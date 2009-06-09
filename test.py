@@ -29,15 +29,37 @@ def readChromosome(filename, chr_id, persons):
 			txtdata = infile.readline()
 			infile.readline() #ignore every alternate row
 			person.chromosomes[chr_id] = Chromosome(person, chr_id, txtdata)
+			status.status(total=len(persons))
 		
 		assert infile.read() == ''
 
-def compareRegions(lchrome, rchrome, numregions):
-	#returns number of exactly matching regions
-	regionlen = ((len(lchrome.data)-1) / numregions) + 1
-	return len([None for idx in xrange(numregions) if 
-			numpy.all(lchrome.data[idx*regionlen:(idx+1)*regionlen] == \
-			rchrome.data[idx*regionlen:(idx+1)*regionlen])])
+def longestCommonRegion(lchrome, rchrome):
+	for regionlen in count(1) | Map(lambda x: 1<<x):
+		if not detectCommonRegion(lchrome, rchrome, regionlen=regionlen):
+			break
+	regionlen /= 2
+	matches = findCommonRegions(lchrome, rchrome, regionlen=regionlen)
+	#TODO: finish
+
+
+def findCommonRegions(lchrome, rchrome, numregions=None, regionlen=None):
+	if regionlen is None:
+		regionlen = ((len(lchrome.data)-1) / numregions) + 1
+	if numregions is None:
+		numregions = ((len(lchrome.data)-1) / regionlen) + 1
+	
+	matches = (numpy.all(
+						lchrome.data[idx*regionlen:(idx+1)*regionlen] == \
+						rchrome.data[idx*regionlen:(idx+1)*regionlen])
+				for idx in xrange(numregions))
+	return matches
+	
+def countCommonRegions(lchrome, rchrome, numregions=None, regionlen=None):
+	return len(findCommonRegions(lchrome, rchrome, numregions, regionlen)
+
+def detectCommonRegion(lchrome, rchrome, numregions=None, regionlen=None):
+	# TODO: verify that this is lazy
+	return True in findCommonRegions(lchrome, rchrome, numregions, regionlen)
 
 def correlation(lchrome, rchrome):
 	return sum(lchrome.data == rchrome.data)
@@ -59,5 +81,5 @@ def crossCorrelation(persons, chr_id=1, correlation=correlation):
 if __name__ == "__main__":
 	persons = [test.Person(i) for i in xrange(60)]
 	test.readChromosome('data/chr1', 1, persons)
-	crossCorrelation(persons[:20], correlation=partial(test.compareRegions, numregions=100))
+	crossCorrelation(persons[:20], correlation=partial(test.findCommonRegions, numregions=100))
 	
