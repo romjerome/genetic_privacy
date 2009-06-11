@@ -32,10 +32,19 @@ def descendentLength(chrome, numgen):
 		return max(y-x, 0)
 	return max(regionProb(lchrome), regionProb(rchrome))
 
-def makePlot(sampleThunk, numintervals=100, numsamples=10000):
-	samples = [int(sampleThunk() * numintervals) for spam in xrange(numsamples)]
+def makePlot(sampleThunk, chromelengths, bucketlen=1000, numsamples=10000):
+	samples = [max(int(sampleThunk()*cl/bucketlen) * bucketlen for cl in chromelengths) \
+					for spam in xrange(numsamples)]
 	hist = utils.getHist(samples)
-	return [hist.get(x, 0) for x in xrange(numintervals)]
+	return 	[bucketlen * x for x in xrange(max(chromelengths) / bucketlen)],\
+			[hist.get(bucketlen * x, 0) for x in xrange(max(chromelengths) / bucketlen)]
+
+def readChromeLengths(filename="data/chrlen", numsnips=1e6):
+	with open(filename) as file:
+		bpcounts = file | Map(int) | pList
+	snipcounts = [int(n * 1e6 / sum(bpcounts)) for n in bpcounts]
+	return snipcounts
+
 
 #top = ((0,1),(0,1))
 #regionsim.makePlot(partial(regionsim.descendentLength, chrome=top, numgen=3))
