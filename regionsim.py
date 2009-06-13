@@ -9,35 +9,92 @@ from itertools import *
 import status, utils
 from pype import *
 
-def childRegion((lchrome, rchrome)):
+from chrlen import chromelengths
+
+TOP, BOT = 0, 1
+
+class Chromosome:
+	def __init__(self, number, top=None, bot=None):
+		self.number = number
+		self.top = top if top is not None else [(TOP, 0, chromelengths[number])]
+		self.bot = bot if bot is not None else [(BOT, 0, chromelengths[number])]
+
+	def __str__(self):
+		return "top: %s\nbot: %s" % (self.top, self.bot)
+
+def childChrome(chrome):
 	def flipIfNeeded((x, y)):
 		return (x, y) if x <= y else (y, x)
 
 	def intersect((x1, y1), (x2, y2)):
 		return (max(x1, x2), min(y1, y2))
+
+	strands = [chrome.top, chrome.top, chrome.bot, chrome.bot]
+	locus = 0
+	crossoverfreq = 5e7
+	while True:
+		locus += int(crossoverfreq * (-math.log(random.random())))
+		if locus >= chromelengths[chrome.number]:
+			break
+		str_id1, str_id2 = utils.sampleWoR(range(4), 2)
+		topstrand, botstrand = [], []
+
+		#TODO: off by one issues
+		def halfCrossover(fromstrand, tostrand1, tostrand2, locus):
+			for which, left, right in fromstrand:
+				if right <= locus:
+					tostrand1.append((which, left, right))
+				elif left > locus:
+					tostrand2.append((which, left, right))
+				else:
+					tostrand1.append((which, left, locus))
+					tostrand2.append((which, locus+1, right))
+		halfCrossover(strands[str_id1], topstrand, botstrand, locus)
+		halfCrossover(strands[str_id2], botstrand, topstrand, locus)
+		strands[str_id1], strands[str_id2] = topstrand, botstrand
+
+	return Chromosome(chrome.number, random.choice(strands), [])
 	
-	lcross = flipIfNeeded((random.choice((0.0, 1.0)), random.random()))
-	rcross = flipIfNeeded((random.choice((0.0, 1.0)), random.random()))
+#TODO:
+# * cousins
 
-	return intersect(lchrome, lcross), intersect(rchrome, rcross)
+@utils.materialize
+def intersectStrands(lstrand, rstrand):
+	for lwhich, lleft, lright in lstrand:
+		for rwhich, rleft, rright in rstrand:
+			if lwhich != rwhich:
+				continue
+			if rright < lleft or lright < rleft:
+				continue
+			yield (lwhich, max(lleft, rleft), min(lright, rright))
 
-def descendentRegion(chrome, numgen):
+def cousinLength(chrnum, lnumgen, rnumgen):
+	lstrand = descendentChrome(Chromosome(chrnum), lnumgen).top
+	rstrand = descendentChrome(Chromosome(chrnum), rnumgen).top
+	return maxLength(intersectStrands(lstrand, rstrand))
+
+def descendentChrome(chrome, numgen):
 	for spam in xrange(numgen):
-		chrome = childRegion(chrome)
+		chrome = childChrome(chrome)
 	return chrome
 
-def descendentLength(chrome, numgen):
-	lchrome, rchrome = descendentRegion(chrome, numgen)
-	def regionProb((x, y)):
-		return max(y-x, 0)
-	return max(regionProb(lchrome), regionProb(rchrome))
+def maxLength(strand):
+	basepairspersnip = 3000
+	lengths = map(lambda (w, l, r): r-l, strand)
+	return max([0] + lengths) / basepairspersnip
 
-def makePlot(sampleThunk, chromelengths, bucketlen=1000, numsamples=10000):
-	samples = [max(int(sampleThunk()*cl/bucketlen) * bucketlen for cl in chromelengths) \
-					for spam in xrange(numsamples)]
-	hist = utils.getHist(samples)
-	return 	[bucketlen * x for x in xrange(max(chromelengths) / bucketlen)],\
-			[hist.get(bucketlen * x, 0) for x in xrange(max(chromelengths) / bucketlen)]
+def descendentLength(chrnum, numgen):
+	return maxLength(descendentChrome(Chromosome(chrnum), numgen).top)
+
+def makePlot(sampleThunk, bucketlen=1000, numsamples=10000):
+	chromesamples = [[sampleThunk(chrnum) for spam in xrange(numsamples/10)] \
+					for chrnum in xrange(1, 23)]
+	samples = [max(random.choice(cs) for cs in chromesamples) \
+				for spam in xrange(numsamples)]
+	hist = utils.getHist([int(x+bucketlen/2)/bucketlen * bucketlen for x in samples])
+	return 	[bucketlen * x for x in xrange(max(samples) / bucketlen)],\
+			[float(hist.get(bucketlen * x, 0)) / numsamples \
+					for x in xrange(max(samples) / bucketlen)]
 
 def readChromeLengths(filename="data/chrlen", numsnips=1e6):
 	with open(filename) as file:
@@ -48,3 +105,5 @@ def readChromeLengths(filename="data/chrlen", numsnips=1e6):
 
 #top = ((0,1),(0,1))
 #regionsim.makePlot(partial(regionsim.descendentLength, chrome=top, numgen=3))
+#pylab.plot(*regionsim.makePlot(partial(regionsim.cousinLength, lnumgen=5, rnumgen=5)))
+
