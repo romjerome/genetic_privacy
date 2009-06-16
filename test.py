@@ -1,5 +1,7 @@
 from __future__ import with_statement
-# test self-correlation and cross-correlation between people
+""" test self-correlation and cross-correlation between people
+	sriram's data
+"""
 
 import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy
 

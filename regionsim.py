@@ -1,5 +1,7 @@
 from __future__ import with_statement
-# test self-correlation and cross-correlation between people
+
+"""computes expected characteristics (mainly max. length) of 
+shared contiguous regions across simulated meiosis for arbitrarily related humans"""
 
 import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy
 
@@ -14,6 +16,11 @@ from chrlen import chromelengths
 TOP, BOT = 0, 1
 
 class Chromosome:
+	""" a chromosome pair, made of homologous chromosomes top and bot
+		each consists of a list of triples (which, left, right) that track the 
+		material derived from a specific ancestor. which = TOP or BOTTOM
+		and (left, right) is the region on the chromosome
+	"""
 	def __init__(self, number, top=None, bot=None):
 		self.number = number
 		self.top = top if top is not None else [(TOP, 0, chromelengths[number])]
@@ -23,21 +30,17 @@ class Chromosome:
 		return "top: %s\nbot: %s" % (self.top, self.bot)
 
 def childChrome(chrome):
-	def flipIfNeeded((x, y)):
-		return (x, y) if x <= y else (y, x)
-
-	def intersect((x1, y1), (x2, y2)):
-		return (max(x1, x2), min(y1, y2))
-
-	strands = [chrome.top, chrome.top, chrome.bot, chrome.bot]
+	""" assuming uniform, non-interfering crossover with morgan = 1e8 bp
+		chromosome from specified parent is always top
+	"""
+	morgan = 1e8
+	top, bot = chrome.top, chrome.bot
 	locus = 0
-	crossoverfreq = 5e7
 	while True:
-		locus += int(crossoverfreq * (-math.log(random.random())))
+		locus += int(morgan * (-math.log(random.random())))
 		if locus >= chromelengths[chrome.number]:
 			break
-		str_id1, str_id2 = utils.sampleWoR(range(4), 2)
-		topstrand, botstrand = [], []
+		newtop, newbot = [], []
 
 		#TODO: off by one issues
 		def halfCrossover(fromstrand, tostrand1, tostrand2, locus):
@@ -49,15 +52,12 @@ def childChrome(chrome):
 				else:
 					tostrand1.append((which, left, locus))
 					tostrand2.append((which, locus+1, right))
-		halfCrossover(strands[str_id1], topstrand, botstrand, locus)
-		halfCrossover(strands[str_id2], botstrand, topstrand, locus)
-		strands[str_id1], strands[str_id2] = topstrand, botstrand
+		halfCrossover(top, newtop, newbot, locus)
+		halfCrossover(bot, newbot, newtop, locus)
+		top, bot = newtop, newbot
 
-	return Chromosome(chrome.number, random.choice(strands), [])
+	return Chromosome(chrome.number, random.choice([top, bot]), [])
 	
-#TODO:
-# * cousins
-
 @utils.materialize
 def intersectStrands(lstrand, rstrand):
 	for lwhich, lleft, lright in lstrand:
@@ -68,22 +68,30 @@ def intersectStrands(lstrand, rstrand):
 				continue
 			yield (lwhich, max(lleft, rleft), min(lright, rright))
 
-def cousinLength(chrnum, lnumgen, rnumgen):
+def halfcousinLength(chrnum, lnumgen, rnumgen):
+	"""	expected max. length of shared material in half-cousins with a single common
+		ancestor lnumgen and rnumgen generations above, respectively"""
 	lstrand = descendentChrome(Chromosome(chrnum), lnumgen).top
 	rstrand = descendentChrome(Chromosome(chrnum), rnumgen).top
 	return maxLength(intersectStrands(lstrand, rstrand))
+
+def relativeLength(chrnum, ancestors):
+	"""	expected max. length of shared material in relatives who share a list
+		of ancestors, each ancestor being a pair (lnumgen, rnumgen)
+		assumes independence of material derived from each ancestor """
+	return max(halfcousinLength(chrnum, lnum, rnum) for lnum, rnum in ancestors)
 
 def descendentChrome(chrome, numgen):
 	for spam in xrange(numgen):
 		chrome = childChrome(chrome)
 	return chrome
 
-def maxLength(strand):
-	basepairspersnip = 3000
-	lengths = map(lambda (w, l, r): r-l, strand)
-	return max([0] + lengths) / basepairspersnip
-
 def descendentLength(chrnum, numgen):
+	"""expected max. length of shared material between node and descendent"""
+	def maxLength(strand):
+		basepairspersnip = 3000
+		lengths = map(lambda (w, l, r): r-l, strand)
+		return max([0] + lengths) / basepairspersnip
 	return maxLength(descendentChrome(Chromosome(chrnum), numgen).top)
 
 def makePlot(sampleThunk, bucketlen=1000, numsamples=10000):
@@ -96,14 +104,15 @@ def makePlot(sampleThunk, bucketlen=1000, numsamples=10000):
 			[float(hist.get(bucketlen * x, 0)) / numsamples \
 					for x in xrange(max(samples) / bucketlen)]
 
-def readChromeLengths(filename="data/chrlen", numsnips=1e6):
-	with open(filename) as file:
-		bpcounts = file | Map(int) | pList
-	snipcounts = [int(n * 1e6 / sum(bpcounts)) for n in bpcounts]
-	return snipcounts
+#def readChromeLengths(filename="data/chrlen", numsnips=1e6):
+#	with open(filename) as file:
+#		bpcounts = file | Map(int) | pList
+#	snipcounts = [int(n * 1e6 / sum(bpcounts)) for n in bpcounts]
+#	return snipcounts
 
 
 #top = ((0,1),(0,1))
 #regionsim.makePlot(partial(regionsim.descendentLength, chrome=top, numgen=3))
 #pylab.plot(*regionsim.makePlot(partial(regionsim.cousinLength, lnumgen=5, rnumgen=5)))
+#pylab.plot(*regionsim.makePlot(partial(regionsim.relativeLength, ancestors=[(4,4), (4,4)]), numsamples=10000))
 
