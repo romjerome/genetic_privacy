@@ -3,7 +3,7 @@ from __future__ import with_statement
 """
 	evolves diploid genomes given family tree
 """
-import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy, array, copy
+import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy, array, copy, numpy
 
 from functools import *
 from itertools import *
@@ -15,7 +15,7 @@ from chrlen import chromelengths, sniplengths
 
 TOP, BOT = 0, 1
 
-defaultchromes = dict((chrnum, array.array('B', [random.randrange(256) for spam in xrange(sniplengths[chrnum]/8)])) for chrnum in xrange(1, 23))
+defaultchromes = dict((chrnum, numpy.array([random.randrange(256) for spam in xrange(sniplengths[chrnum]/8)], numpy.uint8)) for chrnum in xrange(1, 23))
 
 class Chromosome:
 	def __init__(self, number, top=None, bot=None):
@@ -23,15 +23,12 @@ class Chromosome:
 		length = sniplengths[number]
 		def randomChrome(size):
 			return copy.deepcopy(defaultchromes[number])
-		self.top = top if top else randomChrome(length/8)
-		self.bot = bot if bot else randomChrome(length/8)
+		self.top = top if top is not None else randomChrome(length/8)
+		self.bot = bot if bot is not None else randomChrome(length/8)
 
 
 def segments2Chrome(chrnum, segments):
-	chrome = array.array('B')
-	for (ances, left, right) in sorted(segments, key = lambda (ances, left, right): left):
-		chrome.extend(ances[left/2800:right/2800])
-	return chrome
+	return numpy.concatenate([ances[left/2800/8:right/2800/8] for (ances, left, right) in sorted(segments, key = lambda (ances, left, right): left)])
 
 def crossOver(chrnum, topsegs, botsegs):
 	"""given two sets of segments corresponding to two homologous chromosomes, 
@@ -50,21 +47,22 @@ def crossOver(chrnum, topsegs, botsegs):
 	if len(chiasmas) == 1:
 		return topsegs
 	outsegs = []
-	def splitSegment(which, left, right):
-		outsegss = [], []
-		for 		chi, 		prevchi, 			cnt in \
-			izip(	chiasmas, 	[0] + chiasmas, 	count()):
+	def splitSegment(which, left, right, parity):
+		outsegs = []
+		for idx in xrange(parity, len(chiasmas), 2):
+			chi = chiasmas[idx]
 			if chi < left:
 				continue
-			elif right < prevchi:
-				return outsegss
-			outsegss[cnt % 2].append((which, max(left, prevchi), min(right, chi)))
-		return outsegss
+			prevchi = chiasmas[idx-1] if idx > 0 else 0
+			if right < prevchi:
+				return outsegs
+			outsegs.append((which, max(left, prevchi), min(right, chi)))
+		return outsegs
 				
 	for (which, left, right) in topsegs:
-		outsegs.extend(splitSegment(which, left, right)[0])
+		outsegs.extend(splitSegment(which, left, right, 0))
 	for (which, left, right) in botsegs:
-		outsegs.extend(splitSegment(which, left, right)[1])
+		outsegs.extend(splitSegment(which, left, right, 1))
 	return outsegs
 
 class Node:
