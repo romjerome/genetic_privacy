@@ -47,6 +47,8 @@ def crossOver(chrnum, topsegs, botsegs):
 			break
 		chiasmas.append(cur_chiasma)
 	chiasmas.append(chromelengths) # one fake chiasma
+	if len(chiasmas) == 1:
+		return topsegs
 	outsegs = []
 	def splitSegment(which, left, right):
 		outsegss = [], []
