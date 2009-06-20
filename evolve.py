@@ -35,34 +35,32 @@ def crossOver(chrnum, topsegs, botsegs):
 	produce segments for result of crossover"""
 	length = chromelengths[chrnum]
 	morgan = 1e8
-	chiasmas = []
-	cur_chiasma = 0
 	topsegs, botsegs = utils.permute([topsegs, botsegs])
+
+	cur_chiasma = 0
+	chiasmas = []
 	while True:
 		cur_chiasma += int(morgan * (-math.log(random.random())))
 		if cur_chiasma >= length:
 			break
 		chiasmas.append(cur_chiasma)
-	chiasmas.append(chromelengths) # one fake chiasma
+	chiasmas.append(length) # one fake chiasma
+
 	if len(chiasmas) == 1:
 		return topsegs
+			
 	outsegs = []
-	def splitSegment(which, left, right, parity):
-		outsegs = []
+	insegs = [tup + (0,) for tup in topsegs] + [tup + (1,) for tup in botsegs] 
+	for (which, left, right, parity) in insegs:
 		for idx in xrange(parity, len(chiasmas), 2):
 			chi = chiasmas[idx]
 			if chi < left:
 				continue
 			prevchi = chiasmas[idx-1] if idx > 0 else 0
 			if right < prevchi:
-				return outsegs
+				break
 			outsegs.append((which, max(left, prevchi), min(right, chi)))
-		return outsegs
-				
-	for (which, left, right) in topsegs:
-		outsegs.extend(splitSegment(which, left, right, 0))
-	for (which, left, right) in botsegs:
-		outsegs.extend(splitSegment(which, left, right, 1))
+
 	return outsegs
 
 class Node:
