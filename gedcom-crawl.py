@@ -1,6 +1,12 @@
 #!/usr/bin/python
 from __future__ import with_statement
 
+"""crawls the family records of the LDS ancestry file
+
+produces output in data/<id>.family
+
+start it by appending ids to data/crawlqueue"""
+
 import sys, re, operator, math, string, os.path, hashlib, random, itertools, urllib2, time, socket
 
 from functools import *
@@ -40,7 +46,7 @@ def doStep(id=None):
 	assert id not in crawledids
 	try:
 		data = urllib2.urlopen(gedcom_url_prefix % id).read()
-	except URLError: # timeout
+	except urllib2.URLError: # timeout
 		return
 
 	crawledids.add(id)
