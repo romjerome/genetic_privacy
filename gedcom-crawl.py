@@ -27,16 +27,16 @@ socket.setdefaulttimeout(5)
 
 
 crawledids = open('data/crawledids') | pStrip | pSet
-crawlqueue = open('data/crawlqueue') | pStrip | Filter(lambda id: id not in crawledids) | pList
+crawlqueue = open('data/crawlqueue') | pStrip | Filter(lambda id: id not in crawledids) | pSet | pList
 seenids = crawledids | set(crawlqueue)
 origcrawlcount = len(crawledids)
 
 def parseIds(data):
 	"""grab the family id's from a piece of gedcom data"""
 	for line in data.split('\n'):
-		match = re.search('FAMC.*@F(.*)@', line)
+		match = re.search('FAM[CS].*@F(.*)@', line)
 		if match:
-			yield match.groups()[0]
+			yield match.groups()[0].strip()
 
 def doStep(id=None):
 	"""if id is None, then an id will be pulled out of crawlqueue"""
@@ -71,12 +71,16 @@ def doStep(id=None):
 	sys.stderr.write("%d crawled (%d new), %d in queue     \r" % \
 			(len(crawledids), len(crawledids) - origcrawlcount, len(crawlqueue)))
 
-	time.sleep(wait_time)
+	time.sleep(_opts.waittime)
 
 def main():
+	global _opts
+	_opts, args = utils.EasyParser("waittime=1.0:").parse_args()
 	while len(crawlqueue) > 0 and not os.path.exists('STOP'):
 		doStep()
 	print
 
+
+if __name__ == "__main__": main()
 if __name__ == "__main__":
 	main()

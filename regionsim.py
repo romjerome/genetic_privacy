@@ -68,6 +68,11 @@ def intersectStrands(lstrand, rstrand):
 				continue
 			yield (lwhich, max(lleft, rleft), min(lright, rright))
 
+def maxLength(strand):
+	basepairspersnip = 3000
+	lengths = map(lambda (w, l, r): r-l, strand)
+	return max([0] + lengths) / basepairspersnip
+
 def halfcousinLength(chrnum, lnumgen, rnumgen):
 	"""	expected max. length of shared material in half-cousins with a single common
 		ancestor lnumgen and rnumgen generations above, respectively"""
@@ -88,10 +93,6 @@ def descendentChrome(chrome, numgen):
 
 def descendentLength(chrnum, numgen):
 	"""expected max. length of shared material between node and descendent"""
-	def maxLength(strand):
-		basepairspersnip = 3000
-		lengths = map(lambda (w, l, r): r-l, strand)
-		return max([0] + lengths) / basepairspersnip
 	return maxLength(descendentChrome(Chromosome(chrnum), numgen).top)
 
 def makePlot(sampleThunk, bucketlen=1000, numsamples=10000):

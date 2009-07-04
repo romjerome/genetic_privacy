@@ -40,6 +40,12 @@ class Node(utils.Struct):
 	def knownParents(self):
 		return ([self.mom] if self.mom else []) + ([self.dad] if self.dad else [])
 
+def sanityCheck(node):
+	for parent in node.knownParents():
+		assert node in parent.children
+	for child in node.children:
+		assert node in child.knownParents()
+
 _allnodes = {}
 
 def getNode(id):
@@ -66,11 +72,14 @@ def processBlock(block):
 		mom.spouses.add(dad)
 
 	for child in children:
+		if child.dad or child.mom: #this ensures parents are always spouses
+			continue
 		if dad:
 			dad.children.add(child)
 			child.dad = dad
 		if mom:
 			mom.children.add(child)
+			assert child.mom in (mom, None)
 			child.mom = mom
 
 
@@ -90,6 +99,21 @@ def nearestCommonAncestor(lnode, rnode):
 		if not lfront and not rfront:
 			return None
 
+def chainOp(node, numsteps, op):
+	"""repeat op numsteps times on node"""
+	result = [node]
+	for spam in xrange(numsteps):
+		result = result | Map(op) | pFlatten
+	return result
+
+ancestorsByGeneration = partial(chainOp, op=lambda node: node.knownParents())
+descendentsByGeneration = partial(chainOp, op=lambda node: node.children)
+
+def cousinsNApart(node, numsteps):
+	cousins = ancestorsByGeneration(node, numsteps) | Map(partial(descendentsByGeneration, numsteps=numsteps)) | pFlatten | pSet
+	assert len(cousins) == 0 or node in cousins
+	return cousins - set([node])
+
 def closureSize(node, op):
 	closure = set([node])
 	front = set([node])
@@ -98,9 +122,8 @@ def closureSize(node, op):
 		if node in front:
 			print node
 			assert False
-		front -= closure
-		if not front:
-			return len(closure)
+		if not (front-closure): #FIXME: find the loop
+			return len(closure) - 1
 		closure |= front
 
 pedigreeSize = partial(closureSize, op=lambda node: node.knownParents())
