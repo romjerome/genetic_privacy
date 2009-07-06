@@ -27,7 +27,7 @@ scrapequeue = os.popen('ls data | grep family | sed "s/.family//"') | pStrip | p
 scrapequeue -= scrapedids
 scrapedrecs = open(data_dir + 'scrapedrecs') | pStrip | pSet
 
-@utils.failSilently(exception=urllib2.URLError)
+@utils.failSilently(exception=(urllib2.URLError, socket.timeout))
 def urlRead(url):
 	return urllib2.urlopen(url).read()
 
@@ -69,6 +69,8 @@ def main():
 	for familyid in scrapequeue:
 		themap = makeMap(familyid)
 		time.sleep(_opts.waittime)
+		if themap is None:
+			themap = {}
 		for recid in themap.itervalues():
 			if recid in scrapedrecs:
 				continue

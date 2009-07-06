@@ -44,7 +44,7 @@ def doStep(id=None):
 	assert id not in crawledids
 	try:
 		data = urllib2.urlopen(gedcom_url_prefix % id).read()
-	except urllib2.URLError: # timeout
+	except (urllib2.URLError, socket.timeout): # timeout
 		return
 
 	crawledids.add(id)
