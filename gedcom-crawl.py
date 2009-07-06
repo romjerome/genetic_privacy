@@ -17,8 +17,6 @@ from pype import *
 
 gedcom_url_prefix = 'http://www.familysearch.org/Eng/Search/AF/family_group_record_gedcom.asp?familyid=%s'
 
-start_id = '7366709'
-
 data_dir = 'data/'
 
 wait_time = 1 #seconds
@@ -26,8 +24,8 @@ wait_time = 1 #seconds
 socket.setdefaulttimeout(5)
 
 
-crawledids = open('data/crawledids') | pStrip | pSet
-crawlqueue = open('data/crawlqueue') | pStrip | Filter(lambda id: id not in crawledids) | pSet | pList
+crawledids = open(data_dir + 'crawledids') | pStrip | pSet
+crawlqueue = open(data_dir + 'crawlqueue') | pStrip | Filter(lambda id: id not in crawledids) | pSet | pList
 seenids = crawledids | set(crawlqueue)
 origcrawlcount = len(crawledids)
 
@@ -50,7 +48,7 @@ def doStep(id=None):
 		return
 
 	crawledids.add(id)
-	with open('data/crawledids', 'a') as out:
+	with open(data_dir + 'crawledids', 'a') as out:
 		out.write(id + '\n')
 
 	if data.startswith('No records found'):
@@ -62,7 +60,7 @@ def doStep(id=None):
 	newids = set(parseIds(data)) - seenids
 	
 	crawlqueue.extend(newids)
-	with open('data/crawlqueue', 'a') as out:
+	with open(data_dir + 'crawlqueue', 'a') as out:
 		for newid in newids:
 			out.write(newid + '\n')
 	
