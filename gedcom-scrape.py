@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import with_statement
 
-import sys, re, operator, math, string, os.path, hashlib, random, itertools, urllib2, time, socket
+import re, os.path, urllib2, time, socket, glob
 
 from functools import *
 from itertools import *
@@ -59,6 +59,11 @@ def scrapeRecord(recid):
 		match = re.search('family_group_record.asp\?familyid=([0-9]*)[^0-9]', line)
 		if match:
 			yield match.groups()[0]
+
+def missedRecords():
+	"""get records that were missed because of server errors"""
+	recids = glob.iglob(data_dir + '*afnmap') | Map(lambda f: open(f) | pCut(1)) | pFlatten | pSet
+	
 
 def main():
 	global _opts
