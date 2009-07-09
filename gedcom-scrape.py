@@ -83,9 +83,10 @@ def processMissedRecords():
 
 def main():
 	global _opts
-	_opts, args = utils.EasyParser("waittime=1.0:").parse_args()
+	_opts, args = utils.EasyParser("waittime=1.0: missed").parse_args()
 
-	processMissedRecords()
+	if _opts.missed:
+		processMissedRecords()
 
 	for familyid in scrapequeue:
 		themap = makeMap(familyid)
