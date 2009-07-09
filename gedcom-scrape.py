@@ -25,7 +25,7 @@ socket.setdefaulttimeout(5)
 scrapedids = os.popen('ls data | grep afnmap | sed "s/.afnmap//"') | pStrip | pSet
 scrapequeue = os.popen('ls data | grep family | sed "s/.family//"') | pStrip | pSet
 scrapequeue -= scrapedids
-scrapedrecs = open(data_dir + 'scrapedrecs') | pStrip | pSet
+scrapedrecids = open(data_dir + 'scrapedrecs') | pStrip | pSet
 
 @utils.failSilently(exception=(urllib2.URLError, socket.timeout))
 def urlRead(url):
@@ -60,30 +60,42 @@ def scrapeRecord(recid):
 		if match:
 			yield match.groups()[0]
 
-def missedRecords():
+def processRecord(recid, qout, scrout):
+	global scrapedrecids
+	qout.write('\n'.join(set(scrapeRecord(recid))) + '\n')
+	qout.flush()
+	scrout.write(recid + '\n')
+	scrout.flush()
+	scrapedrecids.add(recid)
+
+processRecord = partial(processRecord, 
+						qout=open(data_dir + 'crawlqueue.in', 'a'),
+						scrout = open(data_dir + 'scrapedrecs', 'a'))
+
+def processMissedRecords():
 	"""get records that were missed because of server errors"""
-	recids = glob.iglob(data_dir + '*afnmap') | Map(lambda f: open(f) | pCut(1)) | pFlatten | pSet
-	
+	allrecids = glob.iglob(data_dir + '*afnmap') | Map(lambda f: open(f) | pCut(1)) | pFlatten | pSet
+	missedids = allrecids - scrapedrecids
+	for id in missedids:
+		processRecord(id)
+		time.sleep(_opts.waittime)
+		status.status('missed ids', total=len(missedids))
 
 def main():
 	global _opts
 	_opts, args = utils.EasyParser("waittime=1.0:").parse_args()
 
-	qout = open(data_dir + 'crawlqueue.in', 'a')
-	scrout = open(data_dir + 'scrapedrecs', 'a')
+	processMissedRecords()
+
 	for familyid in scrapequeue:
 		themap = makeMap(familyid)
 		time.sleep(_opts.waittime)
 		if themap is None:
 			themap = {}
 		for recid in themap.itervalues():
-			if recid in scrapedrecs:
+			if recid in scrapedrecids:
 				continue
-			qout.write('\n'.join(set(scrapeRecord(recid))) + '\n')
-			qout.flush()
-			scrout.write(recid + '\n')
-			scrout.flush()
-			scrapedrecs.add(recid)
+			processRecord(recid)
 			time.sleep(_opts.waittime)
 		status.status(total=len(scrapequeue))
 
