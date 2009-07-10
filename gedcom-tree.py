@@ -9,7 +9,9 @@ from itertools import *
 import status, utils, graphing
 from pype import *
 
-MALE, FEMALE = 0, 1
+import common
+
+MALE, FEMALE = "male", "female"
 
 def parseGED(filename):
 	with open(filename) as f:
@@ -28,15 +30,7 @@ def parseGED(filename):
 					nodetype, nodeid = match.groups()
 					curblock.append((nodetype, nodeid))
 
-class Node(utils.Struct):
-	def __init__(self, id):
-		self.id = id
-		self.mom = None
-		self.dad = None
-		self.sex = None
-		self.spouses = set()
-		self.children = set()
-
+class Node(common.Node)
 	def knownParents(self):
 		return ([self.mom] if self.mom else []) + ([self.dad] if self.dad else [])
 
