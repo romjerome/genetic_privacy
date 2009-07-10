@@ -31,14 +31,7 @@ def parseGED(filename):
 					curblock.append((nodetype, nodeid))
 
 class Node(common.Node)
-	def knownParents(self):
-		return ([self.mom] if self.mom else []) + ([self.dad] if self.dad else [])
-
-def sanityCheck(node):
-	for parent in node.knownParents():
-		assert node in parent.children
-	for child in node.children:
-		assert node in child.knownParents()
+	pass
 
 _allnodes = {}
 
@@ -75,53 +68,6 @@ def processBlock(block):
 			mom.children.add(child)
 			assert child.mom in (mom, None)
 			child.mom = mom
-
-
-def nearestCommonAncestor(lnode, rnode):
-	lfront, rfront = set([lnode]), set([rnode])
-	pedigree = set([])
-
-	def extend(nodes):
-		return set(utils.flatten(node.knownParents() for node in nodes))
-
-	for distance in count(1):
-		lfront = extend(lfront)
-		rfront = extend(rfront)
-		newpedigree = set(pedigree | lfront | rfront)
-		if len(newpedigree) < len(pedigree) + len(lfront) | len(rfront):
-			return distance
-		if not lfront and not rfront:
-			return None
-
-def chainOp(node, numsteps, op):
-	"""repeat op numsteps times on node"""
-	result = [node]
-	for spam in xrange(numsteps):
-		result = result | Map(op) | pFlatten
-	return result
-
-ancestorsByGeneration = partial(chainOp, op=lambda node: node.knownParents())
-descendentsByGeneration = partial(chainOp, op=lambda node: node.children)
-
-def cousinsNApart(node, numsteps):
-	cousins = ancestorsByGeneration(node, numsteps) | Map(partial(descendentsByGeneration, numsteps=numsteps)) | pFlatten | pSet
-	assert len(cousins) == 0 or node in cousins
-	return cousins - set([node])
-
-def closureSize(node, op):
-	closure = set([node])
-	front = set([node])
-	while True:
-		front = set(utils.flatten(op(node) for node in front))
-		if node in front:
-			print node
-			assert False
-		if not (front-closure): #FIXME: find the loop
-			return len(closure) - 1
-		closure |= front
-
-pedigreeSize = partial(closureSize, op=lambda node: node.knownParents())
-progenySize = partial(closureSize, op=lambda node: node.children)
 
 def readData():
 	gedfiles = os.popen('ls data | grep family') | pStrip | pList

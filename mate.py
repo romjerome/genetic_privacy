@@ -16,7 +16,7 @@ MALE, FEMALE = "male", "female"
 
 num_children_distribution = [17.9, 17.4, 35.4, 18.9, 6.8, 1.8, 1.0, 0.8]
 
-class Node:
+class Node(common.Node):
 	def __init__(self, dad, mom, sex=None):
 		self.dad = dad
 		self.mom = mom
