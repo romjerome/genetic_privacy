@@ -1,3 +1,5 @@
+import utils
+
 class Node(utils.Struct):
 	def __init__(self, id):
 		self.id = id
