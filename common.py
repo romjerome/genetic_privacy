@@ -48,7 +48,7 @@ def nearestCommonAncestor(lnode, rnode):
 		lfront = extend(lfront)
 		rfront = extend(rfront)
 		newpedigree = set(pedigree | lfront | rfront)
-		if len(newpedigree) < len(pedigree) + len(lfront) | len(rfront):
+		if len(newpedigree) < len(pedigree) + len(lfront) + len(rfront):
 			return distance
 		if not lfront and not rfront:
 			return None
@@ -78,11 +78,28 @@ def closureSize(node, op):
 		if node in front:
 			print node
 			assert False
-		if not (front-closure): #FIXME: find the loop
+		if not (front-closure): #FIXME: find the loops in the LDS data
 			return len(closure) - 1
 		closure |= front
 
 pedigreeSize = partial(closureSize, op=lambda node: node.knownparents)
 progenySize = partial(closureSize, op=lambda node: node.children)
+
+
+#size=100000
+#nodes=[[mate.Node(None, None) for spam in xrange(size)]]
+#for i in xrange(size): nodes[0][i].location = i
+#for gen in xrange(1,10):
+#	newgen=mate.newGen(nodes[-1],size)
+#	mate.postProcessLocation(newgen)
+#	nodes.append(newgen)
+#c5e = lambda n: c5(n) - c4(n)
+#c5 = partial(common.cousinsNApart, numsteps=5)
+#c4 = partial(common.cousinsNApart, numsteps=4)
+#nca = common.nearestCommonAncestor
+##map(lambda n:map(lambda m:nca(n,m),reduce(operator.__and__, map(c5, utils.sampleWoR(c5(n)|pList, 5)))), utils.sampleWoR(nodes[9], 2))
+#map(lambda n:len(reduce(operator.__and__, map(c5e, utils.sampleWoR(c5e(n)|pList, 6))))-len(n.dad.children), utils.sampleWoR(nodes[9], 20))
+
+
 
 
