@@ -1,6 +1,6 @@
 from __future__ import with_statement
 
-"""computes expected characteristics (mainly max. length) of 
+"""computes expected characteristics (e.g, max. length) of 
 shared contiguous regions across simulated meiosis for arbitrarily related humans"""
 
 import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy
