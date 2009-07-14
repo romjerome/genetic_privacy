@@ -99,7 +99,3 @@ progenySize = partial(closureSize, op=lambda node: node.children)
 #nca = common.nearestCommonAncestor
 ##map(lambda n:map(lambda m:nca(n,m),reduce(operator.__and__, map(c5, utils.sampleWoR(c5(n)|pList, 5)))), utils.sampleWoR(nodes[9], 2))
 #map(lambda n:len(reduce(operator.__and__, map(c5e, utils.sampleWoR(c5e(n)|pList, 6))))-len(n.dad.children), utils.sampleWoR(nodes[9], 20))
-
-
-
-
