@@ -13,7 +13,7 @@ from itertools import *
 import status, utils
 from pype import *
 
-from chrlen import chromelengths
+from chrlen import chromelengths, geneticlengths
 
 TOP, BOT = 0, 1
 
@@ -32,10 +32,18 @@ def pdfSample(f, interval, epsilon=1e-6):
 			xmax = xmid
 		else:
 			xmin = xmid
-		print xmin, xmid, xmax
 	return (xmax + xmin) / 2
 
-gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
+#gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
+def gammaSample():
+	try:
+		samples = gammaSample._samples
+	except:
+		samples = gammaSample._samples = []
+	if len(samples) < 10000:
+		samples.append(pdfSample(gammaDensity, (0, 10)))
+		return samples[-1]
+	return random.choice(samples)
 
 def recombLoci(geneticlength):
 	x = random.random() * gammaSample() #initial chiasma, stationarity condition
@@ -55,23 +63,18 @@ class Chromosome:
 	"""
 	def __init__(self, number, top=None, bot=None):
 		self.number = number
-		self.top = top if top is not None else [(TOP, 0, chromelengths[number])]
-		self.bot = bot if bot is not None else [(BOT, 0, chromelengths[number])]
+		self.top = top if top is not None else [(TOP, 0, geneticlengths[number])]
+		self.bot = bot if bot is not None else [(BOT, 0, geneticlengths[number])]
 
 	def __str__(self):
 		return "top: %s\nbot: %s" % (self.top, self.bot)
 
 def childChrome(chrome):
-	""" assuming uniform, non-interfering crossover with morgan = 1e8 bp
+	""" assuming uniform, non-interfering crossover on genetic lengths
 		chromosome from specified parent is always top
 	"""
-	morgan = 1e8
 	top, bot = chrome.top, chrome.bot
-	locus = 0
-	while True:
-		locus += int(morgan * (-math.log(random.random())))
-		if locus >= chromelengths[chrome.number]:
-			break
+	for locus in recombLoci(geneticlengths[chrome.number]):
 		newtop, newbot = [], []
 
 		#TODO: off by one issues
@@ -130,19 +133,13 @@ def descendentLength(chrnum, numgen):
 def makePlot(sampleThunk, bucketlen=1000, numsamples=10000):
 	chromesamples = [[sampleThunk(chrnum) for spam in xrange(numsamples/10)] \
 					for chrnum in xrange(1, 23)]
-	samples = [max(random.choice(cs) for cs in chromesamples) \
+	samples = [int(max(random.choice(cs) * 3e6 for cs in chromesamples)) \
 				for spam in xrange(numsamples)]
+	print samples
 	hist = utils.getHist([int(x+bucketlen/2)/bucketlen * bucketlen for x in samples])
 	return 	[bucketlen * x for x in xrange(max(samples) / bucketlen)],\
 			[float(hist.get(bucketlen * x, 0)) / numsamples \
 					for x in xrange(max(samples) / bucketlen)]
-
-#def readChromeLengths(filename="data/chrlen", numsnips=1e6):
-#	with open(filename) as file:
-#		bpcounts = file | Map(int) | pList
-#	snipcounts = [int(n * 1e6 / sum(bpcounts)) for n in bpcounts]
-#	return snipcounts
-
 
 #top = ((0,1),(0,1))
 #regionsim.makePlot(partial(regionsim.descendentLength, chrome=top, numgen=3))
