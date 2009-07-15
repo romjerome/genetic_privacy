@@ -5,6 +5,8 @@ shared contiguous regions across simulated meiosis for arbitrarily related human
 
 import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy
 
+from scipy import integrate
+
 from functools import *
 from itertools import *
 
@@ -14,6 +16,36 @@ from pype import *
 from chrlen import chromelengths
 
 TOP, BOT = 0, 1
+
+def gammaDensity(x, nu=4.3):
+	return math.exp(-2*nu*x) * (2*nu)**nu * x**(nu-1) /  8.85
+
+def pdfSample(f, interval, epsilon=1e-6):
+	unisample = random.random()
+	xmin, xmax = map(float, interval)
+	f_int = lambda x: integrate.quad(f, interval[0], x)[0]
+	inttable = {}
+	get_int = lambda x: inttable.setdefault(x, f_int(x))
+	while xmax - xmin > epsilon:
+		xmid = (xmax + xmin) / 2
+		if integrate.quad(f, interval[0], xmid)[0] > unisample:
+			xmax = xmid
+		else:
+			xmin = xmid
+		print xmin, xmid, xmax
+	return (xmax + xmin) / 2
+
+gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
+
+def recombLoci(geneticlength):
+	x = random.random() * gammaSample() #initial chiasma, stationarity condition
+	while True:
+		if x > geneticlength:
+			raise StopIteration
+		if random.randrange(2) == 0: #thinning (xover vs recombination)
+			yield x
+		x += gammaSample()
+
 
 class Chromosome:
 	""" a chromosome pair, made of homologous chromosomes top and bot
