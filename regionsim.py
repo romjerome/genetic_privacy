@@ -3,7 +3,7 @@ from __future__ import with_statement
 """computes expected characteristics (e.g, max. length) of 
 shared contiguous regions across simulated meiosis for arbitrarily related humans"""
 
-import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy
+import sys, re, operator, math, string, os.path, hashlib, random, itertools, numpy, array
 
 from scipy import integrate
 
@@ -34,13 +34,18 @@ def pdfSample(f, interval, epsilon=1e-6):
 			xmin = xmid
 	return (xmax + xmin) / 2
 
-#gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
+gammasamples = array.array('f')
+gammasamples.fromfile(open('../data/gammasamples'), 100000) #FIXME
+
 def gammaSample():
+	return random.choice(gammasamples)
+#gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
+def gammaSampleOld():
 	try:
 		samples = gammaSample._samples
 	except:
 		samples = gammaSample._samples = []
-	if len(samples) < 10000:
+	if len(samples) < 100000:
 		samples.append(pdfSample(gammaDensity, (0, 10)))
 		return samples[-1]
 	return random.choice(samples)
@@ -86,7 +91,7 @@ def childChrome(chrome):
 					tostrand2.append((which, left, right))
 				else:
 					tostrand1.append((which, left, locus))
-					tostrand2.append((which, locus+1, right))
+					tostrand2.append((which, locus, right))
 		halfCrossover(top, newtop, newbot, locus)
 		halfCrossover(bot, newbot, newtop, locus)
 		top, bot = newtop, newbot
@@ -104,9 +109,8 @@ def intersectStrands(lstrand, rstrand):
 			yield (lwhich, max(lleft, rleft), min(lright, rright))
 
 def maxLength(strand):
-	basepairspersnip = 3000
 	lengths = map(lambda (w, l, r): r-l, strand)
-	return max([0] + lengths) / basepairspersnip
+	return max([0] + lengths)
 
 def halfcousinLength(chrnum, lnumgen, rnumgen):
 	"""	expected max. length of shared material in half-cousins with a single common
@@ -130,16 +134,14 @@ def descendentLength(chrnum, numgen):
 	"""expected max. length of shared material between node and descendent"""
 	return maxLength(descendentChrome(Chromosome(chrnum), numgen).top)
 
-def makePlot(sampleThunk, bucketlen=1000, numsamples=10000):
+def makePlot(sampleThunk, precision=2, numsamples=10000):
 	chromesamples = [[sampleThunk(chrnum) for spam in xrange(numsamples/10)] \
 					for chrnum in xrange(1, 23)]
-	samples = [int(max(random.choice(cs) * 3e6 for cs in chromesamples)) \
-				for spam in xrange(numsamples)]
-	print samples
-	hist = utils.getHist([int(x+bucketlen/2)/bucketlen * bucketlen for x in samples])
-	return 	[bucketlen * x for x in xrange(max(samples) / bucketlen)],\
-			[float(hist.get(bucketlen * x, 0)) / numsamples \
-					for x in xrange(max(samples) / bucketlen)]
+	samples = [sum(random.choice(s) for s in chromesamples) for spam in xrange(numsamples)]
+	hist = utils.getHist(int(x * 10 ** precision) for x in samples)
+	xs = range(int(max(samples) * 10**precision+1))
+	ys = [float(hist.get(x, 0.0)) / numsamples * 10**precision for x in xs]
+	return 	[x/10.0 ** precision for x in xs], ys[:1] + list(utils.iirSmooth(ys[1:], 0.1))
 
 #top = ((0,1),(0,1))
 #regionsim.makePlot(partial(regionsim.descendentLength, chrome=top, numgen=3))
