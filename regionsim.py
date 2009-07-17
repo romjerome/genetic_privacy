@@ -108,43 +108,47 @@ def intersectStrands(lstrand, rstrand):
 				continue
 			yield (lwhich, max(lleft, rleft), min(lright, rright))
 
-def maxLength(strand):
+def strandProperty(strand, property):
 	lengths = map(lambda (w, l, r): r-l, strand)
-	return max([0] + lengths)
+	return property(lengths)
 
-def halfcousinLength(chrnum, lnumgen, rnumgen):
-	"""	expected max. length of shared material in half-cousins with a single common
+def halfcousinProperty(chrnum, lnumgen, rnumgen, property):
+	"""	expected characteristic of shared material in half-cousins with a single common
 		ancestor lnumgen and rnumgen generations above, respectively"""
 	lstrand = descendentChrome(Chromosome(chrnum), lnumgen).top
 	rstrand = descendentChrome(Chromosome(chrnum), rnumgen).top
-	return maxLength(intersectStrands(lstrand, rstrand))
+	return strandProperty(intersectStrands(lstrand, rstrand), property)
 
-def relativeLength(chrnum, ancestors):
-	"""	expected max. length of shared material in relatives who share a list
+def relativeProperty(chrnum, ancestors, property=sum):
+	"""	expected characteristic of shared material in relatives who share a list
 		of ancestors, each ancestor being a pair (lnumgen, rnumgen)
 		assumes independence of material derived from each ancestor """
-	return max(halfcousinLength(chrnum, lnum, rnum) for lnum, rnum in ancestors)
+	return property(halfcousinProperty(chrnum, lnum, rnum, property) for lnum, rnum in ancestors)
 
 def descendentChrome(chrome, numgen):
 	for spam in xrange(numgen):
 		chrome = childChrome(chrome)
 	return chrome
 
-def descendentLength(chrnum, numgen):
+def descendentProperty(chrnum, numgen, property=sum):
 	"""expected max. length of shared material between node and descendent"""
-	return maxLength(descendentChrome(Chromosome(chrnum), numgen).top)
+	return strandProperty(descendentChrome(Chromosome(chrnum), numgen).top, property)
 
-def makePlot(sampleThunk, precision=2, numsamples=10000):
+def getPdf(sampleThunk, bucketsize, numsamples):
 	chromesamples = [[sampleThunk(chrnum) for spam in xrange(numsamples/10)] \
 					for chrnum in xrange(1, 23)]
 	samples = [sum(random.choice(s) for s in chromesamples) for spam in xrange(numsamples)]
-	hist = utils.getHist(int(x * 10 ** precision) for x in samples)
-	xs = range(int(max(samples) * 10**precision+1))
-	ys = [float(hist.get(x, 0.0)) / numsamples * 10**precision for x in xs]
-	return 	[x/10.0 ** precision for x in xs], ys[:1] + list(utils.iirSmooth(ys[1:], 0.1))
+	return utils.getHist(int(x * bucketsize) for x in samples)
+
+def makePlot(sampleThunk, bucketsize=100.0, numsamples=10000):
+	hist = getPdf(sampleThunk, bucketsize, numsamples)
+
+	xs = range(int(max(hist.keys())+1))
+	ys = [float(hist.get(x, 0.0)) / numsamples * bucketsize for x in xs]
+	return 	[x/float(bucketsize) for x in xs], ys[:1] + list(utils.iirSmooth(ys[1:], 0.1))
 
 #top = ((0,1),(0,1))
-#regionsim.makePlot(partial(regionsim.descendentLength, chrome=top, numgen=3))
+#regionsim.makePlot(partial(regionsim.descendentProperty, chrome=top, numgen=3))
 #pylab.plot(*regionsim.makePlot(partial(regionsim.cousinLength, lnumgen=5, rnumgen=5)))
 #pylab.plot(*regionsim.makePlot(partial(regionsim.relativeLength, ancestors=[(4,4), (4,4)]), numsamples=10000))
 

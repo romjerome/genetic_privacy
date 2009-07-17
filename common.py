@@ -37,6 +37,24 @@ class Node(utils.Struct):
 		for child in self.children:
 			assert self in child.knownparents
 
+def relationMap(node, height):
+	front = [node]
+	ancmap = {node: [(0,0)]}
+
+	def climb(dir, front, ancmap, seen=set()):
+		nbrs = lambda n: set(n.parents) if dir == "up" else n.children
+		for spam in xrange(height): #climb up
+			for f in front:
+				for h_up, h_down in ancmap[f]:
+					for p in nbrs(f) - seen:
+						ancmap.setdefault(p, []).append((h_up+1 if dir == "up" else h_up, 
+													h_down+1 if dir == "down" else h_down))
+			front = map(nbrs, front) | pFlatten | pSet
+		return front
+	front = climb("up", front, ancmap)
+	climb("down", front, ancmap, set(ancmap))
+	return ancmap
+
 def nearestCommonAncestor(lnode, rnode):
 	lfront, rfront = set([lnode]), set([rnode])
 	pedigree = set([])
