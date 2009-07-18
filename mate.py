@@ -91,6 +91,16 @@ def postProcessLocation(nodes):
 	for node, idx in izip(sorted(nodes, key=sortKey), count()):
 		node.location = idx
 
+def makeTree(size=1e5, generations=10):
+	nodes=[[Node(None, None) for spam in xrange(size)]]
+	for i in xrange(size):
+		nodes[0][i].location = i
+	for gen in xrange(1,generations):
+		newgen = newGen(nodes[-1],size)
+		mate.postProcessLocation(newgen)
+		nodes.append(newgen)
+	return nodes
+
 def main():
 	global _opts
 	_opts, args = utils.EasyParser("").parse_args()

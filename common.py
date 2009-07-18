@@ -47,8 +47,8 @@ def relationMap(node, height):
 			for f in front:
 				for h_up, h_down in ancmap[f]:
 					for p in nbrs(f) - seen:
-						ancmap.setdefault(p, []).append((h_up+1 if dir == "up" else h_up, 
-													h_down+1 if dir == "down" else h_down))
+						ancmap.setdefault(p, []).append(
+							(h_up+1, h_down) if dir == "up" else (h_up, h_down+1))
 			front = map(nbrs, front) | pFlatten | pSet
 		return front
 	front = climb("up", front, ancmap)
