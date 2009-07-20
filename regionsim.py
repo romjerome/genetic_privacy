@@ -17,38 +17,30 @@ from chrlen import chromelengths, geneticlengths
 
 TOP, BOT = 0, 1
 
-def gammaDensity(x, nu=4.3):
-	return math.exp(-2*nu*x) * (2*nu)**nu * x**(nu-1) /  8.85
-
-def pdfSample(f, interval, epsilon=1e-6):
-	unisample = random.random()
-	xmin, xmax = map(float, interval)
-	f_int = lambda x: integrate.quad(f, interval[0], x)[0]
-	inttable = {}
-	get_int = lambda x: inttable.setdefault(x, f_int(x))
-	while xmax - xmin > epsilon:
-		xmid = (xmax + xmin) / 2
-		if integrate.quad(f, interval[0], xmid)[0] > unisample:
-			xmax = xmid
-		else:
-			xmin = xmid
-	return (xmax + xmin) / 2
+#def gammaDensity(x, nu=4.3):
+#	return math.exp(-2*nu*x) * (2*nu)**nu * x**(nu-1) /  8.85
+#
+#def pdfSample(f, interval, epsilon=1e-6):
+#	unisample = random.random()
+#	xmin, xmax = map(float, interval)
+#	f_int = lambda x: integrate.quad(f, interval[0], x)[0]
+#	inttable = {}
+#	get_int = lambda x: inttable.setdefault(x, f_int(x))
+#	while xmax - xmin > epsilon:
+#		xmid = (xmax + xmin) / 2
+#		if integrate.quad(f, interval[0], xmid)[0] > unisample:
+#			xmax = xmid
+#		else:
+#			xmin = xmid
+#	return (xmax + xmin) / 2
+#
+#gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
 
 gammasamples = array.array('f')
-gammasamples.fromfile(open('../data/gammasamples'), 100000) #FIXME
+gammasamples.fromfile(open('../data/gammasamples'), 100000) #FIXME: data_dir
 
 def gammaSample():
 	return random.choice(gammasamples)
-#gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
-def gammaSampleOld():
-	try:
-		samples = gammaSample._samples
-	except:
-		samples = gammaSample._samples = []
-	if len(samples) < 100000:
-		samples.append(pdfSample(gammaDensity, (0, 10)))
-		return samples[-1]
-	return random.choice(samples)
 
 def recombLoci(geneticlength):
 	x = random.random() * gammaSample() #initial chiasma, stationarity condition

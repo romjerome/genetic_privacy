@@ -37,18 +37,21 @@ class Node(utils.Struct):
 		for child in self.children:
 			assert self in child.knownparents
 
-def relationMap(node, height):
+def relationMap(node, height=8, maxdist=13):
 	front = [node]
-	ancmap = {node: [(0,0)]}
+	ancmap = {node: {(0,0):1}}
 
 	def climb(dir, front, ancmap, seen=set()):
 		nbrs = lambda n: set(n.parents) if dir == "up" else n.children
 		for spam in xrange(height): #climb up
 			for f in front:
-				for h_up, h_down in ancmap[f]:
+				for h_up, h_down in ancmap.get(f, []):
+					if h_up + h_down >= maxdist:
+						continue
 					for p in nbrs(f) - seen:
-						ancmap.setdefault(p, []).append(
-							(h_up+1, h_down) if dir == "up" else (h_up, h_down+1))
+						key = (h_up+1, h_down) if dir == "up" else (h_up, h_down+1)
+						dic = ancmap.setdefault(p, {})
+						dic[key] = dic.get(key, 0) + 1
 			front = map(nbrs, front) | pFlatten | pSet
 		return front
 	front = climb("up", front, ancmap)
