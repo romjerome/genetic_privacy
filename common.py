@@ -37,13 +37,14 @@ class Node(utils.Struct):
 		for child in self.children:
 			assert self in child.knownparents
 
-def relationMap(node, height=8, maxdist=13):
+def relationMap(node, height=8, depth=8, maxdist=13):
+	"""FIXME: doesn't work on non-leaf nodes"""
 	front = [node]
 	ancmap = {node: {(0,0):1}}
 
-	def climb(dir, front, ancmap, seen=set()):
+	def climb(dir, front, ancmap, height, seen=set()):
 		nbrs = lambda n: set(n.parents) if dir == "up" else n.children
-		for spam in xrange(height): #climb up
+		for spam in xrange(height):
 			for f in front:
 				for h_up, h_down in ancmap.get(f, []):
 					if h_up + h_down >= maxdist:
@@ -54,8 +55,8 @@ def relationMap(node, height=8, maxdist=13):
 						dic[key] = dic.get(key, 0) + 1
 			front = map(nbrs, front) | pFlatten | pSet
 		return front
-	front = climb("up", front, ancmap)
-	climb("down", front, ancmap, set(ancmap))
+	front = climb("up", front, ancmap, height)
+	climb("down", front, ancmap, depth, set(ancmap))
 	return ancmap
 
 def nearestCommonAncestor(lnode, rnode):
