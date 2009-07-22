@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import with_statement
 
-import sys, re, operator, math, string, os.path, hashlib, random
+import sys, re, operator, math, string, os.path, hashlib, random, array, numpy
 
 from scipy import signal
 
@@ -12,11 +12,11 @@ import status, utils, graphing
 from pype import *
 from pypethread import *
 
-import mate, common
+import mate, common, cached
 
 XMAX = 20
 
-def sampleFromPdfVector(vector):
+def sampleFromVector(vector):
 	"""note: max running time is O(len(vector)), but usually much faster"""
 	maxval = max(vector)
 	assert maxval > 0
@@ -25,38 +25,38 @@ def sampleFromPdfVector(vector):
 		if random.random() < vector[x] / maxval:
 			return x
 
-def convolveSequence(vectors):
-	return reduce(lambda u, v: signal.fftconvolve(u, v)[:len(u)], vectors)
-
-def convolvedDensity(relation):
-	"""TODO: cache"""
-	def pdfVectors():
-		for (h1, h2), val in relation.iteritems():
-			dist = h1 + h2
-			for spam in xrange(val):
-				yield pdfvectors[dist]
-	return convolveSequence(pdfVectors())
+def sampleFromPdfVector(vector):
+	"""assumes that a lot of the weight is at 0"""
+	if random.random() < 0.001:
+		assert 0.99 < sum(vector) < 1.01
+	if random.random() < vector[0]:
+		return 0
+	return sampleFromVector(vector[1:])
 
 def nodeDepth(node):
 	if not node.dad:
 		return 0
 	return nodeDepth(node.dad) + 1
 
-def individualScores(relative, relation, sample):
+def individualScores(victim, relative, relation, sample):
 	"""sample is specified as an array index"""
+	global _node, _rel
 	pair = relation.keys()[0]
 	nodeheight = pair[0]-pair[1]
 	relmap = common.relationMap(relative, min(8, 9-nodeheight))
+	if victim not in relmap:
+		_node = victim
+		_rel = relative
+		assert False
 	scores = {}
-	for possiblevictim, rel in relmap.iteritems():
-		h1, h2 = rel.keys()[0]
-		if abs(h1 - h2) > 3 or h1 + h2 < 2:
+	for possiblevictim, relation in relmap.iteritems():
+		h1, h2 = relation.keys()[0]
+		if abs(h1 - h2) > 3 or min(map(sum, relation.keys())) < 2:
 			continue
-		scores[possiblevictim] = convolvedDensity(rel)[sample]
-		#sys.stderr.write("%.5f\n" % max(convolvedDensity(rel)))
+		scores[possiblevictim] = cached.convolvedDensity(relation)[sample]
 	meanscore = utils.mean(scores.itervalues())
 	maxscore = max(scores.itervalues())
-	return ((k, val / meanscore * maxscore ** 0.3)) | pDict()
+	return dict(((k, val / maxscore) for k, val in scores.iteritems()))
 
 def aggregateScores(node):
 	relmap = common.relationMap(node)
@@ -65,10 +65,15 @@ def aggregateScores(node):
 	for relative, relation in relmap.iteritems():
 		if not relative.ispublic:
 			continue
-		ibdsample = sampleFromPdfVector(convolvedDensity(relation))
-		for k, s in individualScores(relative, relation, ibdsample):
-			scores[k] = scores.get(k, 0) + s
 		status.status(total=totallen)
+		h1, h2 = relation.keys()[0]
+		if abs(h1 - h2) > 3 or min(map(sum, relation.keys())) < 2:
+			continue
+		ibdsample = sampleFromPdfVector(cached.convolvedDensity(relation))
+		if ibdsample == 0:
+			continue
+		for k, s in individualScores(node, relative, relation, ibdsample).iteritems():
+			scores.setdefault(k, []).append(s)
 	return scores
 
 

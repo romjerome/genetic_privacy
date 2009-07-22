@@ -38,26 +38,28 @@ class Node(utils.Struct):
 			assert self in child.knownparents
 
 def relationMap(node, height=8, depth=8, maxdist=13):
-	"""FIXME: doesn't work on non-leaf nodes"""
-	front = [node]
-	ancmap = {node: {(0,0):1}}
+	"""FIXME: debug this thoroughly"""
+	front = set([node])
+	relmap = {node: {(0,0):1}}
 
-	def climb(dir, front, ancmap, height, seen=set()):
-		nbrs = lambda n: set(n.parents) if dir == "up" else n.children
+	def climb(dir, front, relmap, height, seen=set()):
+		nbrs = lambda n: set(n.knownparents) if dir == "up" else n.children
 		for spam in xrange(height):
 			for f in front:
-				for h_up, h_down in ancmap.get(f, []):
+				for (h_up, h_down), cnt in relmap.get(f, {}).iteritems():
 					if h_up + h_down >= maxdist:
 						continue
 					for p in nbrs(f) - seen:
 						key = (h_up+1, h_down) if dir == "up" else (h_up, h_down+1)
-						dic = ancmap.setdefault(p, {})
-						dic[key] = dic.get(key, 0) + 1
-			front = map(nbrs, front) | pFlatten | pSet
+						dic = relmap.setdefault(p, {})
+						dic[key] = dic.get(key, 0) + cnt
+			seen |= front
+			front = (map(nbrs, front) | pFlatten | pSet) - seen
 		return front
-	front = climb("up", front, ancmap, height)
-	climb("down", front, ancmap, depth, set(ancmap))
-	return ancmap
+	front = climb("up", front, relmap, height)
+	seen = set(relmap)
+	climb("down", front | seen, relmap, depth, seen)
+	return relmap
 
 def nearestCommonAncestor(lnode, rnode):
 	lfront, rfront = set([lnode]), set([rnode])
@@ -74,6 +76,7 @@ def nearestCommonAncestor(lnode, rnode):
 			return distance
 		if not lfront and not rfront:
 			return None
+		pedigree = newpedigree
 
 def chainOp(node, numsteps, op):
 	"""repeat op numsteps times on node"""
