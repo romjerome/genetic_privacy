@@ -12,6 +12,8 @@ import status, utils, graphing
 from pype import *
 from pypethread import *
 
+#TODO: truncate the vectors
+
 pdfvectors = {}
 for d in xrange(2, 14):
 	a = array.array('f')
