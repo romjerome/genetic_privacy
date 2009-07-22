@@ -22,14 +22,25 @@ for d in xrange(2, 14):
 def convolveSequence(vectors):
 	return reduce(lambda u, v: signal.fftconvolve(u, v)[:len(u)], vectors)
 
-def convolvedDensity(relation):
+#TODO: write a decorator
+
+def convolvedDensity(relation_or_distseq):
 	cache = utils.getattrdefault(convolvedDensity, 'cache', dict)
-	distseq = 	relation.iteritems() |\
-				Map(lambda ((h1, h2), val): (h1 + h2 for spam in xrange(val))) |\
-				pFlatten | pSort() | Sink(tuple)
-	if distseq not in cache:
-		print distseq
-		cache[distseq] = convolveSequence(map(pdfvectors.get, distseq))
+	if hasattr(relation_or_distseq, "items"):
+		distseq = 	relation_or_distseq.iteritems() |\
+					Map(lambda ((h1, h2), val): (h1 + h2 for spam in xrange(val))) |\
+					pFlatten | pSort() | Sink(tuple)
+		if distseq in cache:
+			return cache[distseq]
+		subseqs = [tuple([d for d in distseq if d == i]) for i in set(distseq)]
+		vectors = map(convolvedDensity, subseqs)
+	else:
+		distseq = relation_or_distseq
+		if distseq in cache:
+			return cache[distseq]
+		vectors = map(pdfvectors.get, distseq)
+	print distseq
+	cache[distseq] = convolveSequence(vectors)
 	return cache[distseq]
 
 
