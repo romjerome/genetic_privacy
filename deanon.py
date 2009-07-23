@@ -34,6 +34,7 @@ def sampleFromPdfVector(vector):
 	return sampleFromVector(vector[1:])
 
 def nodeDepth(node):
+	"""just for testing"""
 	if not node.dad:
 		return 0
 	return nodeDepth(node.dad) + 1
@@ -53,7 +54,8 @@ def individualScores(victim, relative, relation, sample):
 		h1, h2 = relation.keys()[0]
 		if abs(h1 - h2) > 3 or min(map(sum, relation.keys())) < 2:
 			continue
-		scores[possiblevictim] = cached.convolvedDensity(relation)[sample]
+		pdfvector = cached.convolvedDensity(relation)
+		scores[possiblevictim] = pdfvector[sample] if sample < len(pdfvector) else 0
 	meanscore = utils.mean(scores.itervalues())
 	maxscore = max(scores.itervalues())
 	return dict(((k, val / maxscore) for k, val in scores.iteritems()))

@@ -14,17 +14,28 @@ from pypethread import *
 
 #TODO: truncate the vectors
 
+VECTORLEN = 20000
+
+def truncateNonzero(vector):
+	"""hack to determine nonzero range of the array"""
+	trunclen = numpy.argmin(numpy.greater(vector, 1e-8))
+	if trunclen == 0:
+		return vector
+	return vector[:trunclen]
+
 pdfvectors = {}
 for d in xrange(2, 14):
 	a = array.array('f')
 	# FIXME: data_dir
-	a.fromfile(open('../data/distance=%d,xmax=20,numbuckets=20000.pdfvector' % d), 20000)
-	pdfvectors[d] = numpy.array(a, numpy.float32)
+	a.fromfile(
+			open('../data/distance=%d,xmax=20,numbuckets=20000.pdfvector' % d),
+			VECTORLEN)
+	pdfvectors[d] = truncateNonzero(numpy.array(a, numpy.float32))
 
 def convolveSequence(vectors):
-	return reduce(lambda u, v: signal.fftconvolve(u, v)[:len(u)], vectors)
+	return reduce(lambda u, v: truncateNonzero(signal.fftconvolve(u, v)), vectors)
 
-#TODO: write a decorator
+#TODO: write a cache decorator
 
 def convolvedDensity(relation_or_distseq):
 	cache = utils.getattrdefault(convolvedDensity, 'cache', dict)
@@ -44,5 +55,4 @@ def convolvedDensity(relation_or_distseq):
 	print distseq
 	cache[distseq] = convolveSequence(vectors)
 	return cache[distseq]
-
 

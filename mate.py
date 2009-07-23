@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import with_statement
 
-import sys, re, operator, math, string, os.path, hashlib, random
+import sys, re, operator, math, string, os.path, hashlib, random, cProfile
 
 from functools import *
 from itertools import *
@@ -41,7 +41,8 @@ def makePairs1D(nodes, meandist=100, matingfraction=0.9):
 	mated = set()
 	while len(mated) < matingfraction * len(nodes):
 		while True:
-			node = list(utils.sampleWoR(nodes, 1))[0]
+			#node = list(utils.sampleWoR(nodes, 1))[0]
+			node = random.choice(nodes)
 			if node not in mated:
 				break
 		matedist = int(math.log(1/random.random()) * meandist + 0.5)
@@ -52,15 +53,17 @@ def makePairs1D(nodes, meandist=100, matingfraction=0.9):
 						node.location - matedist - offset)
 			return [loc2node[loc % len(nodes)] for loc in newlocs]
 		mate = xrange(len(nodes)) | Map(matesByOffset) | pFlatten |\
-			Filter(lambda mate: mate not in mated and mate.sex != node.sex) | pFirst
+			Filter(lambda m: m.sex != node.sex and m not in mated) | pFirst
 		mated.add(node)
 		mated.add(mate)
 		dad, mom = (node, mate) if node.sex == MALE else (mate, node)
 		yield dad, mom
 
 def makeChildren((dad, mom)):
-	numchildren = utils.Sampler(range(len(num_children_distribution)),
-								num_children_distribution.__getitem__).sample()
+	sampler = utils.getattrdefault(makeChildren, 'sampler',
+							lambda: utils.Sampler(range(len(num_children_distribution)),
+									num_children_distribution.__getitem__))
+	numchildren = sampler.sample()
 	children = [Node(dad, mom) for spam in xrange(numchildren)]
 	for child in children:
 		dad.children.add(child)
@@ -105,5 +108,6 @@ def makeTree(size=100000, generations=10):
 def main():
 	global _opts
 	_opts, args = utils.EasyParser("").parse_args()
+	cProfile.run("makeTree(20000,2)")
 
 if __name__ == "__main__": main()
