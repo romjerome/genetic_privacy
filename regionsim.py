@@ -13,6 +13,7 @@ from itertools import *
 import status, utils
 from pype import *
 
+import common
 from chrlen import chromelengths, geneticlengths
 
 TOP, BOT = 0, 1
@@ -37,7 +38,7 @@ TOP, BOT = 0, 1
 #gammaSample = partial(pdfSample, f=gammaDensity, interval=(0, 10)) #10 is infinity
 
 gammasamples = array.array('f')
-gammasamples.fromfile(open('../data/gammasamples'), 100000) #FIXME: data_dir
+gammasamples.fromfile(open(common.data_dir + '/gammasamples'), 100000)
 
 def gammaSample():
 	return random.choice(gammasamples)

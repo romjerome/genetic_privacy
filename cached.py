@@ -12,7 +12,7 @@ import status, utils, graphing
 from pype import *
 from pypethread import *
 
-#TODO: truncate the vectors
+import common
 
 VECTORLEN = 20000
 
@@ -26,10 +26,9 @@ def truncateNonzero(vector):
 pdfvectors = {}
 for d in xrange(2, 14):
 	a = array.array('f')
-	# FIXME: data_dir
 	a.fromfile(
-			open('../data/distance=%d,xmax=20,numbuckets=20000.pdfvector' % d),
-			VECTORLEN)
+		open(common.data_dir + '/distance=%d,xmax=20,numbuckets=20000.pdfvector' % d),
+		VECTORLEN)
 	pdfvectors[d] = truncateNonzero(numpy.array(a, numpy.float32))
 
 def convolveSequence(vectors):

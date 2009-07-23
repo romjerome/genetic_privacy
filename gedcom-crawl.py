@@ -17,7 +17,7 @@ from pype import *
 
 gedcom_url_prefix = 'http://www.familysearch.org/Eng/Search/AF/family_group_record_gedcom.asp?familyid=%s'
 
-data_dir = 'data/'
+data_dir = 'data/' #FIXME: in the future don't append / here
 
 wait_time = 1 #seconds
 
