@@ -8,6 +8,8 @@ import status, utils, graphing
 from pype import *
 from pypethread import *
 
+data_dir = 'data'
+
 def main():
 	global _opts
 	_opts, args = utils.EasyParser("").parse_args()
@@ -28,6 +30,10 @@ class Node(utils.Struct):
 		return (self.dad, self.mom)
 	
 	@property
+	def siblings(self):
+		return self.dad.children & self.mom.children
+	
+	@property
 	def knownparents(self):
 		return ([self.mom] if self.mom else []) + ([self.dad] if self.dad else [])
 
@@ -37,6 +43,7 @@ class Node(utils.Struct):
 		for child in self.children:
 			assert self in child.knownparents
 
+@utils.cached
 def relationMap(node, height=8, depth=8, maxdist=13):
 	"""FIXME: debug this thoroughly"""
 	front = set([node])

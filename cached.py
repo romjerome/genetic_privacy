@@ -18,9 +18,8 @@ VECTORLEN = 20000
 
 def truncateNonzero(vector):
 	"""hack to determine nonzero range of the array"""
-	trunclen = numpy.argmin(numpy.greater(vector, 1e-8))
-	if trunclen == 0:
-		return vector
+	trunclen = len(vector) - numpy.argmax(numpy.greater(vector[::-1], 1e-8))
+	assert trunclen > 0
 	return vector[:trunclen]
 
 pdfvectors = {}
@@ -33,8 +32,6 @@ for d in xrange(2, 14):
 
 def convolveSequence(vectors):
 	return reduce(lambda u, v: truncateNonzero(signal.fftconvolve(u, v)), vectors)
-
-#TODO: write a cache decorator
 
 def convolvedDensity(relation_or_distseq):
 	cache = utils.getattrdefault(convolvedDensity, 'cache', dict)
