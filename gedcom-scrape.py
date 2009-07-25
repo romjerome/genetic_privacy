@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import with_statement
 
-import re, os.path, urllib2, time, socket, glob
+import re, os.path, urllib2, time, socket, glob, httplib
 
 from functools import *
 from itertools import *
@@ -27,7 +27,7 @@ scrapequeue = os.popen('ls data | grep family | sed "s/.family//"') | pStrip | p
 scrapequeue -= scrapedids
 scrapedrecids = open(data_dir + 'scrapedrecs') | pStrip | pSet
 
-@utils.failSilently(exception=(urllib2.URLError, socket.timeout))
+@utils.failSilently(exception=(urllib2.URLError, socket.timeout, httplib.BadStatusLine))
 def urlRead(url):
 	return urllib2.urlopen(url).read()
 
