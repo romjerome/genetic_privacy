@@ -42,13 +42,17 @@ def convolvedDensity(relation_or_distseq):
 		if distseq in cache:
 			return cache[distseq]
 		subseqs = [tuple([d for d in distseq if d == i]) for i in set(distseq)]
-		vectors = map(convolvedDensity, subseqs)
 	else:
 		distseq = relation_or_distseq
+		assert len(set(distseq)) == 1
 		if distseq in cache:
 			return cache[distseq]
-		vectors = map(pdfvectors.get, distseq)
-	print distseq
-	cache[distseq] = convolveSequence(vectors)
+		if len(distseq) == 1:
+			return pdfvectors[distseq[0]]
+		subseqs = [distseq[:len(distseq)/2], distseq[len(distseq)/2:]]
+	vectors = map(convolvedDensity, subseqs)
+	if distseq not in cache:
+		sys.stderr.write('cache miss ' + str(distseq) + '\n')
+		cache[distseq] = convolveSequence(vectors)
 	return cache[distseq]
 

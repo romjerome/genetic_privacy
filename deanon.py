@@ -71,19 +71,31 @@ def aggregateScores(node):
 	relmap = common.relationMap(node)
 	scores = {}
 	totallen = sum(1 for n in relmap if n.ispublic)
+	ibdsamples = {}
 	for relative, relation in relmap.iteritems():
 		if not relative.ispublic:
 			continue
-		status.status(total=totallen)
 		h1, h2 = relation.keys()[0]
-		assert min(map(sum, relation.keys())) >= 2
-		ibdsample = sampleFromPdfVector(cached.convolvedDensity(relation))
+		assert min(map(sum, relation.keys())) >= 2 #FIXME
+		ibdsample = ibdsamples[relative] = \
+				sampleFromPdfVector(cached.convolvedDensity(relation))
 		if ibdsample == 0:
 			continue
 		for k, s in individualScores(node, relative, relation, ibdsample).iteritems():
-			# total score is L-0.5 norm
+			# total score is L-p norm
 			scores.setdefault(k, []).append(s ** 0.5) 
-	return scores
+	return scores, ibdsamples
+
+def nonmatchScore(vic, cand, scores, ibdsamples):
+	"""extremely effective :-)"""
+	candmap = common.relationMap(cand)
+	def zeroProb(relation):
+		return cached.convolvedDensity(relation)[0]
+	product = lambda seq: reduce(operator.__mul__, seq, 1)
+	return product(zeroProb(r) for n, r in candmap.iteritems()
+					if n.ispublic and not ibdsamples.get(n))
+
+
 
 def smallestDistance(n1, n2):
 	"""this is inefficient but the hope is that it will be amortized by the 
