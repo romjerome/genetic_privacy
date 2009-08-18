@@ -86,41 +86,64 @@ def aggregateScores(node):
 			scores.setdefault(k, []).append(s ** 0.5) 
 	return scores, ibdsamples
 
-def nonmatchScore(vic, cand, scores, ibdsamples):
-	"""extremely effective :-)"""
-	candmap = common.relationMap(cand)
-	def zeroProb(relation):
-		return cached.convolvedDensity(relation)[0]
-	product = lambda seq: reduce(operator.__mul__, seq, 1)
-	return product(zeroProb(r) for n, r in candmap.iteritems()
-					if n.ispublic and not ibdsamples.get(n))
+def nonmatchScore(vic, cand, publicnodes, scores, ibdsamples):
+	#candmap = common.relationMap(cand)
+	def zeroProb(node):
+		"""prob that i.b.d. of node and cand is zero"""
+		relation = common.relationMap(node).get(cand)
+		return cached.convolvedDensity(relation)[0] if relation else 1.0
+	product = lambda seq: reduce(operator.__mul__, seq, 1.0)
+	return product(zeroProb(n) for n in publicnodes if not ibdsamples.get(n))
+	#return product(zeroProb(r) for n, r in candmap.iteritems()
+	#				if n.ispublic and not ibdsamples.get(n))
 
 
 
 def smallestDistance(n1, n2):
 	"""this is inefficient but the hope is that it will be amortized by the 
 	cache in relationMap"""
+	if n1 == n2:
+		return 0
 	if n2 not in common.relationMap(n1):
 		return None
 	relation = common.relationMap(n1)[n2]
 	return min(abs(h1 + h2) for h1, h2 in relation.keys())
 
-def analyzeScores(node, scores):
+def analyzeScores(node, scores, ibdsamples, publicnodes):
 	result = utils.JStruct()
 	highscores = dict((k, s) for k, s in scores.items() if sum(s) >= sum(scores[node]))
 	result.num_cands = len(highscores)
 	siblinggroups = set(frozenset(k.dad.children & k.mom.children) for k in highscores)
-	groupreps = utils.permute([list(group)[0] for group in siblinggroups])
-	result.num_groups = len(siblinggroups)
+	groupreps = utils.permute(
+		[node if node in group else list(group)[0] for group in siblinggroups])
+	groupreps = filter(lambda r: nonmatchScore(node, r, publicnodes, scores, ibdsamples) > 0.1, groupreps)
+	result.num_groups_unfiltered = len(siblinggroups)
+	result.num_groups = len(groupreps)
 	result.distances = [smallestDistance(node, rep) for rep in groupreps]
-	result.heights = [map(nodeHeight, groupreps)]
+	result.generations = map(lambda n:n.generation, groupreps)
 	result.num_relatives = sum(1 for r in common.relationMap(node) if r.ispublic)
 	result.num_matching_relatives = len(scores[node])
 	result.cand_num_rel_hist = map(lambda n: len(scores[n]), groupreps) | pHist()
-	#result.cand_num_mat_rel_hist = map(lambda n: sum(1 -  for r in common.relationMap(n) if r.ispublic))
 	return result
 	#TODO: eccentricity
-	#TODO: negative scores when candidate should have matched a relative but didn't
+
+def doSample(tree, publicnodes, numsamples=5):
+	vic = random.choice(tree[-1])
+	#scores, ibdsamples = aggregateScores(vic)
+	return [analyzeScores(vic, *aggregateScores(vic), publicnodes=publicnodes) for spam in xrange(numsamples)]
+
+def makePopulation(size=100000, generations=10, publicprob=0.002, publicgens=4):
+	tree = mate.makeTree(size, generations)
+	for node in tree[:-publicgens] | pFlatten:
+		node.ispublic = False
+		node.isalive = False
+	for node in tree[-publicgens:] | pFlatten:
+		node.ispublic = random.random() <  publicprob
+		node.isalive = True
+	publicnodes = tree[-publicgens:] | pFlatten | Filter(lambda n: n.ispublic) | pSet
+	for node in status.wrap(publicnodes): #warm up cache
+		common.relationMap(node)
+	return tree, publicnodes
 
 def main():
 	global _opts

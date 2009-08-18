@@ -17,12 +17,15 @@ def main():
 if __name__ == "__main__": main()
 
 class Node(utils.Struct):
+	
+	__slots__ = 'location generation sex mom dad children ispublic isalive'.split()
+
 	def __init__(self, id):
 		self.id = id
 		self.mom = None
 		self.dad = None
 		self.sex = None
-		self.spouses = set()
+		#self.spouses = set()
 		self.children = set()
 
 	@property
@@ -37,11 +40,11 @@ class Node(utils.Struct):
 	def knownparents(self):
 		return ([self.mom] if self.mom else []) + ([self.dad] if self.dad else [])
 
-	def sanityCheck(self):
-		for parent in self.knownparents:
-			assert self in parent.children
-		for child in self.children:
-			assert self in child.knownparents
+def sanityCheck(node):
+	for parent in node.knownparents:
+		assert node in parent.children
+	for child in node.children:
+		assert node in child.knownparents
 
 @utils.cached
 def relationMap(node, height=8, depth=8, maxdist=13):
@@ -66,6 +69,10 @@ def relationMap(node, height=8, depth=8, maxdist=13):
 	front = climb("up", front, relmap, height)
 	seen = set(relmap)
 	climb("down", front | seen, relmap, depth, seen)
+
+	for n in relmap.keys():
+		if not n.isalive:
+			del relmap[n]
 	return relmap
 
 def nearestCommonAncestor(lnode, rnode):
