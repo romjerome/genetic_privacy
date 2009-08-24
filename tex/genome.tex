@@ -1,0 +1,50 @@
+\documentclass[conference,compsoc]{IEEEtran}
+\usepackage{url,epsfig,ifthen}
+\title{Re-identifying anonymous genetic samples using familial relationships -- Draft}
+\author{Arvind Narayanan \\
+{\small Stanford University}}
+
+\newcommand{\XX}{{\cal X}}
+\newcommand{\YY}{{\cal Y}}
+\newcommand{\Adv}{\textsf{Adv}}
+\newcommand{\PP}{\textsf {PP}}
+\newcommand{\PR}{\textsf {PR}}
+\newcommand{\bkg}{\textsf {BkGnd}}
+\newcommand{\priv}{\textsf {priv}}
+\newcommand{\pub}{\textsf {pub}}
+\newcommand{\Aux}{\textsf {Aux}}
+\newtheorem{definition}{Definition}
+
+\newcommand{\grumbler}[2]{\begin{quote}\sl{\bf #1:} #2\end{quote}}
+\newcommand{\arvind}[1]{\grumbler{Arvind}{#1}}
+
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The right of a person to control his or her own data is a fundamental tenet of privacy advocacy today. This position implicitly assumes the {\em possibility} of such control, at least with the co-operation of the powers that be -- broadly, the government, and those involved in data collection and analysis.
+
+In the context of genetic data, it is well known that each person shares genetic material with blood relatives, and that the extent of sharing is dependent upon the degree of the relationship. Given this fact, how does the notion of an ``owner'' of each piece of data hold up? Does it merely need to be modified, or jettisoned entirely, thus necessitating an overhaul of the genetic privacy debate?
+
+We show that the answer is likely to be disturbingly close to the latter possibility. The key to our conclusion is an analysis of what an adversary, equipped with realistic ``auxiliary information,'' might be able to deduce from completely anonymous genetic material -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims. We qualify and quantify the conditions under which identities can be affixed to these surreptitiously collected samples, and argue that these conditions will become a reality within a few short years.
+
+There does not appear to be a purely technological fix to our attack. We briefly present policy prescriptions that may delay the eventuality of genetic re-identifiability, and argue that genetic privacy norms must change to accomodate the new technological reality.
+\end{abstract}
+
+We consider the question of what an adversary can learn from a completely anonymous genetic sample, . Our analysis rests on the assumption that two types of data will become available to powerful adversaries within at most a decade or two: 
+\begin{itemize}
+\item
+1) a {\em genealogical graph} consisting of an increasingly large fraction of all known blood relationships among all individuals
+\item
+2) {\em genotypes} of a small fraction of the individuals represented in the above graph
+\end{itemize}
+
+Algorithms to identify shared --``identical-by-descent''-- genetic sequences even among distantly related individuals have recently been developed. This enables the adversary, with some confidence, to detect familial relationships. Our main technical contribution is an algorithm which uses the above data to determine, . Based on the results of this algorithm, we make the claim that scenarios that fall under the realm of science fiction today will soon become reality -- an individual's entire DNA can be sequenced and exposed based on, say, a hair .
+
+\section{Introduction}
+\label{intro}
+
+\end{document}
