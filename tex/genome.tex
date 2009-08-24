@@ -24,6 +24,9 @@
 \begin{document}
 \maketitle
 
+
+
+
 \begin{abstract}
 The right of a person to control his or her own data is a fundamental tenet of privacy advocacy today. This position implicitly assumes the {\em possibility} of such control, at least with the co-operation of the powers that be -- broadly, the government, and those involved in data collection and analysis.
 
@@ -34,7 +37,17 @@ We show that the answer is likely to be disturbingly close to the latter possibi
 There does not appear to be a purely technological fix to our attack. We briefly present policy prescriptions that may delay the eventuality of genetic re-identifiability, and argue that genetic privacy norms must change to accomodate the new technological reality.
 \end{abstract}
 
-We consider the question of what an adversary can learn from a completely anonymous genetic sample, . Our analysis rests on the assumption that two types of data will become available to powerful adversaries within at most a decade or two: 
+\section{Introduction}
+
+Threats to genetic privacy have been of great concern to society every since the dawn of DNA fingerprinting. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so much as to make it qualitatively different. For instance, at the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23-and-me} and has been estimated to capture over 50\% of the entropy in the human genome.
+
+Privacy violations could take many forms, including data breaches and sharing of information without consent. We are concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
+
+Inference attacks have recently received considerable attention: in 2007, Homer {\em et al} showed that the identities of individuals contributing DNA to a mixture, by analyzing only the {\em aggregate} values of each genotype locus. Further papers have discussed this attack, arguing that it is either less serious \cite{sriram} or more serious \cite{css} than previously thought.  In other work, Goodrich analyzed threats to the privacy of mitochondrial DNA sequences \cite{goodrich}.
+
+Common to these attacks is the fact that the victim needs to have first given up their DNA or genotype data. On the other hand, we consider the question of what an adversary can learn from a completely anonymous genetic sample -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims.
+
+ Our analysis rests on the assumption that two types of data will become available to powerful adversaries within at most a decade or two: 
 \begin{itemize}
 \item
 1) a {\em genealogical graph} consisting of an increasingly large fraction of all known blood relationships among all individuals
@@ -42,7 +55,7 @@ We consider the question of what an adversary can learn from a completely anonym
 2) {\em genotypes} of a small fraction of the individuals represented in the above graph
 \end{itemize}
 
-Algorithms to identify shared --``identical-by-descent''-- genetic sequences even among distantly related individuals have recently been developed. This enables the adversary, with some confidence, to detect familial relationships. Our main technical contribution is an algorithm which uses the above data to determine, . Based on the results of this algorithm, we make the claim that scenarios that fall under the realm of science fiction today will soon become reality -- an individual's entire DNA can be sequenced and exposed based on, say, a hair .
+Algorithms to identify shared --``identical-by-descent''-- genetic sequences even among distantly related individuals have recently been developed. This enables the adversary, with some confidence, to detect familial relationships. Our main technical contribution is an algorithm which uses the above data to determine,
 
 \section{Introduction}
 \label{intro}
