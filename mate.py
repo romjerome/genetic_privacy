@@ -65,9 +65,16 @@ def makeChildren((dad, mom)):
 									num_children_distribution.__getitem__))
 	numchildren = sampler.sample()
 	children = [Node(dad, mom) for spam in xrange(numchildren)]
+	if hasattr(dad, 'generation') and hasattr(mom, 'generation')\
+							and dad.generation == mom.generation:
+		generation = dad.generation + 1
+	else:
+		generation = None
 	for child in children:
 		dad.children.add(child)
 		mom.children.add(child)
+		if generation is not None:
+			child.generation = generation
 	return children
 
 def newGen(oldgen, size):
@@ -98,6 +105,7 @@ def makeTree(size=100000, generations=10):
 	nodes=[[Node(None, None) for spam in xrange(size)]]
 	for i in xrange(size):
 		nodes[0][i].location = i
+		nodes[0][i].generation = 0
 	for gen in xrange(1,generations):
 		newgen = newGen(nodes[-1],size)
 		postProcessLocation(newgen)

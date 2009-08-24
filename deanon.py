@@ -1,7 +1,9 @@
 #!/usr/bin/python
 from __future__ import with_statement
 
-import sys, re, operator, math, string, os.path, hashlib, random, array, numpy
+import sys, re, operator, math, string, os.path, hashlib, random, array, numpy, shelve, cPickle
+
+import simplejson as json
 
 from scipy import signal
 
@@ -67,6 +69,9 @@ def individualScores(victim, relative, relation, sample):
 	maxscore = max(scores.itervalues())
 	return dict(((k, val / maxscore) for k, val in scores.iteritems()))
 
+class SiblingException(Exception):
+	pass
+
 def aggregateScores(node):
 	relmap = common.relationMap(node)
 	scores = {}
@@ -76,7 +81,8 @@ def aggregateScores(node):
 		if not relative.ispublic:
 			continue
 		h1, h2 = relation.keys()[0]
-		assert min(map(sum, relation.keys())) >= 2 #FIXME
+		if min(map(sum, relation.keys())) < 2:
+			raise SiblingException
 		ibdsample = ibdsamples[relative] = \
 				sampleFromPdfVector(cached.convolvedDensity(relation))
 		if ibdsample == 0:
@@ -120,7 +126,10 @@ def analyzeScores(node, scores, ibdsamples, publicnodes):
 	result.num_groups_unfiltered = len(siblinggroups)
 	result.num_groups = len(groupreps)
 	result.distances = [smallestDistance(node, rep) for rep in groupreps]
-	result.generations = map(lambda n:n.generation, groupreps)
+	try:
+		result.generations = map(lambda n:n.generation, groupreps)
+	except AttributeError:
+		pass
 	result.num_relatives = sum(1 for r in common.relationMap(node) if r.ispublic)
 	result.num_matching_relatives = len(scores[node])
 	result.cand_num_rel_hist = map(lambda n: len(scores[n]), groupreps) | pHist()
@@ -132,21 +141,33 @@ def doSample(tree, publicnodes, numsamples=5):
 	#scores, ibdsamples = aggregateScores(vic)
 	return [analyzeScores(vic, *aggregateScores(vic), publicnodes=publicnodes) for spam in xrange(numsamples)]
 
-def makePopulation(size=100000, generations=10, publicprob=0.002, publicgens=4):
+def makePopulation(size=100000, generations=10, public_prob=0.002, public_gens=4):
 	tree = mate.makeTree(size, generations)
-	for node in tree[:-publicgens] | pFlatten:
+	for node in tree[:-public_gens] | pFlatten:
 		node.ispublic = False
 		node.isalive = False
-	for node in tree[-publicgens:] | pFlatten:
-		node.ispublic = random.random() <  publicprob
+	for node in tree[-public_gens:] | pFlatten:
+		node.ispublic = random.random() <  public_prob
 		node.isalive = True
-	publicnodes = tree[-publicgens:] | pFlatten | Filter(lambda n: n.ispublic) | pSet
+	publicnodes = tree[-public_gens:] | pFlatten | Filter(lambda n: n.ispublic) | pSet
 	for node in status.wrap(publicnodes): #warm up cache
 		common.relationMap(node)
 	return tree, publicnodes
 
+def driver():
+	params = json.load(open(_opts.infile))
+	tree, publicnodes = makePopulation(**dict(map(lambda (k, v): (str(k), v), 
+											params['population'].items())))
+	results = {'params': params, 'victims' :  []}
+	for spam in xrange(params['num_victims']):
+		results['victims'].append(doSample(tree, publicnodes, params['samples_per_victim']))
+	with open(_opts.outfile,  'w') as outfile:
+		outfile.write(json.dumps(results, indent=2))
+
 def main():
 	global _opts
-	_opts, args = utils.EasyParser("").parse_args()
+	_opts, args = utils.EasyParser("infile=deanon.in: outfile=deanon.out:").parse_args()
+	driver()
+	#_opts.shelf = shelve.open(_opts.outfile, protocol=cPickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__": main()
