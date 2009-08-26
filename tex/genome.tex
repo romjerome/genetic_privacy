@@ -44,7 +44,7 @@ There does not appear to be a purely technological fix to our attack. We briefly
 
 Threats to genetic privacy have been of great concern to society every since the dawn of DNA fingerprinting. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so much as to make it qualitatively different. For instance, at the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23-and-me} and has been estimated to capture over 50\% of the entropy in the human genome.
 
-Privacy violations could take many forms, such as data breaches and non-consensual information sharing. Those categories are the domain of public policy, law enforcement and computer security, resectively. We are instead concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
+Privacy violations could take many forms, such as data breaches and non-consensual information sharing. Protection against such violations falls under the domain of public policy, law enforcement and computer security. We are instead concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
 
 Inference attacks have recently received considerable attention: in 2007, Homer {\em et al} showed how to determine  if an individual contributed DNA to a mixture, by analyzing only the {\em aggregate} values of each genotype locus. Further papers have discussed this attack, arguing that it is either less serious \cite{sriram} or more serious \cite{css} than previously thought.  In other work, Goodrich analyzed threats to the privacy of mitochondrial DNA sequences \cite{goodrich}.
 
@@ -58,9 +58,9 @@ a {\em genealogical graph} representing of a significant fraction of all blood r
 {\em genotypes} of a small fraction of the individuals represented in the above graph
 \end{itemize}
 
-Algorithms to identify shared --``identical-by-descent''-- genetic sequences even among distantly related individuals have recently been developed \ref{germline}. This enables the adversary, with some confidence, to (probabilistically) detect even remote familial relationships.
+Fast algorithms to identify shared (``identical-by-descent'') genetic sequences between related individuals have recently been developed \ref{germline}. This enables the adversary, with some confidence, to (probabilistically) detect even remote blood relationships among individuals.
 
-Our main technical contribution is an inference attack which searches for familial relationships between an unknown genotype and each of a set of identified genotype, and uses these relationships obtained to re-identify the unknown genotype with a node in the genealogical graph. The algorithm has these properties:
+Our main technical contribution is an inference attack which searches for familial relationships between the genotype of an unknown individual and each of a set of identified genotypes, and uses the relationships thus obtained to identify the node in the graph corresponding to the unknown genotype. The algorithm has these properties:
 \begin{itemize}
 \item
 requires only a small fraction of labeled nodes
@@ -72,14 +72,35 @@ can tolerate missing data
 works on a variety of mating models
 \item
 If the unknown genotype does not correspond to any node in the graph, the  algorithm is able to detect this.
-
 \end{itemize}
+
+Let us walk through a simple example to illustrate how such re-identification could be carried out. Let us call our victim Victor, the individual whose genetic information the adversary possesses.  Victor's node happens to be somewhere in the genealogical graph available to the adversary; the adversary would like to find out if that is in fact the case, and if so, determine the identity of the node. Suppose that two of the victim, Victor's cousins Peggy and Sue have labeled genotypes available in the graph. Furthermore, assume that Victor is related to Peggy through his mother and to Sue through his father.  
+
+[illustration here]
+
+Given this setup, the adversary can now determine that unlabeled genotype comes from someone who shares 1/8 of their DNA with both Peggy and Sue. Intuitively, if all mating pairs in the family tree are a) monogamous and b) have no recent common ancestor, then the only nodes that satisfy the constraints available to the adversary are Victor, and any siblings he might have. The adversary looks at the graph and determines that the sample came either from Victor, his sister Wanda, or any other siblings he might have who are not represented in the graph.
+
+Since it is impossible to distinguish between siblings without further auxiliary information, we consider the adversary to be successful in this case. In Section \ref{}, we outline how to carry out further de-anonymization using other auxiliary information. Thus, even if Victor has not been completely de-anonymized, it can serve as useful starting point for manual analysis which can complete the de-anonymization. Therefore, our algorithm outputs a sequence of ``sibling groups'' in decreasing order of match probability.
+
+Unlike our toy example above, in reality there are several factors that make the inference far more complex: 
+
+\begin{itemize}
+\item
+\% of labeled genotypes. 
+\item
+\item
+\item
+\end{itemize
+
+
 
 
 \section{Data collection survey}
 
 \section{Background on re-identification}
-The study of data re-identification is a subfield of information science that has mushroomed in the last decade. Sweeney, Malin and Sweeney, AOL, Netflix, Social networks, Golle, Ohm, case law.
+The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
+
+ Sweeney, Malin and Sweeney, AOL, Netflix, Social networks, Golle, Ohm, case law.
 
 \section{Genetics background and model}
 The human genome consists of 23 pairs of chromosomes. 
@@ -99,7 +120,7 @@ The genetic information in a person's cells was not created by him or her, nor b
 
 One issue that courts have wrestled with is the right to patent a beneficial allele or cell line. Different U.S. states have different rules, some giving the right to the individual, and others demurring \ref{john-moore}.
 
-A related issue is {\em privacy}: to what extent does an individual have the right to force a health provider to keep a piece of genetic information (such as a hereditary) secret, given that 1) his blood relatives may well share the same genes 2) it might be in the interest of his relatives to have this information revealed to them, perhaps a matter of life and death?
+A related issue is  privacy: to what extent does an individual have the right to force a health provider to keep a piece of genetic information (such as a hereditary) secret, given that 1) his blood relatives may well share the same genes 2) it might be in the interest of his relatives to have this information revealed to them, perhaps a matter of life and death?
 
 
 \section{Glossary of terms}
