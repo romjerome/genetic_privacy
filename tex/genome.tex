@@ -1,7 +1,9 @@
 %\documentclass[conference,compsoc]{IEEEtran}
 \documentclass{article}
 \usepackage{url,epsfig,ifthen}
-\title{Re-identifying anonymous genetic samples using familial relationships -- Draft}
+\title{What does it mean to own our genes?\\
+{\small Genetic De-anonymization Attacks and Implications for Privacy}}
+%Draft}}
 \author{Arvind Narayanan \\
 {\small Stanford University}}
 
@@ -40,33 +42,44 @@ There does not appear to be a purely technological fix to our attack. We briefly
 
 \section{Introduction}
 
-The genetic information in a person's cells was not created by him or her, nor by any other individual. In this important respect, genetic information differs from most other types of information of commercial value that people ``own,'' such as the books they write or even their shopping history. Our genetic information has evolved since the dawn of our species, and indeed since the dawn of life on earth. Needless to say, the notion of ownership of genetic data has been fraught with philosophical difficulties.
-
-One issue that courts have wrestled with is the right to patent a beneficial allele or cell line. Different U.S. states have different rules, some giving the right to the individual, and others demurring \ref{john-moore}.
-
-A related issue is {\em privacy}: to what extent does an individual have the right to force a health provider to keep a piece of genetic information (such as a hereditary) secret, given that 1) his blood relatives may well share the same genes 2) it might be in the interest of his relatives to have this information revealed to them, perhaps a matter of life and death?
-
 Threats to genetic privacy have been of great concern to society every since the dawn of DNA fingerprinting. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so much as to make it qualitatively different. For instance, at the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23-and-me} and has been estimated to capture over 50\% of the entropy in the human genome.
 
-Privacy violations could take many forms, including data breaches and sharing of information without consent. We are concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
+Privacy violations could take many forms, such as data breaches and non-consensual information sharing. Those categories are the domain of public policy, law enforcement and computer security, resectively. We are instead concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
 
-Inference attacks have recently received considerable attention: in 2007, Homer {\em et al} showed that the identities of individuals contributing DNA to a mixture, by analyzing only the {\em aggregate} values of each genotype locus. Further papers have discussed this attack, arguing that it is either less serious \cite{sriram} or more serious \cite{css} than previously thought.  In other work, Goodrich analyzed threats to the privacy of mitochondrial DNA sequences \cite{goodrich}.
+Inference attacks have recently received considerable attention: in 2007, Homer {\em et al} showed how to determine  if an individual contributed DNA to a mixture, by analyzing only the {\em aggregate} values of each genotype locus. Further papers have discussed this attack, arguing that it is either less serious \cite{sriram} or more serious \cite{css} than previously thought.  In other work, Goodrich analyzed threats to the privacy of mitochondrial DNA sequences \cite{goodrich}.
 
-Common to these attacks is the fact that the victim needs to have first given up their DNA or genotype data. On the other hand, we consider the question of what an adversary can learn from a completely anonymous genetic sample -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims.
+Common to these attacks is the fact that the victim needs to have first voluntarily provided an identifiable DNA sample or their genotype information. On the other hand, we consider the question of what an adversary can learn from a completely anonymous genetic sample -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims.
 
  Our analysis rests on the assumption that two types of data will become available to powerful adversaries within at most a decade or two: 
 \begin{itemize}
 \item
-1) a {\em genealogical graph} consisting of an increasingly large fraction of all known blood relationships among all individuals
+a {\em genealogical graph} representing of a significant fraction of all blood relationships among a large population group
 \item
-2) {\em genotypes} of a small fraction of the individuals represented in the above graph
+{\em genotypes} of a small fraction of the individuals represented in the above graph
 \end{itemize}
 
-Algorithms to identify shared --``identical-by-descent''-- genetic sequences even among distantly related individuals have recently been developed \ref{germline}. This enables the adversary, with some confidence, to detect familial relationships. Our main technical contribution is an algorithm which uses the above data to determine,
+Algorithms to identify shared --``identical-by-descent''-- genetic sequences even among distantly related individuals have recently been developed \ref{germline}. This enables the adversary, with some confidence, to (probabilistically) detect even remote familial relationships.
+
+Our main technical contribution is an inference attack which searches for familial relationships between an unknown genotype and each of a set of identified genotype, and uses these relationships obtained to re-identify the unknown genotype with a node in the genealogical graph. The algorithm has these properties:
+\begin{itemize}
+\item
+requires only a small fraction of labeled nodes
+\item
+can tolerate noise
+\item
+can tolerate missing data
+\item
+works on a variety of mating models
+\item
+If the unknown genotype does not correspond to any node in the graph, the  algorithm is able to detect this.
+
+\end{itemize}
+
 
 \section{Data collection survey}
 
 \section{Background on re-identification}
+The study of data re-identification is a subfield of information science that has mushroomed in the last decade. Sweeney, Malin and Sweeney, AOL, Netflix, Social networks, Golle, Ohm, case law.
 
 \section{Genetics background and model}
 The human genome consists of 23 pairs of chromosomes. 
@@ -82,6 +95,12 @@ Autosomes/sex chromosomes
 \section{Results}
 
 \section{Discussion}
+The genetic information in a person's cells was not created by him or her, nor by any other individual. In this important respect, genetic information differs from most other types of information of commercial value that people ``own,'' such as the books they write or even their shopping history. Our genetic information has evolved since the dawn of our species, and indeed since the dawn of life on earth. Needless to say, the notion of ownership of genetic data has been fraught with philosophical difficulties.
+
+One issue that courts have wrestled with is the right to patent a beneficial allele or cell line. Different U.S. states have different rules, some giving the right to the individual, and others demurring \ref{john-moore}.
+
+A related issue is {\em privacy}: to what extent does an individual have the right to force a health provider to keep a piece of genetic information (such as a hereditary) secret, given that 1) his blood relatives may well share the same genes 2) it might be in the interest of his relatives to have this information revealed to them, perhaps a matter of life and death?
+
 
 \section{Glossary of terms}
 
