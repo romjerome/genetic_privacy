@@ -42,7 +42,7 @@ There does not appear to be a purely technological fix to our attack. We briefly
 
 \section{Introduction}
 
-Threats to genetic privacy have been of great concern to society every since the dawn of DNA fingerprinting. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so much as to make it qualitatively different. For instance, at the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23-and-me} and has been estimated to capture over 50\% of the entropy in the human genome.
+Threats to genetic privacy have been of great concern to society every since the dawn of DNA fingerprinting. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so much as to make it qualitatively different. For instance, at the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23-and-me} and has been estimated to capture over 50\% of the entropy in the human genome \cite{snpentropy}.
 
 Privacy violations could take many forms, such as data breaches and non-consensual information sharing. Protection against such violations falls under the domain of public policy, law enforcement and computer security. We are instead concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
 
@@ -78,7 +78,7 @@ Let us walk through a simple example to illustrate how such re-identification co
 
 [illustration here]
 
-Given this setup, the adversary can now determine that unlabeled genotype comes from someone who shares 1/8 of their DNA with both Peggy and Sue. Intuitively, if all mating pairs in the family tree are a) monogamous and b) have no recent common ancestor, then the only nodes that satisfy the constraints available to the adversary are Victor, and any siblings he might have. The adversary looks at the graph and determines that the sample came either from Victor, his sister Wanda, or any other siblings he might have who are not represented in the graph.
+Given this setup, the adversary can now determine that unlabeled genotype comes from someone who shares 1/8 of their DNA with both Peggy and Sue.\footnote{The attacker can deduce more than this: for instance, analyzing the {\em number} of shared segments in addition to their {\em total length} can tell him that the related individuals share a pair of grandparents, rather than one being a great-grandparent of the other, which would also result in a $\frac{1}{8}$ shared genome. However, we ignore this for the purpose of this  example.} Intuitively, if all mating pairs in the family tree are a) monogamous and b) have no recent common ancestor, then the only nodes that satisfy the constraints available to the adversary are Victor, and any siblings he might have. The adversary looks at the graph and determines that the sample came either from Victor, his sister Wanda, or any other siblings he might have who are not represented in the graph.
 
 Since it is impossible to distinguish between siblings without further auxiliary information, we consider the adversary to be successful in this case. In Section \ref{}, we outline how to carry out further de-anonymization using other auxiliary information. Thus, even if Victor has not been completely de-anonymized, it can serve as useful starting point for manual analysis which can complete the de-anonymization. Therefore, our algorithm outputs a sequence of ``sibling groups'' in decreasing order of match probability.
 
@@ -87,12 +87,23 @@ Unlike our toy example above, in reality there are several factors that make the
 \begin{itemize}
 \item
 Due to the small fraction of labeled genotypes available to the attacker, the probability that a random node in the graph has a labeled cousin is very small. In fact, our algorithm is successful with so few labeled genotypes that an average node has no fourth cousin or closer that is labeled.
+\item
+We do not make any assumptions about monogamy or common ancestry among mating pairs. (In Section \ref{}, we provide a detailed analysis for a range of different mating models.)
+\item
+The graph could be incomplete or have errors. Because of this, you never know the exact relationship, but only approximations.
 \end{itemize}
+
+The rest of the paper is organized as follows: in Section \ref{reidentification}, we present a survey of re-identification techniques in computer science and their implications for data privacy. ...
 
 
 
 
 \section{Data collection survey}
+
+Recall that there are two types of data that are crucial to the success of our attack: genealogical data and  genotypes of known individuals. In this section, we present a survey of the relevant privacy laws and business incentives for the collection of this data and blah blah.
+
+
+\subsection{}
 
 \section{Background on re-identification}
 The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
@@ -121,7 +132,8 @@ A related issue is  privacy: to what extent does an individual have the right to
 
 
 \section{Glossary of terms}
+\bibliographystyle{plain}
+\bibliography{all}
 
-\label{intro}
 
 \end{document}
