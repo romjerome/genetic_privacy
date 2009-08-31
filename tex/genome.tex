@@ -124,9 +124,27 @@ In the United States, vital records are typically hard to come by before the 190
 
 Constructing a genealogy from such records is not trivial, but can in large part be automated, since the information recorded (first and last name, place, and approximate date/age) is usually sufficient to identify a person uniquely, even in the absence of unique identifiers like SSNs. 
 
-Broadly, there are two steps in the construction of genealogies of deceased persons: digitization of vital records, and analysis of the digitized data. There are many organizations involved in the first phase, such as the volunteer-driven FreeBMD in the UK \cite{freebmd} and the LDS church which operates (primarily) in the United States. The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}.
+The construction of a genealogical tree from vital records is a complex process involving many steps, some of which can be automated to a greater degree than others:
+\begin{itemize}
+\item {\bf Digitization} of digital data involves converting physical vital records into an indexed digital database of records. Sometimes official vital records bureaus perform this task; other times, it is done by private organizations in two steps:
+\begin{itemize}
+\item {\bf Scanning} First, the paper records are converted into microfilm.
+\item {\bf Transcription} Next, the resulting images are converted into text.
+\end{itemize}
+\item {\bf Analysis} At this stage, the data resides in multiple silos, with no inter-links. Further, only immediate family links (such as a parent-child relationship) can be inferred directly from the records. There are two types of algorithms that are used to analyze this data.
+\begin{itemize}
+\item {\bf Entity resolution}, also known as identity resolution, and in the genealogy context as record matching or record linking. It involves resolving records across different databases as the same entity, based on a fuzzy matching of attributes such as comparing names via Soundex \cite{Lait_and_Randall_An_Assessment_of_Name_Matching_Algorithms}.
+\item {\bf Graph merging} operates at a more global level, and tries to merge two genealogical graphs \cite{wilson-remerging}. These methods are still in their infancy, and little information exists in the published literature. Merging is employed today largely in genealogical websites such as Geni, and usually requires some human intervention.
+\end{itemize}
 
+\end{itemize}
+
+ There are many organizations involved in the first phase, such as the volunteer-driven FreeBMD in the UK \cite{freebmd} and the LDS church which operates (primarily) in the United States. The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}. There are currently 200 cameras converting vital records into microfilm, and the transcription process is crowdsourced. 
+
+
+% linking, record matching, entity resolution, identity resolution, name matching, automated genealogy
 \subsubsection{Living persons}
+
 
 \section{Background on re-identification}
 The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
