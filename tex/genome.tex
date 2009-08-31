@@ -103,7 +103,30 @@ The rest of the paper is organized as follows: in Section \ref{reidentification}
 Recall that there are two types of data that are crucial to the success of our attack: genealogical data and  genotypes of known individuals. In this section, we present a survey of the relevant privacy laws and business incentives for the collection of this data and blah blah.
 
 
-\subsection{}
+\subsection{Genealogical data}
+Birth, death, marriage  and divorce records are collectively known as ``vital records.'' In the United States, vital records are typically maintained at the state level. These records are for the most part public, although not always available {\em en masse} in digital form. A summary of availability can be found in \cite{messing}:
+\begin{itemize}
+\item
+birth records have more privacy protection than marriage or death records, as they pertain to (possibly) living people
+\item
+each country maintains records in microfiche form
+\item
+most of the larger states aggregate this information in digital form at the state level
+\item
+\end{itemize}
+
+In the light of the different level of availability for records pertaining to living and dead people, not only from official bureaus but also from private organizations such as the LDS church (see below), we divide our survey into these two categories.
+
+\subsubsection{Deceased persons}
+Data on deceased persons may not always exist, but if it does exist, it is typically much easier to obtain.
+
+In the United States, vital records are typically hard to come by before the 1900s. The situation in European countries is much better: In the United Kingdom, for instance, vital records have been collected since at least 1837 \cite{ukbmd.org.uk} and contains an estimated 170 million unique records. Data from prior dates is often available from parish registers from individual counties. \footnote{Need survey of more European countries.} 
+
+Constructing a genealogy from such records is not trivial, but can in large part be automated, since the information recorded (first and last name, place, and approximate date/age) is usually sufficient to identify a person uniquely, even in the absence of unique identifiers like SSNs. 
+
+Broadly, there are two steps in the construction of genealogies of deceased persons: digitization of vital records, and analysis of the digitized data. There are many organizations involved in the first phase, such as the volunteer-driven FreeBMD in the UK \cite{freebmd} and the LDS church which operates (primarily) in the United States. The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}.
+
+\subsubsection{Living persons}
 
 \section{Background on re-identification}
 The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
