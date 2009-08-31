@@ -104,7 +104,15 @@ Recall that there are two types of data that are crucial to the success of our a
 
 
 \subsection{Genealogical data}
-Birth, death, marriage  and divorce records are collectively known as ``vital records.'' In the United States, vital records are typically maintained at the state level. These records are for the most part public, although not always available {\em en masse} in digital form. A summary of availability can be found in \cite{messing}:
+In the light of the different level of availability for records pertaining to living and dead people, not only from official bureaus but also from private organizations such as the LDS church (see below), we divide our survey into these two categories.
+
+Data on deceased persons may not always exist, but if it does exist, it is typically much easier to obtain. On the other hand, data on living persons always exists, to the extent that they know who their parents are, but it may not be easy to obtain because of privacy concerns.
+
+We know analyze the ease of obtaining genealogical graphs based on source.
+
+\subsubsection{Vital records}
+
+Birth, death, marriage  and divorce records are collectively known as ``vital records.'' In the United States, vital records are typically maintained at the state level. These records are for the most part public, although not always available {\em en masse} in digital form. A summary of availability can be found in \cite{messing}. Some salient points to note are:
 \begin{itemize}
 \item
 birth records have more privacy protection than marriage or death records, as they pertain to (possibly) living people
@@ -112,26 +120,23 @@ birth records have more privacy protection than marriage or death records, as th
 each country maintains records in microfiche form
 \item
 most of the larger states aggregate this information in digital form at the state level
-\item
 \end{itemize}
 
-In the light of the different level of availability for records pertaining to living and dead people, not only from official bureaus but also from private organizations such as the LDS church (see below), we divide our survey into these two categories.
-
-\subsubsection{Deceased persons}
-Data on deceased persons may not always exist, but if it does exist, it is typically much easier to obtain.
+Vital records are primarily useful for constructing genealogies of deceased persons, since they are often ``aged'' (U.S. term) by 50--100 years depending on the jurisdiction.
 
 In the United States, vital records are typically hard to come by before the 1900s. The situation in European countries is much better: In the United Kingdom, for instance, vital records have been collected since at least 1837 \cite{ukbmd.org.uk} and contains an estimated 170 million unique records. Data from prior dates is often available from parish registers from individual counties. \footnote{Need survey of more European countries.} 
+
 
 Constructing a genealogy from such records is not trivial, but can in large part be automated, since the information recorded (first and last name, place, and approximate date/age) is usually sufficient to identify a person uniquely, even in the absence of unique identifiers like SSNs. 
 
 The construction of a genealogical tree from vital records is a complex process involving many steps, some of which can be automated to a greater degree than others:
 \begin{itemize}
-\item {\bf Digitization} of digital data involves converting physical vital records into an indexed digital database of records. Sometimes official vital records bureaus perform this task; other times, it is done by private organizations in two steps:
+\item {\bf Indexing} of digital data involves converting physical vital records into an indexed digital database of records. Sometimes official vital records bureaus perform this task; other times, it is done by private organizations in two steps:
 \begin{itemize}
-\item {\bf Scanning} First, the paper records are converted into microfilm.
+\item {\bf Digitization} First, the paper records are converted into microfilm or microfiche. These are document storage formats.  which are then converted to digital images using a microfilm reader. 
 \item {\bf Transcription} Next, the resulting images are converted into text.
 \end{itemize}
-\item {\bf Analysis} At this stage, the data resides in multiple silos, with no inter-links. Further, only immediate family links (such as a parent-child relationship) can be inferred directly from the records. There are two types of algorithms that are used to analyze this data.
+\item {\bf Analysis} After digitization, the data resides in multiple silos, with no inter-links. Further, only immediate family links (such as a parent-child relationship) can be inferred directly from the records. There are two types of algorithms that are used to analyze this data.
 \begin{itemize}
 \item {\bf Entity resolution}, also known as identity resolution, and in the genealogy context as record matching or record linking. It involves resolving records across different databases as the same entity, based on a fuzzy matching of attributes such as comparing names via Soundex \cite{Lait_and_Randall_An_Assessment_of_Name_Matching_Algorithms}.
 \item {\bf Graph merging} operates at a more global level, and tries to merge two genealogical graphs \cite{wilson-remerging}. These methods are still in their infancy, and little information exists in the published literature. Merging is employed today largely in genealogical websites such as Geni, and usually requires some human intervention.
@@ -139,11 +144,11 @@ The construction of a genealogical tree from vital records is a complex process 
 
 \end{itemize}
 
- There are many organizations involved in the first phase, such as the volunteer-driven FreeBMD in the UK \cite{freebmd} and the LDS church which operates (primarily) in the United States. The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}. There are currently 200 cameras converting vital records into microfilm, and the transcription process is crowdsourced. 
+There are many organizations involved in the first phase, such as the volunteer-driven FreeBMD in the UK \cite{freebmd} and the LDS church which operates (primarily) in the United States. The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}. There are currently 200 cameras converting vital records into microfilm, and the transcription process is crowdsourced. 
+
 
 
 % linking, record matching, entity resolution, identity resolution, name matching, automated genealogy
-\subsubsection{Living persons}
 
 
 \section{Background on re-identification}
@@ -167,7 +172,7 @@ Autosomes/sex chromosomes
 \section{Discussion}
 The genetic information in a person's cells was not created by him or her, nor by any other individual. In this important respect, genetic information differs from most other types of information of commercial value that people ``own,'' such as the books they write or even their shopping history. Our genetic information has evolved since the dawn of our species, and indeed since the dawn of life on earth. Needless to say, the notion of ownership of genetic data has been fraught with philosophical difficulties.
 
-One issue that courts have wrestled with is the right to patent a beneficial allele or cell line. Different U.S. states have different rules, some giving the right to the individual, and others demurring \ref{john-moore}.
+One issue that courts have wrestled with is the right to patent a beneficial allele or cell line. Different U.S. states have different rules, some giving the right to the individual, and others demurring \cite{john-moore-who-owns-your-genetic-information}.
 
 A related issue is  privacy: to what extent does an individual have the right to force a health provider to keep a piece of genetic information (such as a hereditary) secret, given that 1) his blood relatives may well share the same genes 2) it might be in the interest of his relatives to have this information revealed to them, perhaps a matter of life and death?
 
