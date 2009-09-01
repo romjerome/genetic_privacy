@@ -133,19 +133,22 @@ The construction of a genealogical tree from vital records is a complex process 
 \begin{itemize}
 \item {\bf Indexing} of digital data involves converting physical vital records into an indexed digital database of records. Sometimes official vital records bureaus perform this task; other times, it is done by private organizations in two steps:
 \begin{itemize}
-\item {\bf Digitization} First, the paper records are converted into microfilm or microfiche. These are document storage formats.  which are then converted to digital images using a microfilm reader. 
-\item {\bf Transcription} Next, the resulting images are converted into text.
+\item {\bf Digitization} First, the paper records are converted into microfilm or microfiche. These are document storage formats that physically compress the size by a factor of 25 or more.\cite{wikipedia}  The microform documents are then converted to digital images using a microfilm/microfiche reader. 
+\item {\bf Transcription} Next, the resulting images are converted into text. This process is  typically ``crowdsourced'' to volunteers participating over the Internet.
 \end{itemize}
 \item {\bf Analysis} After digitization, the data resides in multiple silos, with no inter-links. Further, only immediate family links (such as a parent-child relationship) can be inferred directly from the records. There are two types of algorithms that are used to analyze this data.
 \begin{itemize}
-\item {\bf Entity resolution}, also known as identity resolution, and in the genealogy context as record matching or record linking. It involves resolving records across different databases as the same entity, based on a fuzzy matching of attributes such as comparing names via Soundex \cite{Lait_and_Randall_An_Assessment_of_Name_Matching_Algorithms}.
-\item {\bf Graph merging} operates at a more global level, and tries to merge two genealogical graphs \cite{wilson-remerging}. These methods are still in their infancy, and little information exists in the published literature. Merging is employed today largely in genealogical websites such as Geni, and usually requires some human intervention.
+\item {\bf Entity resolution}, also known as identity resolution, and in the genealogy context as record matching or record linking. It involves resolving records across different databases as the same entity, based on a fuzzy matching of attributes such as comparing names via Soundex and more sophisticated algorithms \cite{Lait_and_Randall_An_Assessment_of_Name_Matching_Algorithms}.
+\item {\bf Graph merging} operates at a more global level, and tries to merge two genealogical graphs \cite{wilson-remerging}. These methods are still in their infancy, and little information exists in the published literature. Merging is employed by the LDS in creating the ancestry file. 
 \end{itemize}
 
 \end{itemize}
 
 There are many organizations involved in the first phase, such as the volunteer-driven FreeBMD in the UK \cite{freebmd} and the LDS church which operates (primarily) in the United States. The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}. There are currently 200 cameras converting vital records into microfilm, and the transcription process is crowdsourced. 
 
+\subsubsection{``Genealogy 2.0"}
+
+Graph merging is  an essential feature of all major genealogical websites including Geni\cite{geni-merge}, onegreatfamily.com\cite{onegreatfamily-merge} and MyHeritage\cite{myheritage-merge}.  It is essential in order to unify the family trees contributed by different individuals.  Merges with high similarity scores happen automatically but others require human intervention.
 
 
 % linking, record matching, entity resolution, identity resolution, name matching, automated genealogy
