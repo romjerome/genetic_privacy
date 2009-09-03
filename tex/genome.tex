@@ -98,21 +98,35 @@ The rest of the paper is organized as follows: in Section \ref{reidentification}
 
 
 
-\section{Data collection survey}
-
-Recall that there are two types of data that are crucial to the success of our attack: genealogical data and  genotypes of known individuals. In this section, we present a survey of the relevant privacy laws and business incentives for the collection of this data and blah blah.
+%\section{Data collection survey}
 
 
-\subsection{Genealogical data}
-In the light of the different level of availability for records pertaining to living and dead people, not only from official bureaus but also from private organizations such as the LDS church (see below), we divide our survey into these two categories.
 
-Data on deceased persons may not always exist, but if it does exist, it is typically much easier to obtain. On the other hand, data on living persons always exists, to the extent that they know who their parents are, but it may not be easy to obtain because of privacy concerns.
+\section{Genealogical Databases: A Survey}
+Recall that there are two types of data that are crucial to the success of our attack: genealogical data and  genotypes of known individuals. This section is dedicated to the former; we survey a) the types of original data sources that can be used to compile genealogical graphs\footnote{it must be borne in mind that reconstructing genealogy is much more feasible when multiple sources are combined} and b) the existing organizations and databases of genealogical information. 
+In the interest of brevity, we focus on the U.S. and the U.K.; information about other countries is summarized in Appendix \ref{}.
 
-We know survey a) the types of original data sources that can be used to compile genealogical graphs \footnote{it must be borne in mind that reconstructing genealogy will be much easier when multiple sources are combined} b) the existing organizations and databases of genealogical information.
+First, let us consider the process of constructing a genealogical graph from one or more databases of individual records, which have no links either between records or between the different databases.  There are three main algorithms that are needed:
 
-Very broadly, 
+{\bf Entity resolution}, also known as identity resolution, and in the genealogy context as record matching or record linking. It involves resolving records across different databases as the same entity, based on a fuzzy matching of attributes; a simple example would be matching names via Soundex. Record linkage is an extremely well-studied problem and as one might imagine, has applications everywhere. W.E. Winkler of the U.S. Census Bureau has authored two surveys \cite{winkler-survey-99,winkler-survey-06} from the statistics perspective.
 
-\subsubsection{Vital records}
+{\bf Lineage linking} is a specific type of record linking, involving inferring (kin) relationships between individuals. For example, using the parents' names reported in a birth record to link an individual to the resolved entities corresponding to the parents constitutes lineage linking. A lineage-linked database of individuals is essentially a genealogical graph, albeit possibly containing errors and inconstencies.
+
+GEDCOM is a widely used standard for lineage-linked data developed by the LDS Church; an example GEDCOM record is presented in Appendix \ref{}.
+
+{\bf Graph merging} operates at a more global level, and tries to merge two genealogical graphs \cite{wilson-merge}. As opposed to record linkage, graph merging algorithms are still in their infancy, and little information exists in the published literature. Agarwala {\em et al.}\cite{anabaptist} describe merging two genealogies of the North American Anabaptist population consisting of around 56,000 and 31,000 individuals respectively. Interestingly, new relationships are created in the merged graph which exist in neither original graph. 
+
+%Merging is employed by the LDS in creating the ancestry file.  
+
+{\bf Living vs. deceased persons.} Recall that although the privacy harms of our attack (or any other attack) impact mostly the living, our modus operandi is to find remote familial relationships between individuals via distant common ancestors (5-7 generations). This means that it is important for the attacker to have auxiliary information in the form of genealogical data extending back well into the nineteenth century.
+
+Obtaining data on deceased persons turns out to be significantly different from living people. There are two key differences: many sources of genealogical data apply (some) privacy controls for living persons, and usually none for deceased persons. Second, data on deceased pesons has often been irretrievably lost, especially the farther one goes back in time, whereas for living persons the information at least in human memory, even if it may not be easy for the attacker to obtain.
+
+%In the light of the different level of availability for records pertaining to living and dead people, not only from official bureaus but also from private organizations such as the LDS church (see below), we divide our survey into these two categories.
+
+Let us now turn to data sources. Broadly, these can be divided into official sources and user-contributed data. Official sources further subdivide into vital records, census records, and other miscellaneous public sources such as voter registration lists and property records.
+
+\subsection{Vital records}
 
 Birth, death, marriage  and divorce records are collectively known as ``vital records.'' In the United States, vital records are typically maintained at the state level. These records are for the most part public, although not always available {\em en masse} in digital form. A summary of availability can be found in \cite{messing}. Some salient points to note are:
 \begin{itemize}
@@ -124,47 +138,64 @@ Each county maintains records in microfiche form, but most of the larger states 
 The authors note that ``as time progresses, public information stored at even the smallest county offices will invariably become digitally available."
 \end{itemize}
 
-Due to ``aging'' of birth records, constructing genealogies from vital records is likely to be more feasible for deceased persons than for living persons.
-
 In the United States, there is a drop-off in the availability of vital records before the 1900s. The situation in European countries is much better: In the United Kingdom, for instance, vital records have been collected since at least 1837 \cite{ukbmd.org.uk} and contains an estimated 170 million unique records. Data from prior dates is often available from parish registers from individual counties. \footnote{Need survey of more European countries.} 
 
+Vital records may be made available by official bureaus either in original paper form, or in microform, or electronically. The process of converting from paper to an indexed electronic database involves two steps:
 
-Constructing a genealogy from such records is not trivial, but can in large part be automated, since the information recorded (first and last name, place, and approximate date/age) is usually sufficient to identify a person uniquely, even in the absence of unique identifiers like SSNs.  The major missing link is the mother's maiden name, which is sometimes but not always available in birth records.  Conveniently, the authors of \cite{messing} provide a number of heuristics that can be used to infer the mother's maiden name.
+{\bf Digitization} First, the paper records are converted into microfilm or microfiche. These are document storage formats that physically compress the size by a factor of 25 or more \cite{wp-microform}. The microform documents are then converted to digital images using a microfilm/microfiche reader. 
 
+{\bf Transcription} Next, the resulting images are converted into text. Many organizations involved in making vital records available online achieve this time-consuming step by ``crowdsourcing'' it to volunteers participating over the Internet.
 
-The construction of a genealogical tree from vital records is a complex process involving many steps, some of which can be automated to a greater degree than others:
+Constructing a genealogy from vital records is not trivial, but can in large part be automated: 
 \begin{itemize}
-\item {\bf Indexing} of digital data involves converting physical vital records into an indexed digital database of records. Sometimes official vital records bureaus perform this task; other times, it is done by private organizations in two steps:
-\begin{itemize}
-\item {\bf Digitization} First, the paper records are converted into microfilm or microfiche. These are document storage formats that physically compress the size by a factor of 25 or more.\cite{wikipedia}  The microform documents are then converted to digital images using a microfilm/microfiche reader. 
-\item {\bf Transcription} Next, the resulting images are converted into text. This process is  typically ``crowdsourced'' to volunteers participating over the Internet.
-\end{itemize}
-\item {\bf Analysis} After digitization, the data resides in multiple silos, with no inter-links. Further, only immediate family links (such as a parent-child relationship) can be inferred directly from the records. There are two types of algorithms that are used to analyze this data.
-\begin{itemize}
-\item {\bf Entity resolution}, also known as identity resolution, and in the genealogy context as record matching or record linking. It involves resolving records across different databases as the same entity, based on a fuzzy matching of attributes such as comparing names via Soundex and more sophisticated algorithms \cite{Lait_and_Randall_An_Assessment_of_Name_Matching_Algorithms}.
-\item {\bf Graph merging} operates at a more global level, and tries to merge two genealogical graphs \cite{wilson-merge}. These methods are still in their infancy, and little information exists in the published literature. \cite{anabaptist} describe merging two genealogies of the North American Anabaptist population consisting of around 56,000 and 31,000 individuals respectively. Interestingly, new relationships are created in the merged graph which exist in neither original graph.
-%Merging is employed by the LDS in creating the ancestry file.  
+\item
+The information available -- first and last name, place (to the resolution of a county), and age -- is usually sufficient to carry out record linking, even in the absence of unique identifiers.
+\item
+For unredacted or ``aged'' records, the parents' names are available. Combined with other attributes, this makes lineage linking possible.
+\item
+Even when the parents' names have been redacted, \cite{messing} provide a variety of heuristics that they use to infer the mother's maiden name, many of these heuristics can also be used for lineage linking.
 \end{itemize}
 
-\end{itemize}
+\subsection{Census records}
 
-{\bf Ancestry.com}
+Census records are an invaluable source of genealogical research. In the United States, they are maintained by the National Archives. The first Federal Population Census was taken in 1790, and has been taken every ten years since. Due to privacy reasons, data is available only for the 1930 and earlier censuses. The National Archives makes census records available on microfilm from 1790 to 1930. These have been completely transcribed by private companies (see survey below.)
+
+The following information is available for each individual covered by the 1850-1930 censuses: name, age, state or country of birth, parents' birthplaces, year of immigration, street address, marriage status, years of marriage, occupation, and a few other attributes. The situation in the UK is similar in terms of information available; micro-data from the 1851-1901 censuses are currently public.
+
+Record linkage across censuses is possible, and there are a number of efforts to unify the micro-data across the historical censuses; for instance, see \cite{ipums-usa}. Lineage linking is possible to an extent because the members of a household are listed together; however, census records alone provide no definite link between a woman's maiden and married names. We are not aware of any efforts to derive lineages from census records, but they may serve as an excellent complement to vital records.
+
+
+\subsection{Other official public records}
+
+The National Archives website claims that federal records are a ``treasure chest of genealogical information''\cite{nara-faq}. Military, immigration, naturalization and land records are some other types of official records that are useful as genealogical sources. 
+More information can be found in \cite{nara-faq}. 
+
+Land and property records from earlier periods can be particularly useful because deeds contain very detailed information in an effort to identify the individual as completely as possible. Modern property records can be useful for tracking people who move to a different state \cite{messing}.
+
+Voter registration records in the United States have been public since 1995 by the National Voter Act of 1993. These are particularly useful for genealogical reconstruction because they list the maiden name. 
+
+The Social Security Death Index -- which was created as a way to prevent identity theft of the recently deceased -- has been used in enabling privacy breach, most famously in \cite{acquisti-ssn}. According to Griffith and Jakobsson, the SSDI improves the ability to link death and marriage records \cite{messing}.
+
+\subsection{Secondary sources of official records}
+
+As noted, official records are often made available only in microfilm, and may not be available from a central source. Even after digitization, there remains the task of constructing a lineage-linked database, and of aggregating different databases. The availability of such cleansed and aggregated data makes a huge difference to the practical feasibility of our attack. Considering that the source data is public, it is quite likely that the processed data will eventually become publicly available. Nevertheless, it is important to survey the current availability of official records from secondary sources.
+
+{\bf Ancestry.com}, Inc., based on Provo, Utah, is the largest for-profit genealogy company in the world \cite{wp-ancestry.com}. It operates a variety of websites including ancestry.com, genealogy.com, myfamily.com and rootsweb.com. They have completed the indexing of all U.S. Census lists for which micro-data is available. 
 
 {\bf FreeBMD} is a UK-based charitable organization that has the goal of creating a free transcription of vital records (called ``BMD," for ``Births, Marriages and Deaths'' in the UK context), and making them freely available on the Internet.  Currently, over 170 million unique records have been transcribed.
 
 {\bf FamilySearch} is a project of the U.S.-based {\bf Church of the  Latter Day Saints.} The LDS church maintains the International Genealogical Index, which has data on 250 million names \cite{familysearch}. There are currently 200 cameras converting vital records into microfilm, and the transcription process is crowdsourced. 
 
-{\bf Geni} 
+\subsection{Genealogy 2.0} A rapidly growing source of user-contributed genealogical data comes from the trend of ``genealogy 2.0'' websites that combine collaborative genealogy with family-based social networking. Most of these sites have the explicit goal of colleting a genealogical graph of the entire human population. The typical process is for members to create an account, which is associated with their node in the genealogical graph, and then extend their family tree starting from that node.
 
-\subsubsection{``Genealogy 2.0"}
+Graph merging is  an essential feature of all major websites in this category including Geni\cite{geni-merge}, onegreatfamily.com\cite{onegreatfamily-merge} and MyHeritage\cite{myheritage-merge}.  It is essential in order to unify the family trees contributed by different individuals.  Merges with high similarity scores happen automatically but others require human intervention.
 
-Perhaps the best source of genealogical data is the trend of ``genealogy 2.0'' websites that combine genealogy with social networking. Most of these sites have the explicit goal of colleting a genealogical graph of the entire human population. The typical process is for members to create an account, which also corresponds to their node in the genealogical graph, they then extend their family tree starting from their node. 
+Another approach to genealogy 2.0 is to integrate family-features with a general-purpose social network. The leaders in this space appear to be two Facebook applications ``We're Related'' \cite{fb-wererelated} and ``Family Tree'' \cite{fb-familytree}, with 20 million and 5 million active users respectively as of September 2009. Family Tree is also available on other social networks, and claims 12 million users and 55 million profiles overall. 
+The company, Familybuilder Inc., also offers genetic genealogy services.
 
-Graph merging is  an essential feature of all major genealogical websites including Geni\cite{geni-merge}, onegreatfamily.com\cite{onegreatfamily-merge} and MyHeritage\cite{myheritage-merge}.  It is essential in order to unify the family trees contributed by different individuals.  Merges with high similarity scores happen automatically but others require human intervention.
-
+None of these sites have nearly as much data or traffic as ancestry.com. However, ancestry.com has failed to add social features, and therefore these newer competitors currently have more momentum and growth.
 
 % linking, record matching, entity resolution, identity resolution, name matching, automated genealogy
-
 
 \section{Background on re-identification}
 The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
