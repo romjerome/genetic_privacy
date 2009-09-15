@@ -1,6 +1,7 @@
 %\documentclass[conference,compsoc]{IEEEtran}
 \documentclass{article}
-\usepackage{url,epsfig,ifthen}
+\usepackage{url,ifthen}
+\usepackage[pdftex]{graphicx}
 \title{What does it mean to own our genes?\\
 {\small Genetic De-anonymization Attacks and Implications for Privacy}}
 %Draft}}
@@ -31,71 +32,86 @@
 
 
 \begin{abstract}
-The right of a person to control his or her own data is a fundamental tenet of privacy advocacy today. This position implicitly assumes the {\em possibility} of such control, at least with the co-operation of the powers that be -- broadly, the government, and those involved in data collection and analysis.
+Given that each of us shares genetic material with our blood relatives, to what extent can one expect to keep one's genetic information private? We consider this question with respect to an attacker equipped with large-scale (albeit incomplete and ``noisy'') information about the blood relationships in a large population group. 
 
-In the context of genetic data, it is well known that each person shares genetic material with blood relatives, and that the extent of sharing is dependent upon the degree of the relationship. Given this fact, how does the notion of an ``owner'' of each piece of data hold up? Does it merely need to be modified, or jettisoned entirely, thus necessitating an overhaul of the genetic privacy debate?
+Given this kind of auxiliary information, it turns out that the availability of genotype information of a small fraction of individuals -- as little as 0.1\% -- is enough to cause the majority of the population to lose any hope of genetic privacy. We develop a strong inference attack that allows the attacker to re-identify completely anonymous genetic material, such as pieces of hair collected {\em en masse} from public spaces without the consent or even the {\em knowledge} of the potential victims.
 
-We show that the answer is likely to be disturbingly close to the latter possibility. The key to our conclusion is an analysis of what an adversary, equipped with realistic ``auxiliary information,'' might be able to deduce from completely anonymous genetic material -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims. We qualify and quantify the conditions under which identities can be affixed to these surreptitiously collected samples, and argue that these conditions will become a reality within a few short years.
+We survey the efforts aimed at aggregating genealogical  data on a massive scale and argue that the compilation of the ``world's family tree'' is a matter of time. Further, we point out several population groups for which enough auxiliary data is {\em already} available to leave them vulnerable to genetic re-identification.
 
-There does not appear to be a purely technological fix to our attack. We briefly present policy prescriptions that may delay the eventuality of genetic re-identifiability, and argue that genetic privacy norms must change to accomodate the new technological reality.
+There is no purely technological fix to our attack. We briefly present policy prescriptions that may delay ubiquitous genetic re-identifiability, and argue that genetic privacy norms must change to accomodate the new technological reality. In particular, the notion of an ``owner'' of each piece of genetic data appears no longer tenable.
+ 
+%The right of a person to control his or her own data is a fundamental tenet of privacy advocacy today. This position implicitly assumes the {\em possibility} of such control, at least with the co-operation of the powers that be -- broadly, the government, and those involved in data collection and analysis. Our attack shows that the notion of an ``owner'' of each piece of data may need to be jettisoned entirely, necessitating an overhaul of the genetic privacy debate.
+
+%In the context of genetic data, it is well known that each person shares genetic material with blood relatives, and that the extent of sharing is dependent upon the degree of the relationship. Given this fact, how does the notion of an ``owner'' of each piece of data hold up? Does it merely need to be modified, or jettisoned entirely, thus necessitating an overhaul of the genetic privacy debate?
+
+%We show that the answer is likely to be disturbingly close to the latter possibility. The key to our conclusion is an analysis of what an adversary, equipped with realistic ``auxiliary information,'' might be able to deduce from completely anonymous genetic material -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims. We qualify and quantify the conditions under which identities can be affixed to these surreptitiously collected samples, and argue that these conditions will become a reality within a few short years.
+
+%There does not appear to be a purely technological fix to our attack. We briefly present policy prescriptions that may delay the eventuality of genetic re-identifiability, and argue that genetic privacy norms must change to accomodate the new technological reality.
 \end{abstract}
 
 \section{Introduction}
 
-Threats to genetic privacy have been of great concern to society every since the dawn of DNA fingerprinting. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so much as to make it qualitatively different. For instance, at the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23andme-store} and has been estimated to capture over 50\% of the entropy in the human genome \cite{snpentropy}.
+Threats to genetic privacy have been of concern to society since the proliferation of DNA profiling a few decades ago. However, the availability of cheap genotyping in the last few years has changed the scale of the threat so greatly as to make it qualitatively different. At the time of this writing, a ``personal genomics'' kit costs \$399 \cite{23andme-store} and has been estimated to capture over 50\% of the entropy in the human genome \cite{snpentropy}.
 
-Privacy violations could take many forms, such as data breaches and non-consensual information sharing. Protection against such violations falls under the domain of public policy, law enforcement and computer security. We are instead concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from data or samples that might at first glance appear to hide the facts in question.
+Privacy violations could take many forms such as data breaches and non-consensual information sharing. Protection against such violations falls under the domain of public policy, law enforcement and computer security. We are instead concerned about {\em inference attacks}, which result in unexpected revelation of sensitive facts about individuals from genotype data or DNA samples that might at first glance appear to hide the facts in question.
 
 Inference attacks have recently received considerable attention: in 2007, Homer {\em et al} showed how to determine  if an individual contributed DNA to a mixture, by analyzing only the {\em aggregate} values of each genotype locus. Further papers have discussed this attack, arguing that it is either less serious \cite{sriram} or more serious \cite{gwa-privacy} than previously thought.  In other work, Goodrich analyzed threats to the privacy of mitochondrial DNA sequences \cite{mastermind}.
 
-Common to these attacks is the fact that the victim needs to have first voluntarily provided an identifiable DNA sample or their genotype information. On the other hand, we consider the question of what an adversary can learn from a completely anonymous genetic sample -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims.
+Common to these attacks is the fact that the victim needs to have first voluntarily provided an identifiable DNA sample. On the other hand, we consider the question of what an adversary can learn from a completely anonymous genetic sample -- for instance, pieces of hair collected {\em en masse} from public spaces without the consent, or even the {\em knowledge}, of the potential victims.
 
- Our analysis rests on the assumption that two types of data will become available to powerful adversaries within at most a decade or two: 
+Our analysis rests on the asssumption that two types of data will soon become available to powerful attackers (Sections \ref{genealogy-survey} and \ref{genotype-survey} are dedicated to justifying and quantifying these claims):
 \begin{itemize}
 \item
-a {\em genealogical graph} representing of a significant fraction of all blood relationships among a large population group
+A {\em genealogical graph} representing of a significant fraction of all blood relationships among a large population group.
 \item
-{\em genotypes} of a small fraction of the individuals represented in the above graph
+{\em Genotypes} of a small fraction of the individuals represented in the above graph.
 \end{itemize}
 
-Fast algorithms to identify shared (``identical-by-descent'') genetic sequences between related individuals have recently been developed \cite{germline}. This enables the adversary, with some confidence, to (probabilistically) detect even remote blood relationships among individuals.
+Blood-related individuals share fragments of their genome; such shared genetic sequences, known as ``identical-by-descent'', or IBD, exist with significant probability for pairs of people related by as little as a single common ancestor 5--7 generations ago. Furthermore, fast algorithms to identify identical-by-descent segments between have recently been developed \cite{germline}. This enables an adversary to (probabilistically) detect even remote blood relationships among individuals.
 
-Our main technical contribution is an inference attack which searches for familial relationships between the genotype of an unknown individual and each of a set of identified genotypes, and uses the relationships thus obtained to identify the node in the graph corresponding to the unknown genotype. The algorithm has these properties:
+Our main technical contribution is an inference attack that uses IBD segment detection to infer the identity of an unlabeled genotype. The attacker's input is a 1) genealogical graph, 2) a set of labeled genotypes, the labels being nodes in the graph, and 3) an unlabled genotype. First, the attacker computes IBD segments between the unlabeled genotype and each labeled genotype, using existing algorithms. He then uses these sets of IBD segments to determine the node in the graph that is most likely to correspond to the unlabeled genotype, using a novel algorithm.
+
+We say that our attacks succeeds if it identifies the correct node\footnote{This is a slight oversimplification: in reality, the algorithm outputs a ``sibling group,'' since siblings of the same sex are indistinguisable from genotypes alone.}, or if it correctly deduces that genotype did not come from any individual represented in the graph. The attack has several strengths:
 \begin{itemize}
 \item
-requires only a small fraction of labeled nodes
+It requires only a small fraction of labeled nodes to succeed -- in our experiements, as little as a tenth of a percent in some cases (see below). 
 \item
-can tolerate noise
+It can tolerate ``noise'' in the form of missing as well as incorrect links in the graph. This is vital: while increasingly massive genealogical graphs are becoming available (Section \ref{genealogy-survey}), these are by no means complete nor fully accurate.
 \item
-can tolerate missing data
-\item
-works on a variety of mating models
-\item
-If the unknown genotype does not correspond to any node in the graph, the  algorithm is able to detect this.
+It makes no assumptions about the nature of mating -- i.e, monogamy vs. polygamy, inbreeding coefficient, population growth rate, mixing model (random vs. geographically or socially structured), etc. While these differences do affect the efficacy of the attack somewhat, the algorithm remains the same in all cases.
 \end{itemize}
 
-Let us walk through a simple example to illustrate how such re-identification could be carried out. Let us call our victim Victor, the individual whose genetic information the adversary possesses.  Victor's node happens to be somewhere in the genealogical graph available to the adversary; the adversary would like to find out if that is in fact the case, and if so, determine the identity of the node. Suppose that two of the victim, Victor's cousins Peggy and Sue have labeled genotypes available in the graph. Furthermore, assume that Victor is related to Peggy through his mother and to Sue through his father.  
+Let us walk through a simple example to illustrate how the attack might work. Let us call our victim Victor, the individual whose genetic information the adversary possesses.  Victor's node happens to be somewhere in the genealogical graph available to the adversary; the adversary, not yet knowing this, would like to find out if that is in fact the case, and if so, determine the identity of the node. Suppose that two of Victor's cousins Peggy and Sue have labeled genotypes available in the graph. Furthermore, assume that Victor is related to Peggy through his mother and to Sue through his father.  
 
-[illustration here]
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[height=2in]{attack-illustration.png}
+\end{center}
+\caption{Illustration of attack}
+\small{
+The red node represents the victim. 
+The green nodes represent individuals whose genotypes are available to the attacker.
+Pink and blue nodes represent females and males respectively.
+The thick lines represent genealogical links that are available to the attacker, and the dotted lines represent links that are not available.}
+\end{figure}
 
-Given this setup, the adversary can now determine that unlabeled genotype comes from someone who shares 1/8 of their DNA with both Peggy and Sue.\footnote{The attacker can deduce more than this: for instance, analyzing the {\em number} of shared segments in addition to their {\em total length} can tell him that the related individuals share a pair of grandparents, rather than one being a great-grandparent of the other, which would also result in a $\frac{1}{8}$ shared genome. However, we ignore this for the purpose of this  example.} Intuitively, if all mating pairs in the family tree are a) monogamous and b) have no recent common ancestor, then the only nodes that satisfy the constraints available to the adversary are Victor, and any siblings he might have. The adversary looks at the graph and determines that the sample came either from Victor, his sister Wanda, or any other siblings he might have who are not represented in the graph.
+Given this setup, the adversary can now determine that unlabeled genotype comes from someone who shares 1/8 of their DNA with both Peggy and Sue.\footnote{The attacker can deduce more than this: for instance, analyzing the {\em number} of shared segments in addition to their {\em total length} can tell him that the related individuals share a pair of grandparents, rather than one being a great-grandparent of the other, which would also result in a $\frac{1}{8}$ shared genome. However, we ignore this for the purpose of this  example.} Intuitively, if all mating pairs in the family tree are a) monogamous and b) have no recent common ancestor, then the only nodes that satisfy the constraints available to the adversary are Victor, and any siblings he might have. The adversary looks at the graph and determines that the sample came either from Victor, his brother Wilbur, or any other siblings he might have who are not represented in the graph.
 
-Since it is impossible to distinguish between siblings without further auxiliary information, we consider the adversary to be successful in this case. In Section \ref{}, we outline how to carry out further de-anonymization using other auxiliary information. Thus, even if Victor has not been completely de-anonymized, it can serve as useful starting point for manual analysis which can complete the de-anonymization. Therefore, our algorithm outputs a sequence of ``sibling groups'' in decreasing order of match probability.
+Since it is impossible to distinguish between siblings without further auxiliary information, our algorithm outputs the most likely ``sibling group'' instead of the most likely individual. We consider the attacker to be successful if the sibling group is guessed correctly. In Section \ref{genotypephenotype}, we outline how to carry out further de-anonymization using other auxiliary information. Thus, even if Victor has not been completely de-anonymized, it can serve as useful starting point for manual analysis which can complete the de-anonymization.
 
-Unlike our toy example above, in reality there are several factors that make the inference far more complex: 
+Unlike our toy example above, in reality the inference is far more complex. The primary difficulty arises due to the fact that only small fraction of labeled genotypes available to the attacker.  With 0.1\% node-genotypes available, for a random unlabeled node we can expect that not a single one of its 4th cousins (or any closer relative) is among the genotyped set.  At low levels of genetic sharing, it becomes impossible to determine the exact familial relationship, and complex statistical calculations are necessary.
 
-\begin{itemize}
-\item
-Due to the small fraction of labeled genotypes available to the attacker, the probability that a random node in the graph has a labeled cousin is very small. In fact, our algorithm is successful with so few labeled genotypes that an average node has no fourth cousin or closer that is labeled.
-\item
-We do not make any assumptions about monogamy or common ancestry among mating pairs. (In Section \ref{}, we provide a detailed analysis for a range of different mating models.)
-\item
-The graph could be incomplete or have errors. Because of this, you never know the exact relationship, but only approximations.
-\end{itemize}
+Furthermore, in our example we assumed monogamy, a lack of inbreeding, and an absence of errors; overcoming these assumptions also presents a great challenge.
 
-The rest of the paper is organized as follows: in Section \ref{reidentification}, we present a survey of re-identification techniques in computer science and their implications for data privacy. ...
+We now summarize our quantitative results. {\em [numbers go here]}.
 
+The rest of the paper is organized as follows. In Section \ref{genealogy-survey}, we survey techniques and projects aimed at compiling genalogical graphs of large populations. The scale and ease of data availability may surprise the reader. In section \ref{genotype-survey}, we discuss genotype databases and how an attacker may obtain them. We also point out population groups that are most immediately at risk from our attack.
 
+ In Section \ref{reidentification}, we present a survey of re-identification techniques in computer science and their implications for data privacy. Having been virtually unknown to privacy analysts merely a decade ago, advances re-identification science has now thrown into question the very notion of anonymized data.
+
+Section \ref{genetics-background} is a very brief recap of the genetics required to understand our attack, in particular the manipulation of genetic information that occurs during meiosis. We also describe the ``GERMLINE'' IBD-detection algorithm of \cite{germline}, and motivate a few simplyfing assumptions that we make in our model.
+
+Section \ref{attack} describes our attack methodology and algorithm in detail, and Section \ref{results} contains the results of our experiments. We conclude by discussing the implications of our attack to society in Section \ref{discussion}.
 
 
 %\section{Data collection survey}
@@ -104,6 +120,7 @@ The rest of the paper is organized as follows: in Section \ref{reidentification}
 
 
 \section{Genealogical Databases: A Survey}
+\label{genealogy-survey}
 Recall that there are two types of data that are crucial to the success of our attack: genealogical data and  genotypes of known individuals. This section concerns the former; we survey a) the types of original data sources that can be used to compile genealogical graphs and b) the existing organizations and databases of genealogical information. 
 In the interest of brevity, we focus on the U.S. and the U.K.; information about other countries is summarized in Appendix [].
 
@@ -232,29 +249,41 @@ The open question is how easy it will be for an attacker to obtain the aggregate
 The underlying reason for the profusion of data appears to be the strong groundswell of interest in genealogy. According to one report \cite{hobby}, genealogy is the fastest growing hobby in North America, and 2400 people visit the Family History Library of the LDS Church every day. A 2000 poll by Maritz Marketing Research Inc., claims that nearly half of Internet users in the United States conducted family history research online \cite{maritz-poll}.\footnote{They probably pulled the numbers out of a hat, or were funded by a genealogy company.} Thus, the trends in data availability that we have described are likely to continue into the foreseeable future.
 
 
-%-- strong business case, user interest (44\%)
+\section{Genotyping}
+\label{genotype-survey}
+We now survey the large-scale databases of genotypes and the availability of these to the attacker. 
 
-% linking, record matching, entity resolution, identity resolution, name matching, automated genealogy
+{\bf Markers, SNPs and the genome.} 
 
 \section{Background on re-identification}
-The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
+\label{reidentification}
+%The study of data re-identification is a subfield of information science that has mushroomed in the last decade. In 1998, Sweeney \cite{sweeney} showed that Massachusetts hospital records blah blah. 
 
- Sweeney, Malin and Sweeney, AOL, Netflix, Social networks, Golle, Ohm, case law.
+% Sweeney, Malin and Sweeney, AOL, Netflix, Social networks, Golle, Ohm, case law.
 
 \section{Genetics background and model}
-The human genome consists of 23 pairs of chromosomes. 
+\label{genetics-background}
+%The human genome consists of 23 pairs of chromosomes. 
 
-Autosomes/sex chromosomes
+%Autosomes/sex chromosomes
 
-{\bf Meiosis.}
+\subsection{Genotypes and phenotypes}
+\label{genotypephenotype}
+
+\subsection{Meiosis}
 
 \subsection{Germline}
 
 \section{Attack}
+\label{attack}
 
 \section{Results}
+\label{results}
 
 \section{Discussion}
+\label{discussion}
+{\em This section is incomplete.}
+
 The genetic information in a person's cells was not created by him or her, nor by any other individual. In this important respect, genetic information differs from most other types of information of commercial value that people ``own,'' such as the books they write or even their shopping history. Our genetic information has evolved since the dawn of our species, and indeed since the dawn of life on earth. Needless to say, the notion of ownership of genetic data has been fraught with philosophical difficulties.
 
 One issue that courts have wrestled with is the right to patent a beneficial allele or cell line. Different U.S. states have different rules, some giving the right to the individual, and others demurring \cite{john-moore-who-owns-your-genetic-information}.
