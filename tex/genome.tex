@@ -262,17 +262,71 @@ The genome is therefore currently studied using {\em genetic markers}, which are
 
 The variation in the genome sequence between individuals is extremely low -- around 12 million bases.  Since the ``reference human genome" has been produced by the Human Genome Project, it has become possible to identify the nature and loci of variation in the genome. A specific type of marker, or variant, called Single Nucleotide Polymorphism (SNP), is of particular importance.  A SNP (pronounced {\em snip}), as the name implies, is a variation in a single base-pair.  SNPs accounts for 78\% of variant events (and 26\% of variant bases) in the human genome.  
 
-SNP ``microarrays" allow interrogating many loci at once, which allows genome-scale SNP assays. 
+SNP ``microarrays" allow interrogating many loci at once, which allows genome-scale SNP assays.  SNP locations have been standardized to an extent. Affymetrix and Illumina are the two major vendors of commercial DNA microarrays, each capable of integrating over 500,000 loci on the genome.
+
+In the following survey, the key distinction that must be borne in mind is whether or not SNP data is available. Databases that only contain DNA profiles pose little or no privacy threat from the perspective of our attack, whereas databases of SNP genotypes do. In many cases, the DNA itself is physically stored, which can of course still serve as fodder for the attack if genotyping is subsequently carried out. In practice, this is likely to be much harder -- genotyping large numbers of DNA samples requires a premeditated, expensive operation, whereas already-genotyped DNA may be misused by a single rogue employee or custodian.
+
+
+{\em Note about labeled vs. anonymous data.}
+
+
+\subsection{Law enforcement DNA databases.}
+Law enforcement DNA databases in various countries around the world are currently by far the largest repositories of genetic material.  The 10-13 STR markers required for profiling are typically the only genotypic information extracted from the DNA; however, standard procedure is to store the DNA samples themselves in addition to the profiles.
+
+{\bf United States.} In the United States, statutory authority for a law-enforcement DNA databank comes from the National DNA Identification Act of 1994, which is contained in the Violent Crime and Law Enforcement Act of 1994. The resulting database is called the National DNA Index System (NDIS). CODIS, or Combined DNA Index System, is an umbrella term that refers to this database, as well as software and standards supplied by the FBI to co-ordinate the federal, state-level and local DNA databases.
+
+The federal database stores only profiles, of which there are currently around 5 million. The actual DNA samples are stored by individual states (indefinitely in most states). Let us therefore examine what powers the states have over this data.
+
+The NDIS limits states' powers to some extent, and explicitly lists allowed uses of the stored samples. Among the permitted uses are:
+\begin{itemize}
+\item
+to criminal justice agencies for law enforcement identification purposes
+\item
+if personally identifiable information is removed, for a population statistics database, for identification research and protocol development purposes, or for quality control purposes.
+\end{itemize}
+
+According to Elizabeth Joh, ``once the police lawfully collect DNA for one investigation, the Fourth Amendment permits reanalysis of that sample for a wholly separate investigation." The re-identification algorithm of this paper could conceivably be a permitted use under the first bullet, giving states a source of {\em labeled} genotype data. Joh also notes that ``function creep'' of identification systems is very common, and cites the (originally unintended) function of the social security number as a substitute for a national identity card an example.
+
+The second bullet is more interesting. Seth Axelrad, in his comprehensive survey of state DNA database statutes, notes that 34 states expressly authorize the creation of a population statistics database. One state (Alabama) explicitly allows medical uses, 8 states forbid it, and the rest are silent. Presumably, medical use involves genotyping of the samples; it is therefore possible that some states will interpret the NDIS permissively enough to release to researchers a ``anonymized'' genotype database of the DNA samples in their possession.
+
+{\bf United Kingdom.} 
+The United Kingdom National DNA Database (NDNAD) raises significantly more privacy concerns than the U.S. counterpart, for several reasons:
+\begin{itemize}
+\item Over 5\% of UK population is in the database, compared to under 2\% in U.S.; this is by far the largest such database in \% terms.
+\item Storage of samples is centralized; demographic information is also available
+\item In 2006, then Prime Minister Tony Blair stated he saw no reason not to expand the database to include every citizen
+\item There appears to be poor oversight over analysis labs that get access to the DNA samples. Private labs performing the testing keep the samples around indefinitely.\footnote{citation needed}
+\item The database is already being used for medical research purposes
+\end{itemize}
+
+\subsection{Healthcare biobanks and databanks}
+
+\ \ \ \ {\bf Governmental efforts.} UK, Denmark, Iceland, United States, California, Estonia.
+
+{\bf Private efforts.} Kaiser Permanente, Children's hospital of Philadelphia, BioVU, research projects like Hapmap.
+
+\subsection{Abandoned DNA}
+
+The suitability of abandoned DNA as a source of anonymous genetic material is self-evident, and this type of collection is unique in not requiring the knowledge of the potential victim.  However, there is more to be said.  
+
+Abandoned DNA has been regularly used by law enforcement for identification, i.e, as a source of {\em labeled} DNA.  There is no fourth amendment (or any other) legal protection against the police collecting DNA in this manner \cite{joh, 4th-survey}.  Drink containers such as coffee cups and water bottles appear to be the most common source. Cigarette butts, spit, and trash have also been used, as have stamps and envelopes. 
+
+An esoteric source of DNA described in \cite{leech} is blood from a leech that fed on the target. A patent describes a way to collect skin flakes dislodged when a person walks through a portal, which can then be used to extract DNA \cite{skin-patent}. {\em add more esoteric sources}
+
+Thus, abandoned DNA has a strong potential to yield labeled genetic material, although this is obviously harder, and probably cannot be done surreptitously on a large scale. At any rate, abandoned DNA falls on a wide spectrum in terms of identifiability, ranging from completely anonymous to labeled.  In-between these extremes, one might imagine that DNA collected from a specific location is very likely to come from someone who lives or works nearby, and is thus partially identified.
 
 
 
+\subsection{Personal genetics companies}
 
-{\bf Law enforcement DNA databases.}
-Currently, the largest repositories of genetic material are the law enforcement DNA databases in various countries around the world.  DNA profiling requires only 10-13 STR markers, as mentioned above, and typically this is the only genotypic information extracted from the DNA. However, standard procedure is to store the DNA samples themselves in addition to the profiles.
+\subsection{Other sources}
+individuals making it public
 
-In the United States, statutory authority for a law-enforcement DNA databank comes from the National DNA Identification Act of 1994, which is contained in the Violent Crime and Law Enforcement Act of 1994. The resulting database is called the National DNA Index System (NDIS). CODIS, or Combined DNA Index System, is an umbrella term that refers to this database, as well as software and standards supplied by the FBI to co-ordinate the various state and local DNA databases.
+\subsection{Population groups}
 
-The DNA profiles stored in the national database and index do not constitute a privacy risk from the perspective of our attack.\footnote{Indeed, while many privacy concerns have been raised about the information in these DNA profiles, the fact that these markers come from ``junk DNA" makes these fears largely unfounded.}  However, the actual DNA samples are stored by individual states. 
+\subsection{Summary}
+Perhaps a table. Also, note on iterative re-identification.
+
 
 \section{Background on re-identification}
 \label{reidentification}
