@@ -253,7 +253,26 @@ The underlying reason for the profusion of data appears to be the strong grounds
 \label{genotype-survey}
 We now survey the large-scale databases of genotypes and the availability of these to the attacker. 
 
-{\bf Markers, SNPs and the genome.} 
+{\bf The genome, markers and SNPs.} 
+Let us quickly review the different types of genotype data that are typically extracted from DNA, in order to understand the nature of the various DNA databanks that exist. A detailed discussion of genetics can be found in Section \ref{genetics-background}.
+
+The entire human genome consists of around 3 billion base-pairs in each set of chromosomes, or 6 billion base-pairs overall. Whole genome sequencing technology has not yet been commercialized; there is an X Prize contest for the first team to achieve a price point of \$10,000 per individual.
+
+The genome is therefore currently studied using {\em genetic markers}, which are specific variants at specific positions or {\em loci} on the genome.  There are many types of markers used in different applications; DNA fingerprinting for instance uses Short Tandem Repeats. This process is well-understood, standardized, and cheap. The DNA fingerprinting standard in the United States uses 13 pairs of markers, and the UK standard uses 10.
+
+The variation in the genome sequence between individuals is extremely low -- around 12 million bases.  Since the ``reference human genome" has been produced by the Human Genome Project, it has become possible to identify the nature and loci of variation in the genome. A specific type of marker, or variant, called Single Nucleotide Polymorphism (SNP), is of particular importance.  A SNP (pronounced {\em snip}), as the name implies, is a variation in a single base-pair.  SNPs accounts for 78\% of variant events (and 26\% of variant bases) in the human genome.  
+
+SNP ``microarrays" allow interrogating many loci at once, which allows genome-scale SNP assays. 
+
+
+
+
+{\bf Law enforcement DNA databases.}
+Currently, the largest repositories of genetic material are the law enforcement DNA databases in various countries around the world.  DNA profiling requires only 10-13 STR markers, as mentioned above, and typically this is the only genotypic information extracted from the DNA. However, standard procedure is to store the DNA samples themselves in addition to the profiles.
+
+In the United States, statutory authority for a law-enforcement DNA databank comes from the National DNA Identification Act of 1994, which is contained in the Violent Crime and Law Enforcement Act of 1994. The resulting database is called the National DNA Index System (NDIS). CODIS, or Combined DNA Index System, is an umbrella term that refers to this database, as well as software and standards supplied by the FBI to co-ordinate the various state and local DNA databases.
+
+The DNA profiles stored in the national database and index do not constitute a privacy risk from the perspective of our attack.\footnote{Indeed, while many privacy concerns have been raised about the information in these DNA profiles, the fact that these markers come from ``junk DNA" makes these fears largely unfounded.}  However, the actual DNA samples are stored by individual states. 
 
 \section{Background on re-identification}
 \label{reidentification}
