@@ -29,8 +29,6 @@
 \maketitle
 
 
-
-
 \begin{abstract}
 Given that each of us shares genetic material with our blood relatives, to what extent can one expect to keep one's genetic information private? We consider this question with respect to an attacker equipped with large-scale (albeit incomplete and ``noisy'') information about the blood relationships in a large population group. 
 
@@ -253,7 +251,7 @@ The underlying reason for the profusion of data appears to be the strong grounds
 \label{genotype-survey}
 We now survey the large-scale databases of genotypes and the availability of these to the attacker. 
 
-{\bf The genome, markers and SNPs.} 
+{\bf Markers and SNPs.} 
 Let us quickly review the different types of genotype data that are typically extracted from DNA, in order to understand the nature of the various DNA databanks that exist. A detailed discussion of genetics can be found in Section \ref{genetics-background}.
 
 The entire human genome consists of around 3 billion base-pairs in each set of chromosomes, or 6 billion base-pairs overall. Whole genome sequencing technology has not yet been commercialized; there is an X Prize contest for the first team to achieve a price point of \$10,000 per individual.
@@ -301,9 +299,13 @@ The United Kingdom National DNA Database (NDNAD) raises significantly more priva
 
 \subsection{Healthcare biobanks and databanks}
 
-\ \ \ \ {\bf Governmental efforts.} UK, Denmark, Iceland, United States, California, Estonia.
+\ \ \ \ {\bf Governmental efforts.} Denmark was the first country to establish a national-scale biobank in 1982. Biological samples from all newborns have been collected and stored since that year, and currently number around 1.5 million \cite{denmark-newborn}. More recently, plans have been announced to establish a population-wide biobank \cite{denmark-biobank}. It is not clear if genotyping will be carried out routinely on the stored samples.
+
+UK, United States, California, Estonia.
 
 {\bf Private efforts.} Kaiser Permanente, Children's hospital of Philadelphia, BioVU, research projects like Hapmap.
+
+{\bf Summary.} We are currently witnessing an explosive growth of Genome Wide Association Studies (GWAS) that determine links between genetic variants and diseases. Therefore, the usefulness of genotyping for healthcare has been increasing, leading to improved public perception of DNA databanks. Such large-scale genetic databases in turn enable GWAS with higher specificity and resolution, and also exert downward pressure on genotyping costs.  Due to this virtuous cycle, it appears inevitable that the majority of the population of most developed countries will soon have their genotypes in the healthcare system.
 
 \subsection{Abandoned DNA}
 
@@ -319,10 +321,15 @@ Thus, abandoned DNA has a strong potential to yield labeled genetic material, al
 
 \subsection{Personal genetics companies}
 
-\subsection{Other sources}
-individuals making it public
+[main stuff goes here]
+
+%\subsection{Other sources}
+J. Craig Venter famously made his entire genome public. The Personal Genome Project solicits volunteers to follow his lead in the interest of science \cite{personal-genomes}. It is too early to tell how widespread the trend will be, but at least one author exhorts the public to make their genotype data public, stating that a concern for genetic privacy ``betrays a fundamental delusion of self-importance'' \cite{delusion}.
+
+The likely evolution of the personal genetics space is that as costs of genotyping and data storage continue to fall, numerous web-based applications will spring up to provide services based on genetic information, resulting in a convergence with online social networking. The trend has already begun, with two dubious websites claiming to provide dating services by matching individuals based on their genes \cite{genetic-dating-scam}.
 
 \subsection{Population groups}
+(Iceland goes here)
 
 \subsection{Summary}
 Perhaps a table. Also, note on iterative re-identification.
