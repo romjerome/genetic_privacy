@@ -200,8 +200,10 @@ def pdfHist(sampleThunk, bucketsize, numsamples, property=totalLength):
 	return utils.getHist(int(x  / bucketsize) for x in samples)
 
 
-def makePlot(sampleThunk, bucketsize=0.02, numsamples=10000, property=totalLength):
+def makePlot(sampleThunk, bucketsize=0.02, numsamples=10000, property=totalLength, ignorezero=True):
 	hist = pdfHist(sampleThunk, bucketsize, numsamples, property)
+	if ignorezero:
+		del hist[0]
 
 	xs = range(int(max(hist.keys())+1))
 	ys = [float(hist.get(x, 0.0)) / numsamples / bucketsize for x in xs]

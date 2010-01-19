@@ -1,3 +1,5 @@
+import pylab
+
 for chr in xrange(1,24): 
 	pylab.scatter([float(l[-1]) for l in lines if int(l[0]) == chr], [float(l[-2]) for l in lines if int(l[0]) == chr])
 	time.sleep(2)
