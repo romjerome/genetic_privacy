@@ -140,9 +140,22 @@ a property is a function with two behaviors
  - if called with one arg, it aggregates over the items of that arg 
 """
 
-maxLength = lambda *args: max(args[0]) if len(args) == 1 else max(args)
+maxLength = lambda *args: max(args[0] + [0]) if len(args) == 1 else max(args)
 totalLength = lambda *args: sum(args[0]) if len(args) == 1 else sum(args)
-segmentCount = lambda *args: sum(args[0]) if len(args) == 1 else len(args)
+segmentCount = lambda *args: len(args[0]) if len(args) == 1 else sum(args)
+countAndLength = \
+		lambda *args:   (len(args[0]), sum(args[0])) \
+							if len(args) == 1\
+						else (len(args), sum(arg[1] for arg in args))
+
+#def countAndLength(*args):
+#	if len(args) == 1: # leaf; values are lengths
+#		n = len(args[0])
+#		l = sum(args[0])
+#else: # internal node; values are pairs
+#		n = len(args)
+#		l = sum([arg[1] for arg in args])
+#	return (n, l)
 
 def halfcousinProperty(chrnum, lnumgen, rnumgen, property):
 	"""	expected characteristic of shared material in half-cousins with a single common

@@ -69,7 +69,7 @@ def individualScores(victim, relative, relation, sample):
 	maxscore = max(scores.itervalues())
 	return dict(((k, val / maxscore) for k, val in scores.iteritems()))
 
-class SiblingException(Exception):
+class SiblingError(Exception):
 	pass
 
 def aggregateScores(node):
@@ -82,7 +82,7 @@ def aggregateScores(node):
 			continue
 		h1, h2 = relation.keys()[0]
 		if min(map(sum, relation.keys())) < 2:
-			raise SiblingException
+			raise SiblingError
 		ibdsample = ibdsamples[relative] = \
 				sampleFromPdfVector(cached.convolvedDensity(relation))
 		if ibdsample == 0:
