@@ -35,8 +35,11 @@ def makePairsRandom(nodes):
 	return zip(utils.permute(males)[:numpairs], utils.permute(females)[:numpairs])
 
 def makePairs1D(nodes, meandist=100, matingfraction=0.9):
+	"""generate mating pairs from nodes
+	affinity for nearby nodes (topology is a ring) with mean dist meandist
+	only matingfraction of nodes mate"""
 	loc2node = ((node.location, node) for node in nodes) | pDict
-	assert loc2node.keys() == range(len(nodes))
+	assert sorted(loc2node.keys()) == range(len(nodes))
 	assert 2 * min(map(len, splitSexes(nodes))) >= len(nodes) * matingfraction
 	mated = set()
 	while len(mated) < matingfraction * len(nodes):
