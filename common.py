@@ -46,7 +46,7 @@ def sanityCheck(node):
 	for child in node.children:
 		assert node in child.knownparents
 
-@utils.cached
+@utils.cached()
 def relationMap(node, height=8, depth=8, maxdist=13):
 	"""FIXME: debug this thoroughly"""
 	front = set([node])
