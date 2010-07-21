@@ -125,7 +125,8 @@ def analyzeScores(node, scores, ibdsamples, publicnodes):
 	groupreps = filter(lambda r: nonmatchScore(node, r, publicnodes, scores, ibdsamples) > 0.1, groupreps)
 	result.num_groups_unfiltered = len(siblinggroups)
 	result.num_groups = len(groupreps)
-	result.distances = [smallestDistance(node, rep) for rep in groupreps]
+	#FIXME: inefficient
+	#result.distances = [smallestDistance(node, rep) for rep in groupreps]
 	try:
 		result.generations = map(lambda n:n.generation, groupreps)
 	except AttributeError:
@@ -171,3 +172,9 @@ def main():
 	#_opts.shelf = shelve.open(_opts.outfile, protocol=cPickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__": main()
+
+#spline stuff
+#d=cached.convolvedDensity({(3,3):2})
+#spl=interpolate.splrep(range(len(d)),d)
+#e=[interpolate.splev(x,spl) for x in range(len(d))]
+#

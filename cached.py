@@ -38,7 +38,7 @@ def convolvedDensity(relation_or_distseq):
 	if hasattr(relation_or_distseq, "items"):
 		distseq = 	relation_or_distseq.iteritems() |\
 					Map(lambda ((h1, h2), val): (h1 + h2 for spam in xrange(val))) |\
-					pFlatten | pSort() | Sink(tuple)
+					pFlatten | pSort | Sink(tuple)
 		if distseq in cache:
 			return cache[distseq]
 		subseqs = [tuple([d for d in distseq if d == i]) for i in set(distseq)]

@@ -20,7 +20,7 @@ class Node(common.Node):
 	def __init__(self, dad, mom, sex=None):
 		self.dad = dad
 		self.mom = mom
-		self.sex = random.choice((MALE, FEMALE)) if sex is None else sex
+		self.sex = sex or random.choice((MALE, FEMALE))
 		self.children = set()
 		self.spouses = set()
 
