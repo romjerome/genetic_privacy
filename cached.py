@@ -17,42 +17,41 @@ import common
 VECTORLEN = 20000
 
 def truncateNonzero(vector):
-	"""hack to determine nonzero range of the array"""
-	trunclen = len(vector) - numpy.argmax(numpy.greater(vector[::-1], 1e-8))
-	assert trunclen > 0
-	return vector[:trunclen]
+    """hack to determine nonzero range of the array"""
+    trunclen = len(vector) - numpy.argmax(numpy.greater(vector[::-1], 1e-8))
+    assert trunclen > 0
+    return vector[:trunclen]
 
 pdfvectors = {}
 for d in xrange(2, 14):
-	a = array.array('f')
-	a.fromfile(
-		open(common.data_dir + '/distance=%d,xmax=20,numbuckets=20000.pdfvector' % d),
-		VECTORLEN)
-	pdfvectors[d] = truncateNonzero(numpy.array(a, numpy.float32))
+    a = array.array('f')
+    a.fromfile(
+            open(common.data_dir + '/distance=%d,xmax=20,numbuckets=20000.pdfvector' % d),
+            VECTORLEN)
+    pdfvectors[d] = truncateNonzero(numpy.array(a, numpy.float32))
 
 def convolveSequence(vectors):
-	return reduce(lambda u, v: truncateNonzero(signal.fftconvolve(u, v)), vectors)
+    return reduce(lambda u, v: truncateNonzero(signal.fftconvolve(u, v)), vectors)
 
 def convolvedDensity(relation_or_distseq):
-	cache = utils.getattrdefault(convolvedDensity, 'cache', dict)
-	if hasattr(relation_or_distseq, "items"):
-		distseq = 	relation_or_distseq.iteritems() |\
-					Map(lambda ((h1, h2), val): (h1 + h2 for spam in xrange(val))) |\
-					pFlatten | pSort | Sink(tuple)
-		if distseq in cache:
-			return cache[distseq]
-		subseqs = [tuple([d for d in distseq if d == i]) for i in set(distseq)]
-	else:
-		distseq = relation_or_distseq
-		assert len(set(distseq)) == 1
-		if distseq in cache:
-			return cache[distseq]
-		if len(distseq) == 1:
-			return pdfvectors[distseq[0]]
-		subseqs = [distseq[:len(distseq)/2], distseq[len(distseq)/2:]]
-	vectors = map(convolvedDensity, subseqs)
-	if distseq not in cache:
-		sys.stderr.write('cache miss ' + str(distseq) + '\n')
-		cache[distseq] = convolveSequence(vectors)
-	return cache[distseq]
-
+    cache = utils.getattrdefault(convolvedDensity, 'cache', dict)
+    if hasattr(relation_or_distseq, "items"):
+        distseq =       relation_or_distseq.iteritems() |\
+                                Map(lambda ((h1, h2), val): (h1 + h2 for spam in xrange(val))) |\
+                                pFlatten | pSort | Sink(tuple)
+        if distseq in cache:
+            return cache[distseq]
+        subseqs = [tuple([d for d in distseq if d == i]) for i in set(distseq)]
+    else:
+        distseq = relation_or_distseq
+        assert len(set(distseq)) == 1
+        if distseq in cache:
+            return cache[distseq]
+        if len(distseq) == 1:
+            return pdfvectors[distseq[0]]
+        subseqs = [distseq[:len(distseq)/2], distseq[len(distseq)/2:]]
+    vectors = map(convolvedDensity, subseqs)
+    if distseq not in cache:
+        sys.stderr.write('cache miss ' + str(distseq) + '\n')
+        cache[distseq] = convolveSequence(vectors)
+    return cache[distseq]

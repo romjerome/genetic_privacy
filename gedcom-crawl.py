@@ -30,55 +30,55 @@ seenids = crawledids | set(crawlqueue)
 origcrawlcount = len(crawledids)
 
 def parseIds(data):
-	"""grab the family id's from a piece of gedcom data"""
-	for line in data.split('\n'):
-		match = re.search('FAM[CS].*@F(.*)@', line)
-		if match:
-			yield match.groups()[0].strip()
+    """grab the family id's from a piece of gedcom data"""
+    for line in data.split('\n'):
+        match = re.search('FAM[CS].*@F(.*)@', line)
+        if match:
+            yield match.groups()[0].strip()
 
 def doStep(id=None):
-	"""if id is None, then an id will be pulled out of crawlqueue"""
-	global crawlqueue, seenids
-	if id is None:
-		id, crawlqueue = crawlqueue[0], crawlqueue[1:]
-	assert id not in crawledids
-	try:
-		data = urllib2.urlopen(gedcom_url_prefix % id).read()
-	except (urllib2.URLError, socket.timeout): # timeout
-		return
+    """if id is None, then an id will be pulled out of crawlqueue"""
+    global crawlqueue, seenids
+    if id is None:
+        id, crawlqueue = crawlqueue[0], crawlqueue[1:]
+    assert id not in crawledids
+    try:
+        data = urllib2.urlopen(gedcom_url_prefix % id).read()
+    except (urllib2.URLError, socket.timeout): # timeout
+        return
 
-	crawledids.add(id)
-	with open(data_dir + 'crawledids', 'a') as out:
-		out.write(id + '\n')
+    crawledids.add(id)
+    with open(data_dir + 'crawledids', 'a') as out:
+        out.write(id + '\n')
 
-	if data.startswith('No records found'):
-		return
+    if data.startswith('No records found'):
+        return
 
-	with open(data_dir + id + '.family', 'w') as out:
-		out.write(data)
+    with open(data_dir + id + '.family', 'w') as out:
+        out.write(data)
 
-	newids = set(parseIds(data)) - seenids
-	
-	crawlqueue.extend(newids)
-	with open(data_dir + 'crawlqueue', 'a') as out:
-		for newid in newids:
-			out.write(newid + '\n')
-	
-	seenids |= newids
-	
-	sys.stderr.write("%d crawled (%d new), %d in queue     \r" % \
-			(len(crawledids), len(crawledids) - origcrawlcount, len(crawlqueue)))
+    newids = set(parseIds(data)) - seenids
 
-	time.sleep(_opts.waittime)
+    crawlqueue.extend(newids)
+    with open(data_dir + 'crawlqueue', 'a') as out:
+        for newid in newids:
+            out.write(newid + '\n')
+
+    seenids |= newids
+
+    sys.stderr.write("%d crawled (%d new), %d in queue     \r" % \
+                    (len(crawledids), len(crawledids) - origcrawlcount, len(crawlqueue)))
+
+    time.sleep(_opts.waittime)
 
 def main():
-	global _opts
-	_opts, args = utils.EasyParser("waittime=1.0:").parse_args()
-	while len(crawlqueue) > 0 and not os.path.exists('STOP'):
-		doStep()
-	print
+    global _opts
+    _opts, args = utils.EasyParser("waittime=1.0:").parse_args()
+    while len(crawlqueue) > 0 and not os.path.exists('STOP'):
+        doStep()
+    print
 
 
 if __name__ == "__main__": main()
 if __name__ == "__main__":
-	main()
+    main()

@@ -24,4 +24,3 @@ chart.set_codes(hist.keys()|pSort()|pUpper|pList)
 chart.set_colours(['fafafa','fafafa','ff0000'])
 chart.add_data(hist.keys()|pSort()|Map(hist.get)|Map(lambda x:x**((1-x)**2))|pList)
 print chart.get_url()
-
