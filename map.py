@@ -5,7 +5,7 @@ import sys, re, operator, math, string, os.path, hashlib, random, itertools, pyg
 from functools import *
 from itertools import *
 
-import status, utils, graphing
+import status, utils #, graphing
 from pype import *
 
 statecodes=open('statecodes')|pLower|pSplit('\t')|Map(partial(map,string.strip))|pDict
