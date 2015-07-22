@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import pickle
 import time
-import datetime
 
 from pprint import pprint
 
@@ -9,11 +8,14 @@ import requests
 
 from common import api_key, api_secret
 
-# base_url = "http://www.geni.com/api/surname-{}/profiles"
-profile_url = "https://www.geni.com/api/profile-{}"
-immediate_family_url = "https://www.geni.com/api/profile-{}/immediate-family"
-login_url = "https://www.geni.com/platform/oauth/request_token"
-access_token = None
+# Get a new access token 5 min before we NEED to.
+LOGIN_BUFFER_TIME = 5 * 60
+PROFILE_URL = "https://www.geni.com/api/profile-{}" 
+IMMEDIATE_FAMILY_URL = "https://www.geni.com/api/profile-{}/immediate-family"
+LOGIN_URL = "https://www.geni.com/platform/oauth/request_token"
+
+request_parameters = {"access_token": None}
+token_expire_time = None
 
 
 def save_responses(responses):
@@ -21,16 +23,16 @@ def save_responses(responses):
         pickle.dump(responses, responses_file, pickle.HIGHEST_PROTOCOL)
 
 def app_login():
-    request_parameters = {"client_id": api_key,
+    login_parameters = {"client_id": api_key,
                           "client_secret": api_secret,
                           "grant_type": "client_credentials"}
-    r = requests.get(login_url, params = request_parameters)
+    r = requests.get(LOGIN_URL, params = login_parameters)
     json = r.json()
-    return json["access_token"]
+    request_parameters["access_token"] = json["access_token"]
+    token_expire_time = time.time() + json["expires_in"] - LOGIN_BUFFER_TIME
     
 
 responses = []
-access_token = app_login()
 last_time = time.time()
 i = 1
 while True:
@@ -38,16 +40,20 @@ while True:
     print(now - last_time)
     last_time = now
 
+    if token_expire_time < time.time():
+        app_login()
+        time.sleep(0.25)
+
     person_response = {"id": i,
                        "data": None,
                        "immediate_family": None}
-    r = requests.get(profile_url.format(i), params = request_parameters)
+    r = requests.get(PROFILE_URL.format(i), params = request_parameters)
     print(r.url)
     person_response["data"] = r.json()
     if "results" in person_response["data"]:
         save_responses(responses)
         break
-    r = requests.get(immediate_family_url.format(i),
+    r = requests.get(IMMEDIATE_FAMILY_URL.format(i),
                      params = request_parameters)
     print(r.url)
     person_response["immediate_family"] = r.json()
@@ -55,9 +61,9 @@ while True:
     responses.append(person_response)
     if i % 1000 is 0 and i > 0:
         save_responses(responses)
-    i+=1
-    # Sleep as a cheap form of rate limiting.
-    time.sleep(0.8)
+    i += 1
+    # Sleep as a hacky form of rate limiting.
+    time.sleep(0.7)
 
 
         
