@@ -14,6 +14,8 @@ RECOMBINATION_RATE = 1/1000000 * 1/100
 # TODO: fill in
 HUMAN_AUTOSOME_LENGTHS = [249250621, 243199373, 198022430]
 
+#TODO: NEED TO GENERATE LOCATIONS FOR SNPs.
+
 class GenomeGenerator():
     def __init__(self, autosome_count = 22, densities = DEFAULT_DENSITIES):
         # For each autosome, contains a lists of allele pairs for each SNP
@@ -57,12 +59,12 @@ def _pick_allele(alleles, prob):
     return alleles[1]
 
 def recombination(autosome_pair, autosome_num):
-    # TODO: implement recombination.
     # Model the number of recombination locations as n independent coin flips.
     num_recombination = np.random.binomial(HUMAN_AUTOSOME_LENGTHS[autosome_num],
                                            RECOMBINATION_RATE)
     locations = np.random.randint(0, HUMAN_AUTOSOME_LENGTHS[autosome_num],
                                   num_recombination)
+    # TODO: Not finished.
     return autosome_pair
 
 class Genome():
