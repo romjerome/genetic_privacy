@@ -63,7 +63,7 @@ class Population:
         generator = GenomeGenerator()
         # I don't use recursion because python doesn't do well with
         # deep recursion
-        queue = deque(self._generations[0])
+        queue = deque(self._generations[0].members)
         while len(queue) > 0:
             person = queue.popleft()
             if person.genome is not None:

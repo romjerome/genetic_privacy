@@ -19,7 +19,7 @@ HUMAN_AUTOSOME_LENGTHS = [249250621, 243199373, 198022430]
 #TODO: NEED TO GENERATE LOCATIONS FOR SNPs.
 
 class GenomeGenerator():
-    def __init__(self, autosome_count = 22, snp_count = SNP_COUNT):
+    def __init__(self, autosome_count = 1, snp_count = SNP_COUNT):
         # For each autosome, contains a lists of allele pairs for each SNP
         self._alleles = []
         # For each autosome, contains a list of the loci for SNPs
