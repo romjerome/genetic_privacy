@@ -1,6 +1,10 @@
 from enum import Enum
 from math import floor
 from random import shuffle, choice
+from collections import deque
+from itertools import chain
+
+from genome import GenomeGenerator
 
 # From table F1 https://www.census.gov/hhes/families/data/cps2012F.html
 # These numbers are not 100% accurate because each count is the count of
@@ -15,19 +19,19 @@ class Sex(Enum):
 SEXES = list(Sex)
 
 class Node:
-    def __init__(self, dad = None, mom = None, sex = None):
-        self.mom = mom
-        self.dad = dad
+    def __init__(self, father = None, mother = None, sex = None):
+        self.mother = mother
+        self.father = father
         if isinstance(sex, Sex):
             self.sex = sex
         else:
             self.sex = choice(SEXES)
         self.children = set()
-        if mom is not None:
-            mom.children.add(self)
-        if dad is not None:
-            dad.children.add(self)
-        
+        if mother is not None:
+            mother.children.add(self)
+        if father is not None:
+            father.children.add(self)
+        self.genome = None
 
 class Generation:
     def __init__(self, members = None):
@@ -55,6 +59,46 @@ class Population:
         if initial_generation is not None:
             self._generations.append(initial_generation)
 
+    def generate_genomes(self):
+        generator = GenomeGenerator()
+        # I don't use recursion because python doesn't do well with
+        # deep recursion
+        queue = deque(self._generations[0])
+        while len(queue) > 0:
+            person = queue.popleft()
+            if person.genome is not None:
+                continue
+            # An optimization would be to only add children if person is female
+            # This way people only go into the queue once.
+            queue.extend(person.children)
+            mother = person.mother
+            father = person.father
+            if mother is None:
+                person.genome = generator.generate_genome()
+                continue
+            person.genome = mother.genome.mate(father.genome)
+            
+            
+
+    def clean_genomes(self, generations = None):
+        """
+        Remove genomes from the first n given number of generations.
+        If generations is not specified, clears all but the last
+        generations genomes.
+        """
+        if generations is None:
+            generations = self.num_generations - 1
+        for person in chain.from_iterable(self._generations[:generations]):
+            person.genome = None
+
+
+    @property
+    def num_generations(self):
+        """
+        Return the number of generations
+        """
+        return len(self._generations)
+
     def new_generation(self, size = None):
         """
         Generates a new generation of individuals from the previous
@@ -75,7 +119,7 @@ class Population:
             # We go backwards through the list of women, so we pop
             # them off the end of the list.
             for i in range(len(women) - 1, -1, -1):
-                if man.mom is None or women[i].mom != man.mom:
+                if man.mother is None or women[i].mother != man.mother:
                     pairs.append((man, women.pop(i)))
                     break
         min_children = floor(size / len(pairs))
