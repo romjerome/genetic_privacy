@@ -2,7 +2,7 @@ from enum import Enum
 from math import floor
 from random import shuffle, choice
 from collections import deque
-from itertools import chain
+from itertools import chain, tee, product, count
 
 from genome import GenomeGenerator
 
@@ -56,8 +56,19 @@ def generate_population(size):
 class Population:
     def __init__(self, initial_generation = None):
         self._generations = []
+        self._kinship_coefficients = None
         if initial_generation is not None:
             self._generations.append(initial_generation)
+
+    @property
+    def kinship_coefficients(self):
+        if self._kinship_coefficients is None:
+            self._calculate_kinship()
+        return self._kinship_coefficients
+
+    def members(self):
+        return chain.from_iterable(generation.members for
+                                   generation in self._generations)
 
     def generate_genomes(self):
         generator = GenomeGenerator()
@@ -88,7 +99,8 @@ class Population:
         """
         if generations is None:
             generations = self.num_generations - 1
-        for person in chain.from_iterable(self._generations[:generations]):
+        for person in chain.from_iterable(generation.members for generation
+                                          in self._generations[:generations]):
             person.genome = None
 
 
@@ -138,7 +150,23 @@ class Population:
         SIZE_ERROR = "Generation generated is not correct size. Expected {}, got {}."
         assert len(new_nodes) == size, SIZE_ERROR.format(size, len(new_nodes))
         self._generations.append(Generation(new_nodes))
-        
-        
+
+    def _calculate_kinship(self):
+        # Calculated based on
+        # http://www.stat.nus.edu.sg/~stachenz/ST5217Notes4.pdf
+        kinship = dict()
+        # We need to be sure we recursively look up kinship coeff on
+        # the higher numbered person, as given in the pdf. Therefore
+        # we need a number for each person.
+        numbering = dict(zip(self.members(), count()))
+        for person_1, person_2 in product(*tee(self.members())):
+            if frozenset((person_1, person_2)) in kinship:
+                continue
+            if person_1 is person_2:
+                if person_1.mother is None:
+                    kinship[frozenset((person_1, person_1))] = 1/2
+                    continue
+                # TODO: Finish this function.
+                # coeff = 1/2 + 1/2 * kinship[
 
     
