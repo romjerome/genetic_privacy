@@ -79,6 +79,10 @@ class Population:
         return self._kinship_coefficients
 
     @property
+    def generations(self):
+        return list(self._generations)
+
+    @property
     def members(self):
         return chain.from_iterable(generation.members for
                                    generation in self._generations)
