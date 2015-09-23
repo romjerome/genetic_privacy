@@ -28,8 +28,10 @@ class Node:
             self.sex = choice(SEXES)
         self.children = set()
         if mother is not None:
+            assert mother.sex == Sex.Female
             mother.children.add(self)
         if father is not None:
+            assert father.sex == Sex.Male
             father.children.add(self)
         self.genome = None
 
@@ -66,9 +68,14 @@ class Population:
             self._calculate_kinship()
         return self._kinship_coefficients
 
+    @property
     def members(self):
         return chain.from_iterable(generation.members for
                                    generation in self._generations)
+
+    @property
+    def size(self):
+        return sum(generation.size for generation in self._generations)
 
     def generate_genomes(self):
         generator = GenomeGenerator()
@@ -158,17 +165,17 @@ class Population:
         # We need to be sure we recursively look up kinship coeff on
         # the higher numbered person, as given in the pdf. Therefore
         # we need a number for each person.
-        numbering = dict(zip(self.members(), count()))
-        for person_1, person_2 in product(*tee(self.members())):
+        numbering = dict(zip(self.members, count()))
+        for person_1, person_2 in product(*tee(self.members)):
             if numbering[person_1] < numbering[person_2]:
                 continue
             key = frozenset((person_1, person_2))
             if person_1 is person_2:
                 if person_1.mother is None:
-                    kinship[key] = 1/2
+                    kinship[key] = 0.5
                     continue
                 parents = frozenset((person_1.mother, person_1.father))
-                coeff = 1/2 + (1/2) * kinship[parents]
+                coeff = 0.5 + (0.5) * kinship[parents]
                 kinship[key] = coeff
                 continue
             if person_1.mother is None:
@@ -177,7 +184,7 @@ class Population:
             
             coeff_1 = kinship[frozenset((person_1.mother, person_2))]
             coeff_2 = kinship[frozenset((person_1.father, person_2))]
-            kinship[key] = 1/2 * (coeff_1 + coeff_2)
+            kinship[key] = 0.5 * (coeff_1 + coeff_2)
             
         self._kinship_coefficients = kinship
     
