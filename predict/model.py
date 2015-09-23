@@ -160,13 +160,21 @@ class Population:
         # we need a number for each person.
         numbering = dict(zip(self.members(), count()))
         for person_1, person_2 in product(*tee(self.members())):
-            if frozenset((person_1, person_2)) in kinship:
+            if numbering[person_1] < numbering[person_2]:
                 continue
+            key = frozenset((person_1, person_2))
             if person_1 is person_2:
                 if person_1.mother is None:
-                    kinship[frozenset((person_1, person_1))] = 1/2
+                    kinship[key] = 1/2
                     continue
-                # TODO: Finish this function.
-                # coeff = 1/2 + 1/2 * kinship[
-
+                parents = frozenset((person_1.mother, person_1.father))
+                coeff = 1/2 + (1/2) * kinship[parents]
+                kinship[key] = coeff
+                continue
+            
+            coeff_1 = kinship[frozenset((person_1.mother, person_2))]
+            coeff_2 = kinship[frozenset((person_1.father, person_2))]
+            kinship[key] = 1/2 * (coeff_1 + coeff_2)
+            
+        self._kinship_coefficients = kinship
     
