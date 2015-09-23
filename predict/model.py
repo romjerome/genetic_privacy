@@ -37,7 +37,7 @@ class Node:
 
 class Generation:
     def __init__(self, members = None):
-        self.members = set(members)
+        self.members = list(members)
 
     @property
     def men(self):
@@ -52,7 +52,7 @@ class Generation:
         return len(self.members)
 
 def generate_population(size):
-    initial_generation = Generation(set(Node() for _ in range(size)))
+    initial_generation = Generation(Node() for _ in range(size))
     return Population(initial_generation)
 
 class Population:
