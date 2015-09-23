@@ -171,6 +171,9 @@ class Population:
                 coeff = 1/2 + (1/2) * kinship[parents]
                 kinship[key] = coeff
                 continue
+            if person_1.mother is None:
+                kinship[key] = 0
+                continue
             
             coeff_1 = kinship[frozenset((person_1.mother, person_2))]
             coeff_2 = kinship[frozenset((person_1.father, person_2))]
