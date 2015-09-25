@@ -1,4 +1,5 @@
 from random import sample
+from itertools import chain
 import pdb
 
 import numpy as np
@@ -18,8 +19,8 @@ class SimpleAdversary():
         target_vector = np.array([kinship[target, person] for person
                                   in self._individuals])
         kinship_error = dict()
-        potentials = (generation.members for generation
-                      in self._population.generations[-self._generations:])
+        potentials = chain.from_iterable(generation.members for generation
+                                         in self._population.generations[-self._generations:])
         for potential in potentials:
             potential_vector = np.array([kinship[potential, person] for person
                                          in self._individuals])
