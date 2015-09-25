@@ -23,6 +23,6 @@ for i, generation in enumerate(population._generations):
 
 
 print("Calculating kinship coefficients")
-# tr = tracker.SummaryTracker()
+tr = tracker.SummaryTracker()
 kinship = population.kinship_coefficients
-# tr.print_diff()
+tr.print_diff()
