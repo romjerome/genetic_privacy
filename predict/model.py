@@ -2,7 +2,7 @@ from enum import Enum
 from math import floor
 from random import shuffle, choice
 from collections import deque
-from itertools import chain, tee, product, count
+from itertools import chain, product, combinations_with_replacement
 
 from genome import GenomeGenerator
 from symmetric_dict import SymmetricDict
@@ -75,7 +75,7 @@ class Population:
     @property
     def kinship_coefficients(self):
         if self._kinship_coefficients is None:
-            self._calculate_kinship()
+            self._kinship_coefficients = self._calculate_kinship()
         return self._kinship_coefficients
 
     @property
@@ -172,17 +172,45 @@ class Population:
         assert len(new_nodes) == size, SIZE_ERROR.format(size, len(new_nodes))
         self._generations.append(Generation(new_nodes))
 
-    def _calculate_kinship(self):
+    def _symmetric_members(self):
+        """
+        Generator that yields 2 item tuples that contain members of
+        the popluation. Generates all pairs of members, where members
+        are visited in the first entry of the tuple first.
+        TODO: Can this be replaced by itertools.combinations_with_replacement?
+        """
+        members = list(self.members)
+        return ((members[y], members[x])
+                for x in range(len(members))
+                for y in range(x, len(members)))
+
+    def _clean_kinship(self, kinship,  generation):
+        """
+        Remove entries from the kinship dictionary for members of
+        the given generation.
+        """
+        # Delete within the generation as a special case to avoid
+        # (x,y) (y, x) repeats you get with products.
+        current_members = self._generations[generation].members
+        for p_1, p_2 in combinations_with_replacement(current_members, 2):
+            del kinship[p_1, p_2]
+        later_gen = chain.from_iterable(gen.members for gen
+                                        in self._generations[generation + 1:])
+        for p_1, p_2 in product(current_members, later_gen):
+            del kinship[p_1, p_2]
+
+    def _calculate_kinship(self, only_keep = 3):
         # Calculated based on
         # http://www.stat.nus.edu.sg/~stachenz/ST5217Notes4.pdf
         kinship = SymmetricDict()
         # We need to be sure we recursively look up kinship coeff on
         # the higher numbered person, as given in the pdf. Therefore
         # we need a number for each person.
-        numbering = dict(zip(self.members, count()))
-        for person_1, person_2 in product(*tee(self.members)):
-            if numbering[person_1] < numbering[person_2]:
-                continue
+        generation_dict = {member: i for i, generation
+                           in enumerate(self.generations)
+                           for member in generation.members}
+        last_cleaned = -1
+        for person_1, person_2 in self._symmetric_members():
             key = (person_1, person_2)
             if person_1 is person_2:
                 if person_1.mother is None:
@@ -191,7 +219,17 @@ class Population:
                 parents = (person_1.mother, person_1.father)
                 coeff = 0.5 + (0.5) * kinship[parents]
                 kinship[key] = coeff
+
+                # This conditional needs to be here because we can
+                # only start on a new generation when person_2 is
+                # incremented, which first happens when
+                # person_1 == person_2
+                generation = generation_dict[person_2]
+                if generation - only_keep > last_cleaned:
+                    self._clean_kinship(kinship, last_cleaned + 1)
+                    last_cleaned += 1
                 continue
+            
             if person_1.mother is None:
                 kinship[key] = 0
                 continue
@@ -199,6 +237,4 @@ class Population:
             coeff_1 = kinship[(person_1.mother, person_2)]
             coeff_2 = kinship[(person_1.father, person_2)]
             kinship[key] = 0.5 * (coeff_1 + coeff_2)
-            
-        self._kinship_coefficients = kinship
-    
+        return kinship
