@@ -7,6 +7,7 @@ from symmetric_dict import SymmetricDict
 from genome import GenomeGenerator
 from node import Node
 from generation import Generation
+from island_model import IslandTree
 
 class Population:
     def __init__(self, initial_generation = None):
@@ -182,55 +183,20 @@ class Population:
             kinship[key] = 0.5 * (coeff_1 + coeff_2)
         return kinship
 
-class IslandNode():
-    # Node class may be overkill
-    def __init__(self, members, switch_probability):        
-        self._parent = None
-        self._switch_probability = switch_probability
-        self._members = frozenset(members)
-        for node in members:
-            node._parent = self            
-
-    @property
-    def members(self):
-        return self._members
-
-    @property
-    def switch_probability(self):
-        return self._switch_probability
-
-
-class IslandTree():
-    """
-    Class to encapsulate switching probabilities in Hierarchical
-    island tree model.
-    """
-    def __init__(self, root_node):
-        self._root = root_node
-        self._leaves = []
-        
-        nodes = []
-        nodes.append(root_node)
-        while len(nodes.append) > 0:
-            current_node = nodes.pop()
-            children = current_node.members
-            if len(children) == 0:
-                self._leaves.append(current_node)
-            else:
-                nodes.extend(children)
-
-    @property
-    def root(self):
-        return self._root
-
-    @property
-    def leaves(self):
-        return self._leaves
-    
 
 class HierarchicalIslandPopulation(Population):
     def __init__(self, island_tree, *args, **kwargs):
         super(Population, self).__init__(*args, **kwargs)
+        self._island_tree = island_tree
+        # Assume existing members of the tree are a part of the founders
+        if len(self._generations) == 0:
+            self._generations.append(island_tree.individuals)
+        else:
+            self._generations[0].extend(island_tree.individuals)
 
     def new_generation(self, size = None):
         pass
+
+    @property
+    def island_tree(self):
+        return self._island_tree
