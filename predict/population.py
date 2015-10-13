@@ -1,6 +1,6 @@
 from math import floor
-from random import shuffle
-from collections import deque
+from random import shuffle, uniform, choice
+from collections import deque, defaultdict
 from itertools import chain, product, combinations_with_replacement
 
 from symmetric_dict import SymmetricDict
@@ -8,6 +8,7 @@ from genome import GenomeGenerator
 from node import Node
 from generation import Generation
 from island_model import IslandTree
+from sex import Sex
 
 class Population:
     def __init__(self, initial_generation = None):
@@ -194,8 +195,77 @@ class HierarchicalIslandPopulation(Population):
         else:
             self._generations[0].extend(island_tree.individuals)
 
+    def _pick_island(self, individual, ignore_islands = None):
+        # TODO: The probabilities for each pairwise transition can be
+        # precomputed. This may be worth doing.
+        if ignore_islands is None:
+            ignore_islands = set()
+        island = self._island_tree.get_island(individual)
+        # Traverse upward
+        while uniform(0, 1) < island.switch_probability:
+            island = island.parent
+            if island.parent is None:
+                break
+        # Now drill down into final island.
+        while not island.is_leaf:
+            island = choice(list(island.islands - ignore_islands))
+        return island
+
+    def _island_members(self, sex):
+        members = defaultdict(set)
+        for leaf in self._island_tree.leaves:
+            members[leaf] |= filter(lambda m: m.sex is sex, leaf.individuals)
+            
+
     def new_generation(self, size = None):
-        pass
+        # TODO: complete this method.
+        """
+        Generates a new generation of individuals from the previous
+        generation.  If size is not passed, the new generation will be
+        the same size as the previous generation.
+        """
+        if size is None:
+            size = self._generations[-1].size
+        previous_generation = self._generations[-1]
+        new_nodes = []
+        men = list(previous_generation.men)
+        shuffle(men)
+        num_women = len(previous_generation.women)
+        paired_women = set()
+        available_women = self._island_members(Sex.Female)
+        pairs = []
+        for man in men:
+            if len(paired_women) is num_women:
+                break
+            empty_islands = set(island for island, members
+                                in available_women.items()
+                                if len(members) == 0)
+            island = self._pick_island(man, empty_islands)
+            island_women = list(available_women[island])
+            island_women = filter(lambda m: m.mother is not man.mother,
+                                  island_women)
+            if len(island_women) is 0:
+                # There are no mates on this island for this man
+                continue
+            mate = choice(island_women)
+            while (man.mother is not None) and (mate.mother is man.mother):
+                mate = choice(island_women)
+            # TODO: Reduce duplicate state
+            pairs.append((man, mate))
+            available_women[island].remove(mate)
+            paired_women.append(mate)
+        min_children = floor(size / len(pairs))
+        # Number of families with 1 more than the min number of
+        # children. Because only having 2 children per pair only works
+        # if there is an exact 1:1 ratio of men to women.
+        extra_child = size - min_children * len(pairs)
+        for i, (man, woman) in enumerate(pairs):
+            if i < extra_child:
+                extra = 1
+            else:
+                extra = 0
+            for i in range(min_children + extra):
+                new_nodes.append(Node(man, woman))
 
     @property
     def island_tree(self):
