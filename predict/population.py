@@ -1,13 +1,12 @@
 from math import floor
 from random import shuffle, uniform, choice
-from collections import deque, defaultdict
+from collections import deque
 from itertools import chain, product, combinations_with_replacement
 
 from symmetric_dict import SymmetricDict
 from genome import GenomeGenerator
 from node import Node
 from generation import Generation
-from island_model import IslandTree
 from sex import Sex
 
 class Population:
@@ -212,9 +211,10 @@ class HierarchicalIslandPopulation(Population):
         return island
 
     def _island_members(self, sex):
-        members = defaultdict(set)
+        members = dict()
         for leaf in self._island_tree.leaves:
-            members[leaf] |= filter(lambda m: m.sex is sex, leaf.individuals)
+            members[leaf] = set(filter(lambda m: m.sex is sex,
+                                       leaf.individuals))
             
 
     def new_generation(self, size = None):
@@ -230,30 +230,25 @@ class HierarchicalIslandPopulation(Population):
         new_nodes = []
         men = list(previous_generation.men)
         shuffle(men)
-        num_women = len(previous_generation.women)
-        paired_women = set()
         available_women = self._island_members(Sex.Female)
         pairs = []
         for man in men:
-            if len(paired_women) is num_women:
+            if sum(len(members) for members in available_women.values()) is 0:
                 break
             empty_islands = set(island for island, members
                                 in available_women.items()
                                 if len(members) == 0)
             island = self._pick_island(man, empty_islands)
-            island_women = list(available_women[island])
             island_women = filter(lambda m: m.mother is not man.mother,
-                                  island_women)
+                                  available_women[island])
             if len(island_women) is 0:
-                # There are no mates on this island for this man
+                # There are no mates on this island for this man This
+                # man will go unpaired, which shouldn't cause too many
+                # issues in large populations.
                 continue
             mate = choice(island_women)
-            while (man.mother is not None) and (mate.mother is man.mother):
-                mate = choice(island_women)
-            # TODO: Reduce duplicate state
             pairs.append((man, mate))
             available_women[island].remove(mate)
-            paired_women.append(mate)
         min_children = floor(size / len(pairs))
         # Number of families with 1 more than the min number of
         # children. Because only having 2 children per pair only works
@@ -264,8 +259,17 @@ class HierarchicalIslandPopulation(Population):
                 extra = 1
             else:
                 extra = 0
+                
+            # Child will be based at mother's island
+            island = self.island_tree.get_island(woman)
             for i in range(min_children + extra):
-                new_nodes.append(Node(man, woman))
+                child = Node(man, woman)
+                new_nodes.append(child)
+                self.island_tree.add_individual(island, child)
+                
+        SIZE_ERROR = "Generation generated is not correct size. Expected {}, got {}."
+        assert len(new_nodes) == size, SIZE_ERROR.format(size, len(new_nodes))
+        self._generations.append(Generation(new_nodes))
 
     @property
     def island_tree(self):

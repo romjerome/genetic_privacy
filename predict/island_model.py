@@ -78,3 +78,15 @@ class IslandTree():
     def individuals(self):
         return list(self._indivdual_island)
     
+
+
+def tree_from_string(tree):
+    # TODO: Implement this
+    if isinstance(tree, str):
+        tree = tree.split("\n")
+    for line in tree:
+        pass
+
+def tree_from_file(f):
+    with open(f, "r") as tree_file:
+        return tree_from_string(tree_file.readlines())
