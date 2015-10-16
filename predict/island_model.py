@@ -1,5 +1,5 @@
 class IslandNode():
-    def __init__(self, members, switch_probability, is_leaf = False):
+    def __init__(self, switch_probability, members = None, is_leaf = False):
         """
         Create a new island node with constituent members.  If is_leaf
         is true, then members will be individuals (Node objects from
@@ -8,18 +8,24 @@ class IslandNode():
         self._parent = None
         self._is_leaf = is_leaf
         self._switch_probability = switch_probability
+        if members is None:
+            members = set()
         # Don't use a generic "members" container, to potentially
         # catch mistakes where user think this node is a leaf when it
         # is not, or vice versa.
         if is_leaf:
             self._individuals = set(members)
         else:
-            self._islands = frozenset(members)
+            self._islands = set(members)
             for node in members:
                 node._parent = self
 
     def _add_indvidual(self, individual):
         self._individuals.add(individual)
+
+    def _add_island(self, island):
+        self._islands.add(island)
+        island._parent = self
 
     @property
     def is_leaf(self):
@@ -49,7 +55,7 @@ class IslandTree():
         self._individual_island = {}
         nodes = []
         nodes.append(root_node)
-        while len(nodes.append) > 0:
+        while len(nodes) > 0:
             current_node = nodes.pop()
             if current_node.is_leaf:
                 self._leaves.append(current_node)
@@ -77,15 +83,39 @@ class IslandTree():
     @property
     def individuals(self):
         return list(self._indivdual_island)
-    
-
 
 def tree_from_string(tree):
-    # TODO: Implement this
     if isinstance(tree, str):
         tree = tree.split("\n")
+    nodes = []
+    indentation = [-1]
+    previous_node = None
     for line in tree:
-        pass
+        line_indentation = len(line) - len(line.lstrip())
+        current_node = (float(line.strip()), [])
+        if line_indentation > indentation[-1]:
+            if previous_node is None:
+                previous_node = current_node
+                continue
+            nodes.append(previous_node)
+            indentation.append(line_indentation)
+        elif line_indentation < indentation[-1]:
+            nodes.pop()
+            indentation.pop()
+        nodes[-1][1].append(current_node)
+        previous_node = current_node
+        
+    root_node = _tree_from_string_helper(nodes[0])
+    import pdb
+    pdb.set_trace()
+    return IslandTree(root_node)
+
+def _tree_from_string_helper(node):
+    if len(node[1]) is 0:
+        return IslandNode(node[0], is_leaf = True)
+    else:
+        children = [_tree_from_string_helper(child) for child in node[1]]
+        return IslandNode(node[0], children)
 
 def tree_from_file(f):
     with open(f, "r") as tree_file:
