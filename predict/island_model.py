@@ -20,7 +20,7 @@ class IslandNode():
             for node in members:
                 node._parent = self
 
-    def _add_indvidual(self, individual):
+    def _add_individual(self, individual):
         self._individuals.add(individual)
 
     def _add_island(self, island):
@@ -38,6 +38,10 @@ class IslandNode():
     @property
     def individuals(self):
         return self._individuals
+
+    @property
+    def parent(self):
+        return self._parent
 
     @property
     def switch_probability(self):
@@ -66,7 +70,7 @@ class IslandTree():
                 nodes.extend(current_node.islands)
 
     def get_island(self, individual):
-        return self._indivdual_island[individual]
+        return self._individual_island[individual]
 
     def add_individual(self, island, individual):
         island._add_individual(individual)
@@ -82,7 +86,7 @@ class IslandTree():
 
     @property
     def individuals(self):
-        return list(self._indivdual_island)
+        return list(self._individual_island)
 
 def tree_from_string(tree):
     if isinstance(tree, str):
@@ -106,8 +110,6 @@ def tree_from_string(tree):
         previous_node = current_node
         
     root_node = _tree_from_string_helper(nodes[0])
-    import pdb
-    pdb.set_trace()
     return IslandTree(root_node)
 
 def _tree_from_string_helper(node):

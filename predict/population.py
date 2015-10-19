@@ -183,16 +183,23 @@ class Population:
             kinship[key] = 0.5 * (coeff_1 + coeff_2)
         return kinship
 
+def _ignore_internal_nodes(root, ignore_islands):
+    if root.is_leaf:
+        return
+    for island in root.islands:
+        _ignore_internal_nodes(island, ignore_islands)
+    if root.islands < ignore_islands:
+        ignore_islands.add(root)
 
 class HierarchicalIslandPopulation(Population):
     def __init__(self, island_tree, *args, **kwargs):
-        super(Population, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._island_tree = island_tree
         # Assume existing members of the tree are a part of the founders
-        if len(self._generations) == 0:
-            self._generations.append(island_tree.individuals)
-        else:
-            self._generations[0].extend(island_tree.individuals)
+        if len(island_tree.individuals) > 0:
+            assert len(self._generations) is 0
+            self._generations.append(Generation(island_tree.individuals))
+
 
     def _pick_island(self, individual, ignore_islands = None):
         # TODO: The probabilities for each pairwise transition can be
@@ -207,6 +214,7 @@ class HierarchicalIslandPopulation(Population):
                 break
         # Now drill down into final island.
         while not island.is_leaf:
+            # TODO: What if there are no options here?
             island = choice(list(island.islands - ignore_islands))
         return island
 
@@ -215,6 +223,7 @@ class HierarchicalIslandPopulation(Population):
         for leaf in self._island_tree.leaves:
             members[leaf] = set(filter(lambda m: m.sex is sex,
                                        leaf.individuals))
+        return members
             
 
     def new_generation(self, size = None):
@@ -239,8 +248,9 @@ class HierarchicalIslandPopulation(Population):
                                 in available_women.items()
                                 if len(members) == 0)
             island = self._pick_island(man, empty_islands)
-            island_women = filter(lambda m: m.mother is not man.mother,
-                                  available_women[island])
+            island_women = list(filter((lambda m: m.mother is None or
+                                        m.mother is not man.mother),
+                                       available_women[island]))
             if len(island_women) is 0:
                 # There are no mates on this island for this man This
                 # man will go unpaired, which shouldn't cause too many
