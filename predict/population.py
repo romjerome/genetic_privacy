@@ -7,7 +7,6 @@ from symmetric_dict import SymmetricDict
 from genome import GenomeGenerator
 from node import Node
 from generation import Generation
-from sex import Sex
 
 class Population:
     def __init__(self, initial_generation = None):
@@ -183,15 +182,12 @@ class Population:
             kinship[key] = 0.5 * (coeff_1 + coeff_2)
         return kinship
 
-def _ignore_internal_nodes(root, ignore_islands):
-    if root.is_leaf:
-        return
-    for island in root.islands:
-        _ignore_internal_nodes(island, ignore_islands)
-    if root.islands < ignore_islands:
-        ignore_islands.add(root)
-
 class HierarchicalIslandPopulation(Population):
+    """
+    A population where mates are selected based on
+    locality. Individuals exists on "islands", and will search for
+    mates from a different island with a given switching probability.
+    """
     def __init__(self, island_tree, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._island_tree = island_tree
@@ -201,11 +197,7 @@ class HierarchicalIslandPopulation(Population):
             self._generations.append(Generation(island_tree.individuals))
 
 
-    def _pick_island(self, individual, ignore_islands = None):
-        # TODO: The probabilities for each pairwise transition can be
-        # precomputed. This may be worth doing.
-        if ignore_islands is None:
-            ignore_islands = set()
+    def _pick_island(self, individual):
         island = self._island_tree.get_island(individual)
         # Traverse upward
         while uniform(0, 1) < island.switch_probability:
@@ -214,23 +206,24 @@ class HierarchicalIslandPopulation(Population):
                 break
         # Now drill down into final island.
         while not island.is_leaf:
-            # TODO: What if there are no options here?
-            island = choice(list(island.islands - ignore_islands))
+            island = choice(list(island.islands))
         return island
 
-    def _island_members(self, sex):
+    def _island_members(self, generation_members):
+        """
+        Returns a dictionary mapping islands to sets of individuals
+        from generation_members.
+        """
         members = dict()
         for leaf in self._island_tree.leaves:
-            members[leaf] = set(filter(lambda m: m.sex is sex,
-                                       leaf.individuals))
+            members[leaf] = leaf.individuals.intersection(generation_members)
         return members
             
 
     def new_generation(self, size = None):
-        # TODO: complete this method.
         """
         Generates a new generation of individuals from the previous
-        generation.  If size is not passed, the new generation will be
+        generation. If size is not passed, the new generation will be
         the same size as the previous generation.
         """
         if size is None:
@@ -239,24 +232,30 @@ class HierarchicalIslandPopulation(Population):
         new_nodes = []
         men = list(previous_generation.men)
         shuffle(men)
-        available_women = self._island_members(Sex.Female)
+        available_women = self._island_members(previous_generation.women)
         pairs = []
         for man in men:
             if sum(len(members) for members in available_women.values()) is 0:
                 break
-            empty_islands = set(island for island, members
-                                in available_women.items()
-                                if len(members) == 0)
-            island = self._pick_island(man, empty_islands)
-            island_women = list(filter((lambda m: m.mother is None or
-                                        m.mother is not man.mother),
-                                       available_women[island]))
+            island = self._pick_island(man)
+            island_women = list(available_women[island]) 
             if len(island_women) is 0:
                 # There are no mates on this island for this man This
                 # man will go unpaired, which shouldn't cause too many
                 # issues in large populations.
                 continue
             mate = choice(island_women)
+            if mate.mother is not None or mate.mother is man.mother:
+                # We don't build this for every man because it isn't
+                # efficient. Chances are if we pick randomly, we will
+                # get an appropriate mate.
+                island_women = filter((lambda m: m.mother is None or
+                                       m.mother is not man.mother),
+                                      available_women[island])
+                island_women = list(island_women)
+                if len(island_women) is 0:
+                    continue
+                mate = choice(island_women)
             pairs.append((man, mate))
             available_women[island].remove(mate)
         min_children = floor(size / len(pairs))

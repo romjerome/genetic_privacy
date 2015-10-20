@@ -15,7 +15,7 @@ num_leaves = len(tree.leaves)
 assert num_leaves is 3, "Expected 3 leaves, got {}".format(num_leaves)
 
 print("Creating population.")
-initial_population = [Node() for _ in range(1000)]
+initial_population = [Node() for _ in range(10000)]
 leaves = tree.leaves
 for person in initial_population:
     tree.add_individual(choice(leaves), person)
@@ -23,9 +23,10 @@ for person in initial_population:
 population = HierarchicalIslandPopulation(tree)
 
 print("Creating 10 generations.")
-for _ in range(10):
+for i in range(10):
+    print("Creating generation {}".format(i))
     population.new_generation()
-    
+
 for i, generation in enumerate(population._generations):
     if i is 0:
         continue
@@ -35,7 +36,7 @@ for i, generation in enumerate(population._generations):
         assert member.father in previous_generation_members
 
 
-print("Calculating kinship coefficients")
-tr = tracker.SummaryTracker()
-kinship = population.kinship_coefficients
-tr.print_diff()
+# print("Calculating kinship coefficients")
+# tr = tracker.SummaryTracker()
+# kinship = population.kinship_coefficients
+# tr.print_diff()
