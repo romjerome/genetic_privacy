@@ -216,7 +216,9 @@ class HierarchicalIslandPopulation(Population):
         """
         members = dict()
         for leaf in self._island_tree.leaves:
-            members[leaf] = leaf.individuals.intersection(generation_members)
+            m = list(leaf.individuals.intersection(generation_members))
+            members[leaf] = m
+            shuffle(m)
         return members
             
 
@@ -238,26 +240,16 @@ class HierarchicalIslandPopulation(Population):
             if sum(len(members) for members in available_women.values()) is 0:
                 break
             island = self._pick_island(man)
-            island_women = list(available_women[island]) 
+            island_women = available_women[island]
             if len(island_women) is 0:
                 # There are no mates on this island for this man This
                 # man will go unpaired, which shouldn't cause too many
                 # issues in large populations.
                 continue
-            mate = choice(island_women)
-            if mate.mother is not None or mate.mother is man.mother:
-                # We don't build this for every man because it isn't
-                # efficient. Chances are if we pick randomly, we will
-                # get an appropriate mate.
-                island_women = filter((lambda m: m.mother is None or
-                                       m.mother is not man.mother),
-                                      available_women[island])
-                island_women = list(island_women)
-                if len(island_women) is 0:
-                    continue
-                mate = choice(island_women)
-            pairs.append((man, mate))
-            available_women[island].remove(mate)
+            for i in range(len(island_women) - 1, -1 , -1):
+                if man.mother is None or island_women[i].mother != man.mother:
+                    pairs.append((man, island_women.pop(i)))
+                    break
         min_children = floor(size / len(pairs))
         # Number of families with 1 more than the min number of
         # children. Because only having 2 children per pair only works

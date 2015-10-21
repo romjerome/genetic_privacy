@@ -10,13 +10,13 @@ class Node:
             self.sex = sex
         else:
             self.sex = choice(SEXES)
-        self.children = set()
+        self.children = []
         if mother is not None:
             assert mother.sex == Sex.Female
-            mother.children.add(self)
+            mother.children.append(self)
         if father is not None:
             assert father.sex == Sex.Male
-            father.children.add(self)
+            father.children.append(self)
         self.genome = None
 
     # Define the rich comparison operator so that Nodes work in the
