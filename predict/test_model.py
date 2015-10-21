@@ -7,7 +7,7 @@ from pympler import asizeof, tracker, summary, muppy
 from model import Generation, Population, generate_population
 
 print("Generating population")
-population = generate_population(1000)
+population = generate_population(100000)
 
 print("Creating 10 generations.")
 
