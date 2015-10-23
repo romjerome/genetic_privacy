@@ -1,0 +1,14 @@
+From http://hapmap.ncbi.nlm.nih.gov/downloads/recombination/
+http://www.nature.com/nature/journal/v449/n7164/abs/nature06258.html
+
+Info on format I found: https://mathgen.stats.ox.ac.uk/impute/input_file_options.html
+
+??? Verify below
+
+Centimorgan is defined as the genetic distance such that the expected number of recombinations is 0.01
+ie, 0.01 = x * p, where x is in bases. Thus 1 cM = x = 0.01 / p bases
+
+1 Mb is 1 million bases.
+
+Therefore cM / Mb is [(0.01) / p] / 1,000,000 = 1 / (10^8 * p)
+
