@@ -6,7 +6,7 @@ from island_model import tree_from_file
 from population import HierarchicalIslandPopulation
 from node import Node
 
-from pympler import tracker, refbrowser, classtracker
+from pympler import tracker
 
 print("Reading tree from file.")
 tree = tree_from_file("test_tree")
