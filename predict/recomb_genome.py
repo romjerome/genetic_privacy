@@ -14,6 +14,22 @@ class RecombGenomeGenerator():
             
         return RecombGenome(chromosomes)
 
+def recombinator_from_files(files):
+    """
+    Files is a dict from chromosomes to file names with mapping data
+    for that chromosome.
+    """
+    for chrom, filename in files.items():
+        with open(filename, "r") as chrom_file:
+            pass
+
+class Recombinator():
+    def __init__(self):
+        pass
+
+    def recombination(self, genome):
+        pass
+
 class Autosome():
     """
     Encapsulates both homologs of a given Autosome.

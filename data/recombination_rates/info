@@ -3,12 +3,12 @@ http://www.nature.com/nature/journal/v449/n7164/abs/nature06258.html
 
 Info on format I found: https://mathgen.stats.ox.ac.uk/impute/input_file_options.html
 
+Consider also: http://compgen.rutgers.edu/download_maps.shtml
+
 ??? Verify below
 
 Centimorgan is defined as the genetic distance such that the expected number of recombinations is 0.01
-ie, 0.01 = x * p, where x is in bases. Thus 1 cM = x = 0.01 / p bases
+ie, 0.01 = x * p, where x is in bases. Thus 1 cM = x = 1 / (p * 100) bases
 
-1 Mb is 1 million bases.
-
-Therefore cM / Mb is [(0.01) / p] / 1,000,000 = 1 / (10^8 * p)
-
+We want to go from probability to base, that is p/b. So to go from cM / Mb to p / b
+we multiply by (p * 100) / 1 Mb = (p * 100) / 10 ** 6 = p / (10 ** 4)
