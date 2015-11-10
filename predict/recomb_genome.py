@@ -171,7 +171,7 @@ class Recombinator():
                 locations.append(self._num_bases[chrom_name])
             # The zip is the pairs of adjecent list members.
             # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
-            # that spits out (0, 1) then (2, 3)
+            # that yields (0, 1) then (2, 3)
             for location in zip(locations[::2], locations[1::2]):
                 mother_location = bisect_left(autosome.mother, location)
                 father_location = bisect_left(autosome.father, location)
