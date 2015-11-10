@@ -103,7 +103,7 @@ def pairwise(iterable):
     """
     a, b = tee(iterable)
     next(b, None)
-    return izip(a, b)
+    return zip(a, b)
         
 class Recombinator():
     def __init__(self, recombination_data):
@@ -164,6 +164,15 @@ class Recombinator():
         return loci
 
     def recombination(self, genome):
-        # TODO: Complete this method.
+        new_autosomes = dict()
         for chrom_name, autosome in genome.chromosomes.items():
             locations = self._recombination_locations(self, chrom_name)
+            if len(locations) % 2 == 1:
+                locations.append(self._num_bases[chrom_name])
+            # The zip is the pairs of adjecent list members.
+            # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
+            # that spits out (0, 1) then (2, 3)
+            for location in zip(locations[::2], locations[1::2]):
+                mother_location = bisect_left(autosome.mother, location)
+                father_location = bisect_left(autosome.father, location)
+                # TODO: Finish this.
