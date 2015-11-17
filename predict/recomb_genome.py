@@ -1,4 +1,5 @@
 import re
+import csv
 
 from itertools import tee, izip
 from os import listdir
@@ -95,6 +96,25 @@ def _inverse_cumulative_sum(x):
     http://stackoverflow.com/a/16541726/300539
     """
     return np.cumsum(x[::-1])[::-1]
+
+def read_sex_lengths(filename):
+    """
+    Read in file from decode paper that has the centimorgan length of
+    chromosomes by sex. Stored at
+    https://github.com/citp/genetic_privacy/blob/master/data/recombination_rates/decode_recombination_data.tab
+    """
+    male_lengths = dict()
+    female_lengths = dict()
+    with open(filename) as csv_file:
+        reader = csv.reader(csv_file, delimiter = "\t")
+        next(reader) # get rid of header
+        for line in reader:
+            chromosome = int(line[0])
+            male_length = float(line[4])
+            female_length = float(line[5])
+            male_lengths[chromosome] = male_length
+            female_lengths[chromosomes] = female_length
+    return {"male": male_lengths, "female": female_lengths}
 
 def pairwise(iterable):
     """
