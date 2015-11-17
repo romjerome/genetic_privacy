@@ -80,6 +80,7 @@ def recombinator_from_files(files):
 def _read_recombination_file(filename):
     rows = []
     with open(filename, "r") as chrom_file:
+        # XXX Use csv here instead?
         chrom_file.readline() # throw out header
         for row in chrom_file:
             row = row.strip().split(" ")
@@ -124,6 +125,10 @@ def pairwise(iterable):
     a, b = tee(iterable)
     next(b, None)
     return zip(a, b)
+
+def remap_recombinator(recombinator, chrom_lengths):
+    # TODO: write this function to remap a Recombinator into a sex based recombinator
+    pass
         
 class Recombinator():
     def __init__(self, recombination_data):
