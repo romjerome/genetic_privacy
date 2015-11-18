@@ -1,14 +1,19 @@
 import re
 import csv
 
-from itertools import tee, izip
+from itertools import tee
 from os import listdir
+from os.path import isfile, join
 from random import uniform, randint
 from bisect import bisect_left
+from collections import defaultdict
 
 import numpy as np
 
+from sex import Sex
+
 MEGABASE = 10 ** 6
+DECODE_FILENAME = "decode_recombination_data.tab"
 
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths):
@@ -52,32 +57,73 @@ class RecombGenome():
     def chromosomes(self):
         return self._chromosomes
 
-def recombinator_from_directory(directory):
+def recombinators_from_directory(directory):
     """
     Given a directory of files downloaded from, returns a Recombinator
     object for those files.
+    Genome maps are from
     http://hapmap.ncbi.nlm.nih.gov/downloads/recombination/
+    Sex based centimorgan lengths are from decode doi:10.1038/ng917.
     """
     chromosomes = dict()
     for filename in listdir(directory):
         match = re.search("genetic_map_chr([0-9]+)_b36.txt", filename)
         if not match:
             continue
-        chromosomes[int(match.group(1))] = filename
-    return recombinator_from_files(chromosomes)
+        chromosomes[int(match.group(1))] = join(directory, filename)
+    decode_file = join(directory, DECODE_FILENAME)
+    if isfile(decode_file):
+        sex_data = read_sex_lengths(decode_file)
+    return recombinators_from_hapmap_files(chromosomes, sex_data)
 
-def recombinator_from_files(files):
+def recombinators_from_hapmap_files(hapmap_files, sex_lengths = None):
     """
     Files is a dict from chromosomes to file names with mapping data
     for that chromosome.
     """
     chrom_data = dict()
-    for chrom, filename in files.items():
-        data = _read_recombination_file(filename)
-        chrom_data[chrom] = data
-    return Recombinator(chrom_data)
+    for chrom, filename in hapmap_files.items():
+        chrom_data[chrom] = _read_recombination_file(filename)
+    if not sex_lengths:
+        return Recombinator(chrom_data)
+
+    # We may need to interpolate the data to the different rates for
+    # the sexes. This may need to be replaced with something more
+    # sophisticated later.
+    sex_adjusted_data = defaultdict(dict)
+    for sex, sex_lengths in sex_lengths.items():
+        for chromosome, length in sex_lengths.data():
+            original_length = chrom_data[chromosome][-1][2]
+            ratio = length / original_length
+            data = chrom_data[chromosome]
+            sex_adjusted_data[sex][chromosome] = _adjust_centimorgans(data,
+                                                                      ratio)
+    return {sex: Recombinator(data) for sex, data in sex_adjusted_data.items()}
+
+def _adjust_centimorgans(rows, multiplier = 1.0):
+    """
+    Adjusts the number of centimorgans in rows by some multiplier.
+    eg if we have the rows
+
+    a 0.05 0
+    b 0.1  0.05
+    c 0.05 0.15
+
+    and we apply a multiplier of 2, then we are doubling the number of
+    centimorgans, giving us.
+
+    a 0.1 0
+    b 0.2 0.1
+    c 0.1 0.3
+    """
+    return [(bp, rate * multiplier, distance * multiplier)
+            for bp, rate, distance in rows]
 
 def _read_recombination_file(filename):
+    """
+    Reads a recombination file and returns the rows, with columns
+    converted to the appropriate numeric types.
+    """
     rows = []
     with open(filename, "r") as chrom_file:
         # XXX Use csv here instead?
@@ -114,8 +160,8 @@ def read_sex_lengths(filename):
             male_length = float(line[4])
             female_length = float(line[5])
             male_lengths[chromosome] = male_length
-            female_lengths[chromosomes] = female_length
-    return {"male": male_lengths, "female": female_lengths}
+            female_lengths[chromosome] = female_length
+    return {Sex.Male: male_lengths, Sex.Female: female_lengths}
 
 def pairwise(iterable):
     """
@@ -125,10 +171,6 @@ def pairwise(iterable):
     a, b = tee(iterable)
     next(b, None)
     return zip(a, b)
-
-def remap_recombinator(recombinator, chrom_lengths):
-    # TODO: write this function to remap a Recombinator into a sex based recombinator
-    pass
         
 class Recombinator():
     def __init__(self, recombination_data):
