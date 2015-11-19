@@ -231,15 +231,55 @@ class Recombinator():
         return loci
 
     def recombination(self, genome):
+        """
+        Given a RecombGenome, returns a new RecombGenome object that
+        is the product of recombination on the given RecombGenome.
+        """
         new_autosomes = dict()
         for chrom_name, autosome in genome.chromosomes.items():
             locations = self._recombination_locations(self, chrom_name)
             if len(locations) % 2 == 1:
                 locations.append(self._num_bases[chrom_name])
+            mother_modified = list(autosome.mother)
+            father_modified = list(autosome.father)
             # The zip is the pairs of adjecent list members.
             # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
             # that yields (0, 1) then (2, 3)
-            for location in zip(locations[::2], locations[1::2]):
-                mother_location = bisect_left(autosome.mother, location)
-                father_location = bisect_left(autosome.father, location)
+            for start, end in zip(locations[::2], locations[1::2]):
+                mother_start_index = bisect_left(autosome.mother, start)
+                mother_end_index = bisect_left(autosome.mother, end)
+                father_start_index = bisect_left(autosome.father, start)
+                father_end_index = bisect_left(autosome.father, end)
                 # TODO: Finish this.
+            new_autosomes[chrom_name] = Autosome(mother_modified,
+                                                 father_modified)
+        return RecombGenome(new_autosomes)
+
+def _break_sequence(sequence, start, stop, start_index, stop_index):
+    """
+    Given a list of tuples of the form
+    [(x_1, y_1, z_1), (x_2, y_2, z_2), ...]
+    where x_1 < y_1 <= x_2
+    and a start and stop location. _break_sequence will break up
+    intervals that contain start and stop.  It is assumed that
+    start_index is the result of running bisect_left(sequence, start),
+    likewise for stop_index.
+
+    This could a single function called twice, but would be slower as
+    function calls in python are expensive:
+    https://wiki.python.org/moin/PythonSpeed/PerformanceTips#Data_Aggregation
+    I haven't tested the performance of breaking this function up.
+    """
+    # Take care of the case where the start or stop equals the
+    # boundary conditions in one of the ranges.
+    # TODO: Finish this function.
+    first_half = (sequence[start_index][0], start,
+                  sequence[start_index][2])
+    second_half = (start, sequence[start_index][1], sequence[start_index][2])
+    sequence[start_index] = new_start
+    squence.insert(start_index + 1, second_half)
+
+    first_half = (sequence[start_index][0], stop, sequence[start_index][2])
+    second_half = (stop, sequence[start_index][1], sequence[start_index][2])
+    sequence[start_index] = new_start
+    squence.insert(start_index + 1, second_half)
