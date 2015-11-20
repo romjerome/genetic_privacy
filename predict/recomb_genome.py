@@ -23,6 +23,8 @@ class RecombGenomeGenerator():
     def generate(self):
         chromosomes = dict()
         for chromosome, length in self._chromosome_lengths.items():
+            # TODO: Consider making this a two element tuple, where
+            # range is implicit in the sequence of tuples.
             mother = [(0, length, self._genome_id)]
             self._genome_id += 1
             father = [(0, length, self._genome_id)]
@@ -246,40 +248,52 @@ class Recombinator():
             # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
             # that yields (0, 1) then (2, 3)
             for start, end in zip(locations[::2], locations[1::2]):
-                mother_start_index = bisect_left(autosome.mother, start)
-                mother_end_index = bisect_left(autosome.mother, end)
-                father_start_index = bisect_left(autosome.father, start)
+                # Identify and break up the ranges to swap (cross over)
+                mother_start_index = bisect_left(mother_modified, start)
+                _break_sequence(mother_modified, start, mother_start_index)
+                mother_end_index = bisect_left(mother_modified, end)
+                _break_sequence(mother_modified, end, mother_end_index)
+                
+                father_start_index = bisect_left(father_modified, start)
+                _break_sequence(father_modified, start, father_start_index)
                 father_end_index = bisect_left(autosome.father, end)
-                # TODO: Finish this.
+                _break_sequence(father_modified, end, father_end_index)
+
+                # Perform the swap
+                temp = list(mother_modified[mother_start_index:
+                                            mother_end_index + 1])
+                father_range = father_modified[father_start_index:
+                                               father_end_index + 1]
+                mother_modified[mother_start_index:
+                                mother_end_index + 1] = father_range
+                father_modified[father_start_index:
+                                father_end_index + 1] = temp
+                
+                father_modified[father_start_index:father_end_index + 1] = temp
+                
+                
             new_autosomes[chrom_name] = Autosome(mother_modified,
                                                  father_modified)
         return RecombGenome(new_autosomes)
 
-def _break_sequence(sequence, start, stop, start_index, stop_index):
+def _break_sequence(sequence, location, index):
     """
     Given a list of tuples of the form
     [(x_1, y_1, z_1), (x_2, y_2, z_2), ...]
     where x_1 < y_1 <= x_2
-    and a start and stop location. _break_sequence will break up
-    intervals that contain start and stop.  It is assumed that
-    start_index is the result of running bisect_left(sequence, start),
-    likewise for stop_index.
-
-    This could a single function called twice, but would be slower as
-    function calls in python are expensive:
-    https://wiki.python.org/moin/PythonSpeed/PerformanceTips#Data_Aggregation
-    I haven't tested the performance of breaking this function up.
+     _break_sequence will break up
+    intervals that contain location.  It is assumed that
+    index is the result of running bisect_left(sequence, location)
     """
-    # Take care of the case where the start or stop equals the
-    # boundary conditions in one of the ranges.
-    # TODO: Finish this function.
-    first_half = (sequence[start_index][0], start,
-                  sequence[start_index][2])
-    second_half = (start, sequence[start_index][1], sequence[start_index][2])
-    sequence[start_index] = new_start
-    squence.insert(start_index + 1, second_half)
+    assert len(sequence) == index or location <= sequence[index][0]
+    assert index == 0 or sequence[index - 1][0] <= location
 
-    first_half = (sequence[start_index][0], stop, sequence[start_index][2])
-    second_half = (stop, sequence[start_index][1], sequence[start_index][2])
-    sequence[start_index] = new_start
-    squence.insert(start_index + 1, second_half)
+    if (sequence[index - 1][1] == location or
+        (index < len(sequence) and sequence[index][0] == location)):
+        # If the location is at the beginning or end of a range, then
+        # it is considered split already.
+        return    
+    first_half = (sequence[index - 1][0], location, sequence[index - 1][2])
+    second_half = (location, sequence[index - 1][1], sequence[index - 1][2])
+    sequence[index - 1] = first_half
+    sequence.insert(index, second_half)
