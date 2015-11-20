@@ -249,14 +249,14 @@ class Recombinator():
             # that yields (0, 1) then (2, 3)
             for start, end in zip(locations[::2], locations[1::2]):
                 # Identify and break up the ranges to swap (cross over)
-                mother_start_index = bisect_left(mother_modified, start)
+                mother_start_index = bisect_left(mother_modified, (start,))
                 _break_sequence(mother_modified, start, mother_start_index)
-                mother_end_index = bisect_left(mother_modified, end)
+                mother_end_index = bisect_left(mother_modified, (end,))
                 _break_sequence(mother_modified, end, mother_end_index)
                 
-                father_start_index = bisect_left(father_modified, start)
+                father_start_index = bisect_left(father_modified, (start,))
                 _break_sequence(father_modified, start, father_start_index)
-                father_end_index = bisect_left(autosome.father, end)
+                father_end_index = bisect_left(autosome.father, (end,))
                 _break_sequence(father_modified, end, father_end_index)
 
                 # Perform the swap
