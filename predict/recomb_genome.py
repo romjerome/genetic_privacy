@@ -247,34 +247,36 @@ class Recombinator():
             # The zip is the pairs of adjecent list members.
             # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
             # that yields (0, 1) then (2, 3)
-            for start, end in zip(locations[::2], locations[1::2]):
-                # Identify and break up the ranges to swap (cross over)
-                mother_start_index = bisect_left(mother_modified, (start,))
-                _break_sequence(mother_modified, start, mother_start_index)
-                mother_end_index = bisect_left(mother_modified, (end,))
-                _break_sequence(mother_modified, end, mother_end_index)
-                
-                father_start_index = bisect_left(father_modified, (start,))
-                _break_sequence(father_modified, start, father_start_index)
-                father_end_index = bisect_left(autosome.father, (end,))
-                _break_sequence(father_modified, end, father_end_index)
-
-                # Perform the swap
-                temp = list(mother_modified[mother_start_index:
-                                            mother_end_index + 1])
-                father_range = father_modified[father_start_index:
-                                               father_end_index + 1]
-                mother_modified[mother_start_index:
-                                mother_end_index + 1] = father_range
-                father_modified[father_start_index:
-                                father_end_index + 1] = temp
-                
-                father_modified[father_start_index:father_end_index + 1] = temp
-                
+            _swap_at_locations(mother_modified, father_modified,
+                               zip(locations[::2], locations[1::2]))
                 
             new_autosomes[chrom_name] = Autosome(mother_modified,
                                                  father_modified)
         return RecombGenome(new_autosomes)
+
+def _swap_at_locations(mother, father, locations):
+    """
+    Swap elements at the given (start, stop) locations in locations.
+    Locations is given by basepair locations, rather than centimorgans
+    or list index.
+    """
+    for start, end in locations:
+        # Identify and break up the ranges to swap (cross over)
+        mother_start_index = bisect_left(mother, (start,))
+        _break_sequence(mother, start, mother_start_index)
+        mother_end_index = bisect_left(mother, (end,))
+        _break_sequence(mother, end, mother_end_index)
+                
+        father_start_index = bisect_left(father, (start,))
+        _break_sequence(father, start, father_start_index)
+        father_end_index = bisect_left(father, (end,))
+        _break_sequence(father, end, father_end_index)
+
+        # Perform the swap
+        temp = list(mother[mother_start_index:mother_end_index + 1])
+        father_range = father[father_start_index:father_end_index + 1]
+        mother[mother_start_index:mother_end_index + 1] = father_range
+        father[father_start_index:father_end_index + 1] = temp
 
 def _break_sequence(sequence, location, index):
     """
