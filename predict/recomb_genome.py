@@ -261,6 +261,7 @@ def _swap_at_locations(mother, father, locations):
     or list index.
     """
     for start, end in locations:
+        assert start < end
         # Identify and break up the ranges to swap (cross over)
         mother_start_index = bisect_left(mother, (start,))
         _break_sequence(mother, start, mother_start_index)
@@ -273,10 +274,10 @@ def _swap_at_locations(mother, father, locations):
         _break_sequence(father, end, father_end_index)
 
         # Perform the swap
-        temp = list(mother[mother_start_index:mother_end_index + 1])
-        father_range = father[father_start_index:father_end_index + 1]
-        mother[mother_start_index:mother_end_index + 1] = father_range
-        father[father_start_index:father_end_index + 1] = temp
+        temp = list(mother[mother_start_index:mother_end_index])
+        father_range = father[father_start_index:father_end_index]
+        mother[mother_start_index:mother_end_index] = father_range
+        father[father_start_index:father_end_index] = temp
 
 def _break_sequence(sequence, location, index):
     """
