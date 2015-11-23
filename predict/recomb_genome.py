@@ -52,8 +52,9 @@ class Autosome():
 
 class RecombGenome():
     
-    def __init__(self, chromosomes):
-        self._chromsomes = chromosomes
+    def __init__(self, chromosomes, recombinator = None):
+        self._chromosomes = chromosomes
+        self._recombinator = recombinator
 
     @property
     def chromosomes(self):
@@ -94,7 +95,7 @@ def recombinators_from_hapmap_files(hapmap_files, sex_lengths = None):
     # sophisticated later.
     sex_adjusted_data = defaultdict(dict)
     for sex, sex_lengths in sex_lengths.items():
-        for chromosome, length in sex_lengths.data():
+        for chromosome, length in sex_lengths.items():
             original_length = chrom_data[chromosome][-1][2]
             ratio = length / original_length
             data = chrom_data[chromosome]
@@ -134,7 +135,7 @@ def _read_recombination_file(filename):
             row = row.strip().split(" ")
             row[0] = int(row[0])
             row[1] = float(row[1])
-            row[2] = int(row[2])
+            row[2] = float(row[2])
             rows.append(row)
     return rows
 
@@ -158,6 +159,8 @@ def read_sex_lengths(filename):
         reader = csv.reader(csv_file, delimiter = "\t")
         next(reader) # get rid of header
         for line in reader:
+            if line[0].lower() == "x" or line[0].lower() == "y":
+                continue
             chromosome = int(line[0])
             male_length = float(line[4])
             female_length = float(line[5])
@@ -237,9 +240,10 @@ class Recombinator():
         Given a RecombGenome, returns a new RecombGenome object that
         is the product of recombination on the given RecombGenome.
         """
+        assert genome is not None
         new_autosomes = dict()
         for chrom_name, autosome in genome.chromosomes.items():
-            locations = self._recombination_locations(self, chrom_name)
+            locations = self._recombination_locations(chrom_name)
             if len(locations) % 2 == 1:
                 locations.append(self._num_bases[chrom_name])
             mother_modified = list(autosome.mother)
@@ -252,7 +256,7 @@ class Recombinator():
                 
             new_autosomes[chrom_name] = Autosome(mother_modified,
                                                  father_modified)
-        return RecombGenome(new_autosomes)
+        return RecombGenome(new_autosomes, self)
 
 def _swap_at_locations(mother, father, locations):
     """

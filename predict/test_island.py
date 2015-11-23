@@ -6,7 +6,7 @@ from island_model import tree_from_file
 from population import HierarchicalIslandPopulation
 from node import Node
 
-from pympler import tracker
+# from pympler import tracker
 
 print("Reading tree from file.")
 tree = tree_from_file("test_tree")
@@ -15,7 +15,7 @@ num_leaves = len(tree.leaves)
 assert num_leaves is 3, "Expected 3 leaves, got {}".format(num_leaves)
 
 print("Creating population.")
-tr = tracker.SummaryTracker()
+# tr = tracker.SummaryTracker()
 
 initial_population = [Node() for _ in range(1000000)]
 
@@ -31,7 +31,7 @@ for i in range(10):
     population.new_generation()
     
 
-tr.print_diff()
+# tr.print_diff()
 
 for i, generation in enumerate(population._generations):
     if i is 0:

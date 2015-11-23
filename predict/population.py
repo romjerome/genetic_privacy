@@ -33,26 +33,6 @@ class Population:
     @property
     def size(self):
         return sum(generation.size for generation in self._generations)
-
-    def generate_genomes(self, generator):
-        # TODO: update this function, or move it
-        # I don't use recursion because python doesn't do well with
-        # deep recursion
-        queue = deque(self._generations[0].members)
-        while len(queue) > 0:
-            person = queue.popleft()
-            if person.genome is not None:
-                continue
-            # An optimization would be to only add children if person is female
-            # This way people only go into the queue once.
-            queue.extend(person.children)
-            mother = person.mother
-            father = person.father
-            if mother is None:
-                person.genome = generator.generate()
-                continue
-            person.genome = mother.genome.mate(father.genome)
-            
             
 
     def clean_genomes(self, generations = None):
