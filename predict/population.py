@@ -4,7 +4,7 @@ from collections import deque
 from itertools import chain, product, combinations_with_replacement
 
 from symmetric_dict import SymmetricDict
-from genome import GenomeGenerator
+from recomb_genome import RecombGenomeGenerator
 from node import Node
 from generation import Generation
 
@@ -34,8 +34,8 @@ class Population:
     def size(self):
         return sum(generation.size for generation in self._generations)
 
-    def generate_genomes(self):
-        generator = GenomeGenerator()
+    def generate_genomes(self, generator):
+        # TODO: update this function, or move it
         # I don't use recursion because python doesn't do well with
         # deep recursion
         queue = deque(self._generations[0].members)
@@ -49,7 +49,7 @@ class Population:
             mother = person.mother
             father = person.father
             if mother is None:
-                person.genome = generator.generate_genome()
+                person.genome = generator.generate()
                 continue
             person.genome = mother.genome.mate(father.genome)
             
