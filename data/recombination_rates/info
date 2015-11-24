@@ -4,11 +4,3 @@ http://www.nature.com/nature/journal/v449/n7164/abs/nature06258.html
 Info on format I found: https://mathgen.stats.ox.ac.uk/impute/input_file_options.html
 
 Consider also: http://compgen.rutgers.edu/download_maps.shtml
-
-??? Verify below
-
-Centimorgan is defined as the genetic distance such that the expected number of recombinations is 0.01
-ie, 0.01 = x * p, where x is in bases. Thus 1 cM = x = 0.01 / p bases
-
-So to go from cM / Mb to p / b
-we multiply by 10 ** 6, then divide 0.01 by this number.
