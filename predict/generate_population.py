@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 from random import choice
 from pickle import dump, HIGHEST_PROTOCOL
+from sys import setrecursionlimit, getrecursionlimit
 
 from population import HierarchicalIslandPopulation
 from population_genomes import generate_genomes
@@ -43,4 +44,14 @@ generate_genomes(population, genome_generator, recombinators)
 
 if args.output_file:
     with open(args.output_file, "wb") as pickle_file:
+        # Trees cause deep recursion in the pickle module, so we need
+        # to raise the recursion limit. This is the stack depth for
+        # python functions, you may need to increase the native stack
+        # depth using ulimit -s
+        # https://docs.python.org/3.4/library/pickle.html#what-can-be-pickled-and-unpickled
+        old_limit = getrecursionlimit()
+        new_limit = old_limit * args.num_generations * 100
+        print("Setting stack depth to: {}.".format(new_limit))
+        setrecursionlimit(new_limit)
         dump(population, pickle_file, protocol = HIGHEST_PROTOCOL)
+        setrecursionlimit(old_limit)
