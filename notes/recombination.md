@@ -18,6 +18,14 @@ http://hapmap.ncbi.nlm.nih.gov/downloads/recombination/2005-06_16a_phaseI/00READ
 the hapmap data analysis was performed using LDhat. Manual here:
 http://ldhat.sourceforge.net/manual.pdf
 
+Questions
+---------
+
+When there is a recombination hotstop, does that mean there is a lot
+of recombination happening within that region, or that recombination
+is often initiated inside that region and continues outside of it? Are
+recombination locations independent?
+
 Assumptions I make in modeling recombination
 --------------------------------------------
 
