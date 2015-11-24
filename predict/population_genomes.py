@@ -15,13 +15,13 @@ def mate(mother, father, mother_recombinator, father_recombinator):
     offspring_autosomes = dict()
     for chrom_name, chromosome in mother_recomb.chromosomes.items():
         if random() < 0.5:
-            mother = mother_recomb[chrom_name].mother
+            mother = mother_recomb.chromosomes[chrom_name].mother
         else:
-            mother = mother_recomb[chrom_name].father
+            mother = mother_recomb.chromosomes[chrom_name].father
         if random() < 0.5:
-            father = father_recomb[chrom_name].mother
+            father = father_recomb.chromosomes[chrom_name].mother
         else:
-            father = father_recomb[chrom_name].father
+            father = father_recomb.chromosomes[chrom_name].father
         offspring_autosomes[chrom_name] = Autosome(mother, father)
     return RecombGenome(offspring_autosomes)
 

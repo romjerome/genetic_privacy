@@ -4,7 +4,7 @@ import csv
 from itertools import tee
 from os import listdir
 from os.path import isfile, join
-from random import uniform, randint
+from random import uniform
 from bisect import bisect_left
 from collections import defaultdict
 
@@ -228,11 +228,23 @@ class Recombinator():
                                            (centimorgans * 0.01)/ bases)
         recomb_locations = [uniform(0, centimorgans)
                             for _ in range(recomb_events)]
+        recomb_locations.sort()
         loci = []
         for location in recomb_locations:
             index = bisect_left(self._end_points[chrom], location)
             end_point = self._end_points[chrom][index]
-            loci.append(randint(*self._end_point_range[end_point]))
+            start, stop = self._end_point_range[chrom][end_point]
+            if index == 0:
+                start_point = 0.0
+            else:
+                start_point = self._end_points[chrom][index - 1]
+            assert location > start_point
+            # fraction_in is the fraction of the way into this region
+            # the recombination event occurs.
+            fraction_in = (location - start_point) / (end_point - start_point)
+            recomb_spot = int((stop - start) * fraction_in + start)
+            if len(loci) == 0 or recomb_spot != loci[-1]:
+                loci.append(recomb_spot)
         return loci
 
     def recombination(self, genome):
@@ -265,7 +277,8 @@ def _swap_at_locations(mother, father, locations):
     or list index.
     """
     for start, end in locations:
-        assert start < end
+        assert start < end,\
+        "start must be less than end. Start: {}, end : {}".format(start, end)
         # Identify and break up the ranges to swap (cross over)
         mother_start_index = bisect_left(mother, (start,))
         _break_sequence(mother, start, mother_start_index)

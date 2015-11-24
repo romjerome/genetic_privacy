@@ -1,10 +1,8 @@
 from math import floor
 from random import shuffle, uniform, choice
-from collections import deque
 from itertools import chain, product, combinations_with_replacement
 
 from symmetric_dict import SymmetricDict
-from recomb_genome import RecombGenomeGenerator
 from node import Node
 from generation import Generation
 
