@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from random import choice
+from pickle import dump, HIGHEST_PROTOCOL
 
 from population import HierarchicalIslandPopulation
 from population_genomes import generate_genomes
@@ -17,6 +18,7 @@ parser.add_argument("recombination_dir",
                     help = "Directory containing Hapmap and decode data.")
 parser.add_argument("--generation_size", type = int, default = 10000)
 parser.add_argument("--num_generations", type = int, default = 10)
+parser.add_argument("--output_file")
 
 args = parser.parse_args()
 if args.num_generations < 1:
@@ -38,3 +40,7 @@ recombinators = recombinators_from_directory(args.recombination_dir)
 chrom_sizes = recombinators[Sex.Male]._num_bases
 genome_generator = RecombGenomeGenerator(chrom_sizes)
 generate_genomes(population, genome_generator, recombinators)
+
+if args.output_file:
+    with open(args.output_file, "wb") as pickle_file:
+        dump(population, pickle_file, protocol = HIGHEST_PROTOCOL)
