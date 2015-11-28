@@ -95,6 +95,9 @@ def tree_from_string(tree):
     indentation = [-1]
     previous_node = None
     for line in tree:
+        if line.lstrip().startswith("#"):
+            # Ignore comments in tree file.
+            continue
         line_indentation = len(line) - len(line.lstrip())
         current_node = (float(line.strip()), [])
         if line_indentation > indentation[-1]:
