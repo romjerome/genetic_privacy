@@ -38,8 +38,8 @@ class Autosome():
     Encapsulates both homologs of a given Autosome.
     """
     def __init__(self, mother, father):
-        self._mother = mother
-        self._father = father
+        self._mother = tuple(mother)
+        self._father = tuple(father)
 
     @property
     def mother(self):
