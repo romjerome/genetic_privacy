@@ -1,9 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.5
 
 from argparse import ArgumentParser
 from random import choice
 from pickle import dump, HIGHEST_PROTOCOL
 from sys import setrecursionlimit, getrecursionlimit
+
+from pympler import asizeof, tracker, summary, muppy
 
 from population import HierarchicalIslandPopulation
 from population_genomes import generate_genomes
@@ -37,10 +39,20 @@ population = HierarchicalIslandPopulation(tree)
 for _ in range(args.num_generations - 1):
     population.new_generation()
 
+
+# tr = tracker.SummaryTracker()
 recombinators = recombinators_from_directory(args.recombination_dir)
 chrom_sizes = recombinators[Sex.Male]._num_bases
 genome_generator = RecombGenomeGenerator(chrom_sizes)
 generate_genomes(population, genome_generator, recombinators)
+# tr.print_diff()
+# summary.print_(summary.summarize(muppy.get_objects()))
+old_limit = getrecursionlimit()
+new_limit = old_limit * args.num_generations * 200
+print("Setting stack depth to: {}.".format(new_limit))
+setrecursionlimit(new_limit)
+asizeof.asizeof(population)
+setrecursionlimit(old_limit)
 
 if args.output_file:
     with open(args.output_file, "wb") as pickle_file:
@@ -50,7 +62,7 @@ if args.output_file:
         # depth using ulimit -s
         # https://docs.python.org/3.4/library/pickle.html#what-can-be-pickled-and-unpickled
         old_limit = getrecursionlimit()
-        new_limit = old_limit * args.num_generations * 100
+        new_limit = old_limit * args.num_generations * 200
         print("Setting stack depth to: {}.".format(new_limit))
         setrecursionlimit(new_limit)
         dump(population, pickle_file, protocol = HIGHEST_PROTOCOL)
