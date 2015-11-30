@@ -1,6 +1,7 @@
 from math import floor
 from random import shuffle, uniform, choice
 from itertools import chain, product, combinations_with_replacement
+from types import GeneratorType
 
 from symmetric_dict import SymmetricDict
 from node import Node
@@ -192,6 +193,12 @@ class HierarchicalIslandPopulation(Population):
         Returns a dictionary mapping islands to sets of individuals
         from generation_members.
         """
+        if isinstance(generation_members, GeneratorType):
+            # If generation_members is a generator, then all the
+            # elements are "used up" on the first leaf. We need to
+            # iterate over the elements of generation_members multiple
+            # time.
+            generation_members = list(generation_members)
         members = dict()
         for leaf in self._island_tree.leaves:
             m = list(leaf.individuals.intersection(generation_members))
@@ -209,7 +216,6 @@ class HierarchicalIslandPopulation(Population):
         if size is None:
             size = self._generations[-1].size
         previous_generation = self._generations[-1]
-        new_nodes = []
         men = list(previous_generation.men)
         shuffle(men)
         available_women = self._island_members(previous_generation.women)
@@ -233,6 +239,7 @@ class HierarchicalIslandPopulation(Population):
         # children. Because only having 2 children per pair only works
         # if there is an exact 1:1 ratio of men to women.
         extra_child = size - min_children * len(pairs)
+        new_nodes = []
         for i, (man, woman) in enumerate(pairs):
             if i < extra_child:
                 extra = 1
