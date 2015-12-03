@@ -52,9 +52,8 @@ class Autosome():
 
 class RecombGenome():
     
-    def __init__(self, chromosomes, recombinator = None):
+    def __init__(self, chromosomes):
         self._chromosomes = chromosomes
-        self._recombinator = recombinator
 
     @property
     def chromosomes(self):
@@ -268,7 +267,7 @@ class Recombinator():
                 
             new_autosomes[chrom_name] = Autosome(mother_modified,
                                                  father_modified)
-        return RecombGenome(new_autosomes, self)
+        return RecombGenome(new_autosomes)
 
 def _swap_at_locations(mother, father, locations):
     """
