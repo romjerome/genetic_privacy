@@ -12,18 +12,18 @@ def mate(mother, father, mother_recombinator, father_recombinator):
     assert father is not None
     mother_recomb = mother_recombinator.recombination(mother)
     father_recomb = father_recombinator.recombination(father)
-    offspring_autosomes = dict()
-    for chrom_name, chromosome in mother_recomb.chromosomes.items():
+    offspring_autosomes = []
+    for chrom_name, mother_chromosome in mother_recomb.iter_chromosomes():
         if random() < 0.5:
-            mother = mother_recomb.chromosomes[chrom_name].mother
+            mother = mother_chromosome.mother
         else:
-            mother = mother_recomb.chromosomes[chrom_name].father
+            mother = mother_chromosome.father
         if random() < 0.5:
-            father = father_recomb.chromosomes[chrom_name].mother
+            father = father_recomb.get_autosome(chrom_name).mother
         else:
-            father = father_recomb.chromosomes[chrom_name].father
-        offspring_autosomes[chrom_name] = Autosome(mother, father)
-    return RecombGenome(offspring_autosomes)
+            father = father_recomb.get_autosome(chrom_name).father
+        offspring_autosomes.append(Autosome(mother, father))
+    return RecombGenome(offspring_autosomes, mother_recomb._index_map)
 
 def generate_genomes(population, generator, recombinators):
     # I don't use recursion because python doesn't do well with

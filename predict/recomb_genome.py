@@ -6,7 +6,7 @@ from os import listdir
 from os.path import isfile, join
 from random import uniform
 from bisect import bisect_left
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import numpy as np
 
@@ -19,19 +19,29 @@ class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths):
         self._chromosome_lengths = chromosome_lengths
         self._genome_id = 0
+        autosome_names = chromosome_lengths.keys()
+        # The index map tracks where autosomes are in the array/tuple
+        # used in the RecombGenome object. This index_map is shared by
+        # all instances of RecombGenome generated from a
+        # RecombGenomeGenerator. This is because tuples are more space
+        # efficient than dictionaries when you have a large number
+        # with a few members.
+        self._index_map = OrderedDict(zip(autosome_names,
+                                          range(len(autosome_names))))
 
     def generate(self):
-        chromosomes = dict()
-        for chromosome, length in self._chromosome_lengths.items():
+        autosomes = []
+        for autosome_name in self._index_map.keys():
             # TODO: Consider making this a two element tuple, where
             # range is implicit in the sequence of tuples.
+            length = self._chromosome_lengths[autosome_name]
             mother = [(0, length, self._genome_id)]
             self._genome_id += 1
             father = [(0, length, self._genome_id)]
             self._genome_id += 1
-            chromosomes[chromosome] = Autosome(mother, father)
+            autosomes.append(Autosome(mother, father))
             
-        return RecombGenome(chromosomes)
+        return RecombGenome(autosomes, self._index_map)
 
 class Autosome():
     """
@@ -52,13 +62,16 @@ class Autosome():
 
 class RecombGenome():
     
-    def __init__(self, chromosomes, recombinator = None):
-        self._chromosomes = chromosomes
-        self._recombinator = recombinator
+    def __init__(self, chromosomes, index_map):
+        self._chromosomes = tuple(chromosomes)
+        self._index_map = index_map
 
-    @property
-    def chromosomes(self):
-        return self._chromosomes
+    def iter_chromosomes(self):
+        return ((autosome_name, self._chromosomes[index])
+                for autosome_name, index in self._index_map.items())
+
+    def get_autosome(self, autosome):
+        return self._chromosomes[self._index_map[autosome]]
 
 def recombinators_from_directory(directory):
     """
@@ -253,8 +266,8 @@ class Recombinator():
         is the product of recombination on the given RecombGenome.
         """
         assert genome is not None
-        new_autosomes = dict()
-        for chrom_name, autosome in genome.chromosomes.items():
+        new_autosomes = []
+        for chrom_name, autosome in genome.iter_chromosomes():
             locations = self._recombination_locations(chrom_name)
             if len(locations) % 2 == 1:
                 locations.append(self._num_bases[chrom_name])
@@ -266,9 +279,8 @@ class Recombinator():
             _swap_at_locations(mother_modified, father_modified,
                                zip(locations[::2], locations[1::2]))
                 
-            new_autosomes[chrom_name] = Autosome(mother_modified,
-                                                 father_modified)
-        return RecombGenome(new_autosomes, self)
+            new_autosomes.append(Autosome(mother_modified, father_modified))
+        return RecombGenome(new_autosomes, genome._index_map)
 
 def _swap_at_locations(mother, father, locations):
     """
