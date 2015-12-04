@@ -3,7 +3,6 @@
 from argparse import ArgumentParser
 from random import choice
 from pickle import dump, HIGHEST_PROTOCOL
-from sys import setrecursionlimit, getrecursionlimit
 
 from pympler import asizeof, tracker, summary, muppy
 
@@ -47,7 +46,7 @@ if not args.no_genomes:
     recombinators = recombinators_from_directory(args.recombination_dir)
     chrom_sizes = recombinators[Sex.Male]._num_bases
     genome_generator = RecombGenomeGenerator(chrom_sizes)
-    generate_genomes(population, genome_generator, recombinators)
+    generate_genomes(population, genome_generator, recombinators, 3)
     # tr.print_diff()
     summary.print_(summary.summarize(muppy.get_objects()))
 
@@ -62,8 +61,4 @@ if args.output_file:
         # python functions, you may need to increase the native stack
         # depth using ulimit -s
         # https://docs.python.org/3.4/library/pickle.html#what-can-be-pickled-and-unpickled
-        old_limit = getrecursionlimit()
-        new_limit = old_limit * args.num_generations * 300
-        setrecursionlimit(new_limit)
         dump(population, pickle_file, protocol = HIGHEST_PROTOCOL)
-        setrecursionlimit(old_limit)
