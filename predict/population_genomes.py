@@ -25,23 +25,23 @@ def mate(mother, father, mother_recombinator, father_recombinator):
         offspring_autosomes[chrom_name] = Autosome(mother, father)
     return RecombGenome(offspring_autosomes)
 
-def generate_genomes(population, generator, recombinators):
-    # I don't use recursion because python doesn't do well with
-    # deep recursion
-    queue = deque(population.generations[0].members)
-    while len(queue) > 0:
-        person = queue.popleft()
-        if person.genome is not None:
-            continue
-        # An optimization would be to only add children if person is female
-        # This way people only go into the queue once.
-        queue.extend(person.children)
-        mother = person.mother
-        father = person.father
-        if mother is None:
-            person.genome = generator.generate()
-            continue
-        assert mother.genome is not None
-        assert father.genome is not None
-        person.genome = mate(mother.genome, father.genome,
-                             recombinators[Sex.Female], recombinators[Sex.Male])
+def generate_genomes(population, generator, recombinators, keep_last = None):
+    assert keep_last is None or keep_last > 0
+    for generation_num, generation in enumerate(population.generations):
+        for person in generation.members:
+            if person.genome is not None:
+                continue
+            mother = person.mother
+            father = person.father
+            if mother is None:
+                person.genome = generator.generate()
+                continue
+            assert mother.genome is not None
+            assert father.genome is not None
+            person.genome = mate(mother.genome, father.genome,
+                                 recombinators[Sex.Female],
+                                 recombinators[Sex.Male])
+        if keep_last is not None and keep_last < generation_num:
+            to_delete = population.generations[generation_num - keep_last]
+            for person in to_delete.members:
+                person.genome = None
