@@ -5,11 +5,11 @@ from random import choice
 from pickle import dump, HIGHEST_PROTOCOL
 from sys import setrecursionlimit, getrecursionlimit
 
-# from pympler import asizeof, tracker, summary, muppy
+from pympler import asizeof, tracker, summary, muppy
 
 from population import HierarchicalIslandPopulation
 from population_genomes import generate_genomes
-from node import Node
+from node import NodeGenerator
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 from island_model import tree_from_file
 from sex import Sex
@@ -30,7 +30,8 @@ if args.num_generations < 1:
     parser.error("num_generations must be >= 1")
 
 
-founders = [Node() for _ in range(args.generation_size)]
+node_generator = NodeGenerator()
+founders = [node_generator.generate_node() for _ in range(args.generation_size)]
 
 tree = tree_from_file(args.tree_file)
 leaves = tree.leaves
@@ -48,7 +49,11 @@ if not args.no_genomes:
     genome_generator = RecombGenomeGenerator(chrom_sizes)
     generate_genomes(population, genome_generator, recombinators)
     # tr.print_diff()
-    # summary.print_(summary.summarize(muppy.get_objects()))
+    summary.print_(summary.summarize(muppy.get_objects()))
+
+# genomes = [m.genome for m in population.members]
+# print("genome sizes: " + str(asizeof.asizeof(genomes) // 1024))
+# print("population size: " + str(asizeof.asizeof(population) // 1024))
 
 if args.output_file:
     with open(args.output_file, "wb") as pickle_file:

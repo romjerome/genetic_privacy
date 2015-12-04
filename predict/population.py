@@ -4,7 +4,6 @@ from itertools import chain, product, combinations_with_replacement
 from types import GeneratorType
 
 from symmetric_dict import SymmetricDict
-from node import Node
 from generation import Generation
 
 class Population:
@@ -88,7 +87,8 @@ class Population:
             else:
                 extra = 0
             for i in range(min_children + extra):
-                new_nodes.append(Node(man, woman))
+                child = man.node_generator.generate_node(man, woman)
+                new_nodes.append(child)
 
         SIZE_ERROR = "Generation generated is not correct size. Expected {}, got {}."
         assert len(new_nodes) == size, SIZE_ERROR.format(size, len(new_nodes))
@@ -239,6 +239,7 @@ class HierarchicalIslandPopulation(Population):
         # children. Because only having 2 children per pair only works
         # if there is an exact 1:1 ratio of men to women.
         extra_child = size - min_children * len(pairs)
+        node_generator = men[0].node_generator
         new_nodes = []
         for i, (man, woman) in enumerate(pairs):
             if i < extra_child:
@@ -249,7 +250,7 @@ class HierarchicalIslandPopulation(Population):
             # Child will be based at mother's island
             island = self.island_tree.get_island(woman)
             for i in range(min_children + extra):
-                child = Node(man, woman)
+                child = node_generator.generate_node(man, woman)
                 new_nodes.append(child)
                 self.island_tree.add_individual(island, child)
                 
