@@ -53,33 +53,50 @@ def ancestors_of(node, distance):
             continue
         to_visit.append((current_node.mother, current_distance + 1))
         to_visit.append((current_node.father, current_distance + 1))
+    return ancestors
     
 
 def cdf_num_labeled_within_distance(population, distance, percent_labeled):
+    # TODO: This function only works if there is strict monogamy
     members = population.generations[-1].members
     num_labeled = int(percent_labeled * len(members))
     assert num_labeled > 0
     labeled = sample(members, num_labeled)
     ancestors = set(chain.from_iterable(ancestors_of(labeled_node, distance)
                                         for labeled_node in labeled))
+
+    descendants = chain.from_iterable(descendants_of(ancestor)
+                                      for ancestor in ancestors)
+    counter = Counter(descendants)
     
-    counter = Counter(chain.from_itrable(descendants_of(ancestor)
-                                         for ancestor in ancestors))
+    # Remove everyone not in the last generation
+    extras = set(counter.keys()) - set(members)
+    for extra in extras:
+        del counter[extra]
+
     for member in members:
         if member not in counter:
             counter[member] = 0
+        else:
+            # We double count ancestors,
+            # eg if by brother is in the set, then I show up twice in the
+            # count because I am added from both of my parent's sides. Fix
+            # this when we move away from strict monogamy assumptions.
+            counter[member] //= 2
 
     # key is the number of people labeled within distance, and value
     # is the number of people who have this many labeled people within
     # that distance.
     # eg if value_counts[3] is 5, then 5 people have relations of the
     # given distance with with 3 labeled individuals.
-    value_counts = Counter(counter.values())
-    assert len(members) == sum(value_counts.values())
-    total_count = len(members)
-    x = sorted(value_counts.keys())
-    y = np.cumsum([value_counts[key] for key in x]) / total_count
-    return (np.array(x), y)
+    # value_counts = Counter(counter.values())
+    # assert len(members) == sum(value_counts.values()), \
+    #     "Expected len(members) to equal sum(value_counts.values()), got {} and {} instead.".format(len(members), sum(value_co\unts.values()))
+    #  total_count = len(members)
+    # x = sorted(value_counts.keys())
+    # y = np.cumsum([value_counts[key] for key in x]) / total_count
+    # return (x, y)
+    return np.array(list(counter.values()))
 
 def length_shared(population):
     pass
