@@ -1,0 +1,50 @@
+
+from recomb_genome import GENOME_ID_INDEX
+
+def find_common_segments(genome_a, genome_b):
+    pass
+
+def common_homolog_segments(homolog_a, homolog_b):
+    len_a = len(homolog_a)
+    len_b = len(homolog_b)
+    index_a = 0
+    index_b = 0
+    shared_segments = []
+    while index_a < len_a and index_b < len_b:
+        segment_a = homolog_a[index_a]
+        segment_b = homolog_b[index_b]
+        if segment_a[GENOME_ID_INDEX] == segment_b[GENOME_ID_INDEX]:
+            start = max(segment_a[0], segment_b[0])
+            stop = min(segment_a[1], segment_b[1])
+            shared_segments.append((start, stop))
+        if segment_a[1] == segment_b[1]:
+            index_a += 1
+            index_b += 1
+        elif segment_a[1] > segment_b[1]:
+            index_b += 1
+        else:
+            index_a += 1
+    if len(shared_segments) <= 1:
+        return shared_segments
+    # consolidate contiguous segments eg if we have shared segments
+    # (0, 5) and (5, 10), then we should only return (0, 10).  This is
+    # necessary because recombination might possibly move segments
+    # with the same genome id to be continguous, but it will not merge
+    # them.
+    i = 0
+    j = 1
+    deduplicate_shared_segments = []
+    # TODO: Finish this loop
+    while j < len(shared_segments):
+        if shared_segments[i][1] == shared_segements[j][0]:
+            if j + 1 == len(shared_segments):
+                deduplicate_shared_segments.append((shared_segments[i][0],
+                                                    shared_segments[j][1]))
+            j += 1
+
+        else:
+            deduplicate_shared_segments.append((shared_segments[i][0],
+                                                shared_segments[j][1]))
+            i = j
+            j += 1
+    return shared_segments
