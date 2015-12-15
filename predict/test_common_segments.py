@@ -65,6 +65,11 @@ class TestConsolidateSequence(unittest.TestCase):
         seq = [(0, 4), (5, 8), (8, 10)]
         con = _consolidate_sequence(seq)
         self.assertEqual(con, [(0, 4), (5, 10)])
+        
+    def test_middle_two_merge(self):
+        seq = [(0, 3), (4, 6), (6, 8), (9, 10)]
+        con = _consolidate_sequence(seq)
+        self.assertEqual(con, [(0, 3), (4, 8), (9, 10)])
 
     def test_many_elements(self):
         seq = [(0, 2), (2, 4), (4, 8), (8, 10)]
@@ -77,4 +82,4 @@ class TestConsolidateSequence(unittest.TestCase):
         self.assertEqual(con, [(0, 10)])
 
 if __name__ == '__main__':
-    unittest.main(verbosity = 2)
+    unittest.main()
