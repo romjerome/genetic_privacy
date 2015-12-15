@@ -14,6 +14,7 @@ from sex import Sex
 
 MEGABASE = 10 ** 6
 DECODE_FILENAME = "decode_recombination_data.tab"
+GENOME_ID_INDEX = 2
 
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths):
@@ -312,7 +313,9 @@ def _break_sequence(sequence, location, index):
         # If the location is at the beginning or end of a range, then
         # it is considered split already.
         return    
-    first_half = (sequence[index - 1][0], location, sequence[index - 1][2])
-    second_half = (location, sequence[index - 1][1], sequence[index - 1][2])
+    first_half = (sequence[index - 1][0], location,
+                  sequence[index - 1][GENOME_ID_INDEX])
+    second_half = (location, sequence[index - 1][1],
+                   sequence[index - 1][GENOME_ID_INDEX])
     sequence[index - 1] = first_half
     sequence.insert(index, second_half)
