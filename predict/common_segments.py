@@ -40,12 +40,9 @@ def _consolidate_sequence(sequence):
     j = 1
     consolidated = []
     while j < len(sequence):
-        if sequence[i][1] == sequence[j][0]:
-            if j + 1 == len(sequence):
-                consolidated.append((sequence[i][0], sequence[j][1]))
-            j += 1
-        else:
-            consolidated.append((sequence[i][0], sequence[j][1]))
+        if sequence[j - 1][1] != sequence[j][0]:
+            consolidated.append((sequence[i][0], sequence[j - 1][1]))
             i = j
-            j += 1
+        j += 1
+    consolidated.append((sequence[i][0], sequence[j - 1][1]))
     return consolidated
