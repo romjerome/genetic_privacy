@@ -53,8 +53,6 @@ class TestConsolidateSequence(unittest.TestCase):
 
     def test_two_elements_disjoint(self):
         seq = [(0, 5), (6, 10)]
-        import pdb
-        # pdb.set_trace()
         con = _consolidate_sequence(seq)
         self.assertEqual(con, seq)
 
