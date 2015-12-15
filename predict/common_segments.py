@@ -27,24 +27,25 @@ def common_homolog_segments(homolog_a, homolog_b):
     if len(shared_segments) <= 1:
         return shared_segments
     # consolidate contiguous segments eg if we have shared segments
-    # (0, 5) and (5, 10), then we should only return (0, 10).  This is
-    # necessary because recombination might possibly move segments
-    # with the same genome id to be continguous, but it will not merge
-    # them.
+    # (0, 5) and (5, 10), then we should only return (0, 10).
+    return _consolidate_sequence(shared_segments)
+
+def _consolidate_sequence(sequence):
+    """
+    Takes a list of elements of the form (a, b), (c, d), ...  and
+    merges elements where b = c such that (a, b), (c, d) becomes (a, d)
+    """
+    assert len(sequence) > 1
     i = 0
     j = 1
-    deduplicate_shared_segments = []
-    # TODO: Finish this loop
-    while j < len(shared_segments):
-        if shared_segments[i][1] == shared_segements[j][0]:
-            if j + 1 == len(shared_segments):
-                deduplicate_shared_segments.append((shared_segments[i][0],
-                                                    shared_segments[j][1]))
+    consolidated = []
+    while j < len(sequence):
+        if sequence[i][1] == sequence[j][0]:
+            if j + 1 == len(sequence):
+                consolidated.append((sequence[i][0], sequence[j][1]))
             j += 1
-
         else:
-            deduplicate_shared_segments.append((shared_segments[i][0],
-                                                shared_segments[j][1]))
+            consolidated.append((sequence[i][0], sequence[j][1]))
             i = j
             j += 1
-    return shared_segments
+    return consolidated
