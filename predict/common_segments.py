@@ -50,7 +50,7 @@ def common_homolog_segments(homolog_a, homolog_b):
     if len(shared_segments) <= 1:
         return shared_segments
     # consolidate contiguous segments eg if we have shared segments
-    # (0, 5) and (5, 10), then we should only return (0, 10).
+    # (0, 5) and (5, 10), then we should merge them into (0, 10).
     return _consolidate_sequence(shared_segments)
 
 def _lengths(segments):
