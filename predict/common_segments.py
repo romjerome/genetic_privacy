@@ -2,6 +2,11 @@
 from recomb_genome import GENOME_ID_INDEX
 
 def common_segment_lengths(genome_a, genome_b):
+    """
+    Given two genomes returns a list of integers for each autosome,
+    corresponding to the length of segments that are shared between
+    the two autosomes.
+    """
     chromosomes_b = genome_b.chromosomes
     common_segment_lengths = dict()
     for name, autosome_a in genome_a.chromosomes.items():
@@ -19,6 +24,10 @@ def common_segment_lengths(genome_a, genome_b):
     return common_segment_lengths
 
 def common_homolog_segments(homolog_a, homolog_b):
+    """
+    Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
+    where the two autosomes have the same underlying sequence.
+    """
     len_a = len(homolog_a)
     len_b = len(homolog_b)
     index_a = 0
