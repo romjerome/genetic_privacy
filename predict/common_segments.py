@@ -1,15 +1,22 @@
 
 from recomb_genome import GENOME_ID_INDEX
 
-def find_common_segments(genome_a, genome_b):
+def common_segment_lengths(genome_a, genome_b):
     chromosomes_b = genome_b.chromosomes
+    common_segment_lengths = dict()
     for name, autosome_a in genome_a.chromosomes.items():
+        lengths = []
         autosome_b = chromosomes_b[name]
-        # TODO: How do we want to count these?
-        common_homolog_segments(autsome_a.mother, autsome_b.mother)
-        common_homolog_segments(autsome_a.father, autsome_b.mother)
-        common_homolog_segments(autsome_a.mother, autsome_b.father)
-        common_homolog_segments(autsome_a.father, autsome_b.father)
+        lengths.extend(_lengths(common_homolog_segments(autsome_a.mother,
+                                                        autsome_b.mother)))
+        lengths.extend(_lengths(common_homolog_segments(autsome_a.father,
+                                                        autsome_b.mother)))
+        lengths.extend(_lengths(common_homolog_segments(autsome_a.mother,
+                                                        autsome_b.father)))
+        lengths.extend(_lengths(common_homolog_segments(autsome_a.father,
+                                                        autsome_b.father)))
+        common_segment_lengths[name] = lengths
+    return common_segment_lengths
 
 def common_homolog_segments(homolog_a, homolog_b):
     len_a = len(homolog_a)
@@ -36,6 +43,12 @@ def common_homolog_segments(homolog_a, homolog_b):
     # consolidate contiguous segments eg if we have shared segments
     # (0, 5) and (5, 10), then we should only return (0, 10).
     return _consolidate_sequence(shared_segments)
+
+def _lengths(segments):
+    """
+    Takes a list of segments and returns a list of lengths.
+    """
+    return [b - a for a, b in segments]
 
 def _consolidate_sequence(sequence):
     """
