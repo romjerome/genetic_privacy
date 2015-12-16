@@ -12,14 +12,14 @@ def common_segment_lengths(genome_a, genome_b):
     for name, autosome_a in genome_a.chromosomes.items():
         lengths = []
         autosome_b = chromosomes_b[name]
-        lengths.extend(_lengths(common_homolog_segments(autsome_a.mother,
-                                                        autsome_b.mother)))
-        lengths.extend(_lengths(common_homolog_segments(autsome_a.father,
-                                                        autsome_b.mother)))
-        lengths.extend(_lengths(common_homolog_segments(autsome_a.mother,
-                                                        autsome_b.father)))
-        lengths.extend(_lengths(common_homolog_segments(autsome_a.father,
-                                                        autsome_b.father)))
+        lengths.extend(_lengths(common_homolog_segments(autosome_a.mother,
+                                                        autosome_b.mother)))
+        lengths.extend(_lengths(common_homolog_segments(autosome_a.father,
+                                                        autosome_b.mother)))
+        lengths.extend(_lengths(common_homolog_segments(autosome_a.mother,
+                                                        autosome_b.father)))
+        lengths.extend(_lengths(common_homolog_segments(autosome_a.father,
+                                                        autosome_b.father)))
         common_segment_lengths[name] = lengths
     return common_segment_lengths
 
