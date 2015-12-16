@@ -2,7 +2,14 @@
 from recomb_genome import GENOME_ID_INDEX
 
 def find_common_segments(genome_a, genome_b):
-    pass
+    chromosomes_b = genome_b.chromosomes
+    for name, autosome_a in genome_a.chromosomes.items():
+        autosome_b = chromosomes_b[name]
+        # TODO: How do we want to count these?
+        common_homolog_segments(autsome_a.mother, autsome_b.mother)
+        common_homolog_segments(autsome_a.father, autsome_b.mother)
+        common_homolog_segments(autsome_a.mother, autsome_b.father)
+        common_homolog_segments(autsome_a.father, autsome_b.father)
 
 def common_homolog_segments(homolog_a, homolog_b):
     len_a = len(homolog_a)
