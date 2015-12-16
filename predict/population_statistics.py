@@ -4,6 +4,8 @@ from collections import Counter
 
 import numpy as np
 
+from common_segments import common_segment_lengths
+
 def proportion_within_distance(population, distance, percent_labeled):
     members = population.generations[-1].members
     num_labeled = int(percent_labeled * len(members))
@@ -98,6 +100,22 @@ def cdf_num_labeled_within_distance(population, distance, percent_labeled):
     # return (x, y)
     return np.array(list(counter.values()))
 
+def shared_segment_distribution(population, distance):
+    assert distance > 0
+    ancestors = population.generations[-(distance + 1)].members
+    last_generation = population.generations[-1].members
+    percent_labeled = int(0.1 * len(ancestors))
+    ancestors_sample = sample(ancestors, percent_labeled)
+    lengths = []
+    for ancestor in ancestors_sample:
+        descendents = set(descendants_of(ancestor))
+        descendents = list(descendents.intersection(last_generation))
+        descendents_sample = sample(descendents, int(0.5 * len(descendents)))
+        for p_1, p_2 in combinations(descendents_sample, 2):
+            by_autosome = common_segment_lengths(p_1.genome, p_2.genome)
+            lengths.extend(chain.from_iterable(by_autosome.values()))
+    return lengths
+                                    
 def length_shared(population):
     pass
 
