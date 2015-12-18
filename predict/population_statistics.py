@@ -5,6 +5,7 @@ from collections import Counter
 import numpy as np
 
 from common_segments import common_segment_lengths
+from util import descendants_of
 
 def proportion_within_distance(population, distance, percent_labeled):
     members = population.generations[-1].members
@@ -33,15 +34,6 @@ def proportion_within_distance(population, distance, percent_labeled):
         descendant_set.add(current_node)
         to_search.extend(current_node.children)
     return len(descendant_set.intersection(members)) / len(members)
-
-def descendants_of(node):
-    descendants = set()
-    to_visit = list(node.children)
-    while len(to_visit) > 0:
-        ancestor = to_visit.pop()
-        descendants.add(ancestor)
-        to_visit.extend(ancestor.children)
-    return descendants
 
 def ancestors_of(node, distance):
     assert distance > 0

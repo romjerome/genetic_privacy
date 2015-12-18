@@ -48,7 +48,7 @@ if not args.no_genomes:
     genome_generator = RecombGenomeGenerator(chrom_sizes)
     generate_genomes(population, genome_generator, recombinators, 3)
     # tr.print_diff()
-    summary.print_(summary.summarize(muppy.get_objects()))
+    # summary.print_(summary.summarize(muppy.get_objects()))
 
 # genomes = [m.genome for m in population.members]
 # print("genome sizes: " + str(asizeof.asizeof(genomes) // 1024))
