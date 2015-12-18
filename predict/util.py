@@ -12,19 +12,26 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1):
                               int(len(common_ancestors) * percent_ancestors))
     descendants = set()
 
+def descendants_of(node):
+    descendants = set()
+    to_visit = list(node.children)
+    while len(to_visit) > 0:
+        ancestor = to_visit.pop()
+        descendants.add(ancestor)
+        to_visit.extend(ancestor.children)
+    return descendants
+
 def get_n_degree_relations(ancestor, distance):
     """
     Returns pairs of individuals separated by distance generations,
     starting from ancestor.
     """
-    # Do a BFS from the ancestor down to the children, saving the path
-    # to the children. Then pairwise compare the paths of children, if
-    # they have an overlapping parent along the path before the
-    # original ancestor, they are not a path separated by the desired
-    # distance.
-    # Is there a way to do this without comparing all possible pairs?
-    to_explore = deque(ancestor.children)
-    while len(to_explore) > 0:
-        pass
+    # Find the descendents of the children, remove the pairwise
+    # intersection, and return pairs from different sets.
+    ancestor_children = ancestor.children
+    descendant_sets = []
+    for child in ancestor_children:
+        descendent_sets.append(descendants_of(child))
+    
 
 
