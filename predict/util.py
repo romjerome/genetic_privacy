@@ -36,7 +36,8 @@ def descendants_with_common_ancestor(ancestor, generation_members):
     # Find the descendents of the children, remove the pairwise
     # intersection, and return pairs from different sets.
     ancestor_children = ancestor.children
-    assert len(ancestor_children) > 1
+    if len(ancestor_children) < 2:
+        return []
     descendant_sets = [descendants_of(child).intersection(generation_members)
                        for child in ancestor_children]    
     pair_iterables = []
