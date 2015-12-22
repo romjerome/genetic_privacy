@@ -5,8 +5,8 @@ from random import sample
 def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                           percent_descendants = 0.1):
     """
-    return a sample of individuals whos most recent common ancestor is
-    exactly generations back.
+    return a sample of pairs of individuals whos most recent common
+    ancestor is exactly generations back.
     """
     assert distance > 0
     common_ancestors = population.generations[-(distance + 1)].members
