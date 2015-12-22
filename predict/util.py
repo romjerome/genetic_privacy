@@ -9,7 +9,7 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1):
     """
     assert distance > 0
     common_ancestors = population.generations[-(distance + 1)].members
-    last_generation = population.generations[-1].members
+    last_generation = set(population.generations[-1].members)
     ancestors_sample = sample(common_ancestors,
                               int(len(common_ancestors) * percent_ancestors))
     pairs = []
@@ -38,6 +38,9 @@ def descendants_with_common_ancestor(ancestor, generation_members):
     ancestor_children = ancestor.children
     if len(ancestor_children) < 2:
         return []
+    if generation_members.is_superset(ancestor_children):
+        # Depth is only 1 generation, so return all combinations of children.
+        return combinations(ancestor_children, 2)
     descendant_sets = [descendants_of(child).intersection(generation_members)
                        for child in ancestor_children]    
     pair_iterables = []
@@ -49,3 +52,4 @@ def descendants_with_common_ancestor(ancestor, generation_members):
             descendants_b = descendants_b - intersection
         pair_iterables.append(product(descendants_a, descendants_b))
     return chain.from_iterable(pair_iterables)
+
