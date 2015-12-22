@@ -21,17 +21,15 @@ def descendants_of(node):
         to_visit.extend(ancestor.children)
     return descendants
 
-def get_n_degree_relations(ancestor, distance):
+def get_n_degree_relations(ancestor, generation_members):
     """
-    Returns pairs of individuals separated by distance generations,
-    starting from ancestor.
+    Returns pairs of individuals descendent from ancestor in the given
+    generation who have ancestor as their most recent ancestor.
     """
     # Find the descendents of the children, remove the pairwise
     # intersection, and return pairs from different sets.
     ancestor_children = ancestor.children
-    descendant_sets = []
-    for child in ancestor_children:
-        descendent_sets.append(descendants_of(child))
+    assert len(ancestor_children) > 1
+    descendant_sets = [descendants_of(child).intersection(generation_members)
+                       for child in ancestor_children]    
     
-
-
