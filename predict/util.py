@@ -8,7 +8,9 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
     return a sample of pairs of individuals whos most recent common
     ancestor is exactly generations back.
     """
-    assert distance > 0
+    assert 0 < distance < len(population.generations)
+    assert 0 < percent_descendants <= 1
+    assert 0 < percent_ancestors <= 1
     common_ancestors = population.generations[-(distance + 1)].members
     last_generation = set(population.generations[-1].members)
     ancestors_sample = sample(common_ancestors,
