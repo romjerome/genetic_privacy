@@ -2,7 +2,8 @@ from itertools import combinations, product, chain
 from random import sample
 
 
-def get_sample_of_cousins(population, distance, percent_ancestors = 0.1):
+def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
+                          percent_descendants = 0.1):
     """
     return a sample of individuals whos most recent common ancestor is
     exactly generations back.
@@ -16,7 +17,8 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1):
     for ancestor in ancestors_sample:
         temp_pairs = descendants_with_common_ancestor(ancestor, last_generation)
         temp_pairs = list(temp_pairs)
-        pairs.extend(sample(temp_pairs, int(len(temp_pairs) * 0.1)))
+        pairs.extend(sample(temp_pairs,
+                            int(len(temp_pairs) * percent_descendants)))
     return pairs
 
 def descendants_of(node):
@@ -38,7 +40,7 @@ def descendants_with_common_ancestor(ancestor, generation_members):
     ancestor_children = ancestor.children
     if len(ancestor_children) < 2:
         return []
-    if generation_members.is_superset(ancestor_children):
+    if generation_members.issuperset(ancestor_children):
         # Depth is only 1 generation, so return all combinations of children.
         return combinations(ancestor_children, 2)
     descendant_sets = [descendants_of(child).intersection(generation_members)
