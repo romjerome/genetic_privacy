@@ -13,7 +13,7 @@ We could try bucketing based on kinship coefficient.
 
 Idea:
 
-Use relationship (eg full siblings, double first cousins) and learn the distributions of those. This relationship can be represented by a vector rather than by human readable words. The vectors would be made up of the paths between the two individuals, where the entry is the length of the shortest path length. The paths do not need to be disjoint, otherwise there would only ever be maximum two possible paths, one through the mother and one through the father. Not all possible vectors will map onto realistic relationships.
+Use relationship (eg full siblings, double first cousins) and learn the distributions of those. This relationship can be represented by a vector rather than by human readable words. The vectors would be made up of the unique paths between the two individuals, where the entry is the length of the shortest path length. The paths do not need to be disjoint, otherwise there would only ever be maximum two possible paths, one through the mother and one through the father. Not all possible vectors will map onto realistic relationships.
 
 Thoughts on the qualitative differences between relations who may have the same kinship coefficient:
 
