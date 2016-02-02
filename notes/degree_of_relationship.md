@@ -15,6 +15,8 @@ Idea:
 
 Use relationship (eg full siblings, double first cousins) and learn the distributions of those. This relationship can be represented by a vector rather than by human readable words. The vectors would be made up of the unique paths between the two individuals, where the entry is the length of the shortest path length. The paths do not need to be disjoint, otherwise there would only ever be maximum two possible paths, one through the mother and one through the father. Not all possible vectors will map onto realistic relationships.
 
+Are there vectors with identical entries, but where the relationship is very different in nature? ie does <4, 4, 4, 4> always mean double first cousin?
+
 Thoughts on the qualitative differences between relations who may have the same kinship coefficient:
 
 http://familypedia.wikia.com/wiki/Double_first_cousin
