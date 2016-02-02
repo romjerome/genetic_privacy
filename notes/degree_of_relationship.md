@@ -9,7 +9,11 @@ relationship as pairs who share less. For example full siblings and
 half sibling have the same degree of relationship even though they
 share 50% and 25% of their genes, respectively.
 
-We could try bucketing based on kinship coefficient. 
+We could try bucketing based on kinship coefficient.
+
+Idea:
+
+Use relationship (eg full siblings, double first cousins) and learn the distributions of those. This relationship can be represented by a vector rather than by human readable words. The vectors would be made up of the paths between the two individuals, where the entry is the length of the shortest path length. Not all possible vectors will map onto realistic relationships.
 
 Thoughts on the qualitative differences between relations who may have the same kinship coefficient:
 
