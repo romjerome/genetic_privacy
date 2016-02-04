@@ -13,7 +13,7 @@ We could try bucketing based on kinship coefficient.
 
 Idea:
 
-Use relationship (eg full siblings, double first cousins) and learn the distributions of those. This relationship can be represented by a vector rather than by human readable words. The vectors would be made up of the unique paths between the two individuals, where the entry is the length of the shortest path length. The paths do not need to be disjoint, otherwise there would only ever be maximum two possible paths, one through the mother and one through the father. Not all possible vectors will map onto realistic relationships.
+Use relationship (eg full siblings, double first cousins) and learn the distributions of those. This relationship can be represented by a vector rather than by human readable words. The vectors would be made up of the unique paths between the two individuals that pass through a common ancestor, where the entry is the length of the shortest path length. The paths do not need to be disjoint, otherwise there would only ever be maximum two possible paths, one through the mother and one through the father. Not all possible vectors will map onto realistic relationships. The number of entries in the vector correspond to the number of common ancestors.
 
 Are there vectors with identical entries, but where the relationship is very different in nature? ie does <4, 4, 4, 4> always mean double first cousin?
 
