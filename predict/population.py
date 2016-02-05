@@ -10,6 +10,7 @@ class Population:
     def __init__(self, initial_generation = None):
         self._generations = []
         self._kinship_coefficients = None
+        self._node_to_generation = (None, -1)
         if initial_generation is not None:
             self._generations.append(initial_generation)
 
@@ -31,7 +32,24 @@ class Population:
     @property
     def size(self):
         return sum(generation.size for generation in self._generations)
-            
+
+    @property
+    def node_to_generation(self):
+        """
+        Maps nodes in this population to their generation.
+        """
+        # Cache the results of this function so it only needs to be
+        # computed when new generations are added.
+        cached = self._node_to_generation
+        if cached[0] is not None and cached[1] == len(self._generations):
+            return cached[0]        
+        generations = [generation.members for generation in self._generations]
+        node_to_generation = dict()
+        for generation_num, members in enumerate(generations):
+            for node in members:
+                node_to_generation[node] = generation_num
+        self._node_to_generation = (node_to_generation, len(self._generations))
+        return node_to_generation
 
     def clean_genomes(self, generations = None):
         """
