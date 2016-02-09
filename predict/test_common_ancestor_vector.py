@@ -17,7 +17,7 @@ class TestCommonAncestorVector(unittest.TestCase):
         generation = MagicMock()
         generation.node_to_generation = {mother: 0, child: 1}
         vector = common_ancestor_vector(generation, mother, child)
-        self.assertEqual(vector, [1])
+        self.assertEqual(vector, (1,))
 
     def test_parent_child_flip(self):
         mother = MockNode()
@@ -25,7 +25,7 @@ class TestCommonAncestorVector(unittest.TestCase):
         generation = MagicMock()
         generation.node_to_generation = {mother: 0, child: 1}
         vector = common_ancestor_vector(generation, child, mother)
-        self.assertEqual(vector, [1])
+        self.assertEqual(vector, (1,))
 
     def test_grandparent_child(self):
         grandmother = MockNode()
@@ -34,7 +34,7 @@ class TestCommonAncestorVector(unittest.TestCase):
         generation = MagicMock()
         generation.node_to_generation = {grandmother: 0, mother: 1, child: 2}
         vector = common_ancestor_vector(generation, grandmother, child)
-        self.assertEqual(vector, [2])
+        self.assertEqual(vector, (2,))
         
     def test_half_sibling(self):
         mother = MockNode()
@@ -43,7 +43,7 @@ class TestCommonAncestorVector(unittest.TestCase):
         generation = MagicMock()
         generation.node_to_generation = {mother: 0, node_a: 1, node_b: 1}
         vector = common_ancestor_vector(generation, node_a, node_b)
-        self.assertEqual(vector, [2])
+        self.assertEqual(vector, (2,))
         
     def test_full_sibling(self):
         mother = MockNode()
@@ -54,7 +54,7 @@ class TestCommonAncestorVector(unittest.TestCase):
         generation.node_to_generation = {mother: 0, father: 0,
                                          node_a: 1, node_b: 1}
         vector = common_ancestor_vector(generation, node_a, node_b)
-        self.assertEqual(vector, [2, 2])
+        self.assertEqual(vector, (2, 2))
 
     def test_cousins(self):
         grandmother = MockNode()
@@ -69,7 +69,7 @@ class TestCommonAncestorVector(unittest.TestCase):
                                          cousin_a: 2, cousin_b: 2}
         
         vector = common_ancestor_vector(generation, cousin_a, cousin_b)
-        self.assertEqual(vector, [4, 4])
+        self.assertEqual(vector, (4, 4))
 
     def test_double_first_cousins(self):
         grandmother_a = MockNode()
@@ -89,7 +89,7 @@ class TestCommonAncestorVector(unittest.TestCase):
                                          sibling_b1: 1, sibling_b2: 1,
                                          cousin_a: 2, cousin_b: 2}
         vector = common_ancestor_vector(generation, cousin_a, cousin_b)
-        self.assertEqual(vector, [4, 4, 4, 4])
+        self.assertEqual(vector, (4, 4, 4, 4))
 
     def test_sibling_cousins(self):
         grandmother = MockNode()
@@ -107,7 +107,7 @@ class TestCommonAncestorVector(unittest.TestCase):
         
         vector = common_ancestor_vector(generation, sibling_cousin_a,
                                         sibling_cousin_b)
-        self.assertEqual(vector, [2, 4, 4])
+        self.assertEqual(vector, (2, 4, 4))
 
 
 if __name__ == '__main__':

@@ -1,9 +1,8 @@
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from itertools import chain
 
 from scipy.stats import norm
 
-from util import get_sample_of_cousins
 from common_segments import common_segment_lengths
 
 # loc is mean, scale is standard deviation
@@ -13,31 +12,38 @@ class LengthClassifier:
     """
     Classifies based total length of shared segments
     """
-    def __init__(self, population, maximum_distance = 7, minimum_length = 0):
-        distributions = dict()
-        for distance in range(1, maxiumum_distance + 1):
-            lengths = []
-            pairs = get_sample_of_cousins(population, distance,
-                                          percent_descendants = 0.5)
-            for p_1, p_2 in pairs:
-                by_autosome = common_segment_lengths(p_1.genome, p_2.genome)
-                seg_lengths = filter(lambda x: x >= minimum_length,
-                                     chain.from_iterable(by_autosome.values()))
-                lengths.append(sum(seg_lengths))
+    def __init__(self, population, minimum_segment_length = 0):
+        self._distributions = dict()
+        length_counts = defaultdict(list)
+        for node_1, node_2 in _pair_picker(population):
+            relationship_vector = common_ancestor_vector(p_1, p_2)
+            shared_length = _shared_segment_length(node_1, nodes_2,
+                                                   minimum_segment_length)
+            length_counts[relationship_vector].append(shared_length)
+        for vector, lengths in length_counts.items():            
             fit = norm.fit(lengths)
             distribution = NormalDistribution(fit[0], fit[1])
-            distributions[distance] = distribution
-        self._distributions = distributions
+            self._distributions[vector] = distribution
 
     def classify(self, length):
         best_distance = -1
         best_likelihood = -1
-        for distance, distribution in distributions.items():
+        for distance, distribution in self._distributions.items():
             likelihood = norm.pdf(length, distribution.loc, distribution.scale)
             if likelihood > best_likelihood:
                 best_likelihood = likelihood
                 best_distance = distance
         return best_distance
+
+def _pair_picker(population):
+    pass
+
+def _shared_segment_length(node_1, node_2, minimum_length):
+    by_autosome = common_segment_lengths(node_1.genome, node_2.genome)
+    seg_lengths = filter(lambda x: x >= minimum_length,
+                         chain.from_iterable(by_autosome.values()))
+    return sum(seg_lengths)
+    
 
 def _immediate_ancestors_of(nodes):
     """
@@ -60,7 +66,7 @@ def common_ancestor_vector(population, node_a, node_b):
     person_a to person_b through a common ancestor.
     """
     if node_a == node_b:
-        return [0]
+        return (0,)
     node_to_generation = population.node_to_generation
     if node_to_generation[node_a] > node_to_generation[node_b]:
         temp = node_a
@@ -77,7 +83,7 @@ def common_ancestor_vector(population, node_a, node_b):
             # One is a descandant of the other, therefore one of the
             # nodes is the only common ancestor which doesn't have a
             # path through a more recent common ancestor.
-            return [node_b_generation - node_a_generation]
+            return (node_b_generation - node_a_generation,)
         current_generation -= 1
     distances_vector = []
     assert node_a_generation == current_generation
@@ -89,4 +95,5 @@ def common_ancestor_vector(population, node_a, node_b):
         distance_to_b = node_b_generation - current_generation
         new_distance = [distance_to_a + distance_to_b] * len(common_ancestors)
         distances_vector.extend(new_distance)
-    return distances_vector
+    distances_vector.sort() 
+    return tuple(distances_vector)
