@@ -9,8 +9,6 @@ from common_segments import common_segment_lengths
 # loc is mean, scale is standard deviation
 NormalDistribution = namedtuple("NormalDistribution", ["loc", "scale"])
 
-NONE_SET = frozenset([None])
-
 class LengthClassifier:
     """
     Classifies based total length of shared segments
@@ -52,6 +50,8 @@ def _immediate_ancestors_of(nodes):
             continue
         ancestors.add(node.mother)
         ancestors.add(node.father)
+    if None in ancestors:
+        ancestors.remove(None)
     return ancestors
     
 def common_ancestor_vector(population, node_a, node_b):
@@ -82,9 +82,7 @@ def common_ancestor_vector(population, node_a, node_b):
     distances_vector = []
     assert node_a_generation == current_generation
     for current_generation in range(node_a_generation - 1, -1, -1):
-        # If any parents were "None", then we will have None as an
-        # ancestor, which we don't want to count as a common ancestor. 
-        ancestors_a = _immediate_ancestors_of(ancestors_a) - NONE_SET
+        ancestors_a = _immediate_ancestors_of(ancestors_a)
         ancestors_b = _immediate_ancestors_of(ancestors_b)
         common_ancestors = ancestors_a.intersection(ancestors_b)
         distance_to_a = node_a_generation - current_generation
