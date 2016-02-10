@@ -1,5 +1,6 @@
 from collections import namedtuple, defaultdict
 from itertools import chain
+from random import choice
 
 from scipy.stats import norm
 
@@ -16,10 +17,15 @@ class LengthClassifier:
         self._distributions = dict()
         length_counts = defaultdict(list)
         for node_1, node_2 in _pair_picker(population):
-            relationship_vector = common_ancestor_vector(p_1, p_2)
-            shared_length = _shared_segment_length(node_1, nodes_2,
+            relationship_vector = common_ancestor_vector(node_1, node_2)
+            shared_length = _shared_segment_length(node_1, node_2,
                                                    minimum_segment_length)
             length_counts[relationship_vector].append(shared_length)
+            if (len(length_counts) > 5 and
+                min(len(lengths) for lengths in length_counts.values()) > 100):
+                # Ensure there are enough data points to create a
+                # distribution for each type of relationship.
+                break
         for vector, lengths in length_counts.items():            
             fit = norm.fit(lengths)
             distribution = NormalDistribution(fit[0], fit[1])
@@ -35,8 +41,18 @@ class LengthClassifier:
                 best_distance = distance
         return best_distance
 
-def _pair_picker(population):
-    pass
+def _pair_picker(population, generations_to_use = 4):
+    """
+    Returns random pairs of individuals from the last
+    generations_to_use generations of population.
+    """
+    generations = population.generations
+    compared_generations = [generation.members for generation
+                            in generations[-generations_to_use:]]
+    while True:
+        yield (choice(choice(compared_generations)),
+               choice(choice(compared_generations)))
+    
 
 def _shared_segment_length(node_1, node_2, minimum_length):
     by_autosome = common_segment_lengths(node_1.genome, node_2.genome)
