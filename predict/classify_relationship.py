@@ -1,13 +1,19 @@
 from collections import namedtuple, defaultdict
 from itertools import chain
-from random import choice
+from random import choice, random, sample
 
 from scipy.stats import norm
 
 from common_segments import common_segment_lengths
+from util import descendants_of
+
+import pdb
 
 # loc is mean, scale is standard deviation
 NormalDistribution = namedtuple("NormalDistribution", ["loc", "scale"])
+
+# Distributions we want to have a lot of data samples for
+DESIRED_DISTRIBUTIONS = [(2, 2), (4, 4)]
 
 class LengthClassifier:
     """
@@ -16,15 +22,16 @@ class LengthClassifier:
     def __init__(self, population, minimum_segment_length = 0):
         self._distributions = dict()
         length_counts = defaultdict(list)
-        for node_1, node_2 in _pair_picker(population):
-            relationship_vector = common_ancestor_vector(node_1, node_2)
-            shared_length = _shared_segment_length(node_1, node_2,
+        i = 0
+        for node_a, node_b in _pair_picker(population):
+            relationship_vector = common_ancestor_vector(population, node_a,
+                                                         node_b)
+            shared_length = _shared_segment_length(node_a, node_b,
                                                    minimum_segment_length)
             length_counts[relationship_vector].append(shared_length)
-            if (len(length_counts) > 5 and
-                min(len(lengths) for lengths in length_counts.values()) > 100):
-                # Ensure there are enough data points to create a
-                # distribution for each type of relationship.
+            i += 1
+            if i % 1000 == 0 and _stop_sampling(length_counts):
+                # Don't check the stop condition every time for efficiency
                 break
         for vector, lengths in length_counts.items():            
             fit = norm.fit(lengths)
@@ -41,21 +48,47 @@ class LengthClassifier:
                 best_distance = distance
         return best_distance
 
-def _pair_picker(population, generations_to_use = 4):
+def _stop_sampling(length_counts):
+    # TODO: improve this condition.
+    (lengs_counts[key] for key in DESIRED_DISTRIBUTIONS)
+    return (min(len(lengths) for lengths in ) > 100)
+
+def _pair_picker(population, generations_to_use = 3):
     """
     Returns random pairs of individuals from the last
-    generations_to_use generations of population.
+    generations_to_use generations of population.]
+    TODO: Improve this sampling algorithm to get better data.
     """
     generations = population.generations
     compared_generations = [generation.members for generation
                             in generations[-generations_to_use:]]
+    # If we just chose random pairs from the population, few would be
+    # closely related, thus we want to chose pair that we know share
+    # recent common ancestors.
     while True:
-        yield (choice(choice(compared_generations)),
-               choice(choice(compared_generations)))
+        strategy = random()
+        if strategy < 0.3:
+            descendants = list(descendants_of(choice(compared_generations[0])))
+            if len(descendants) <= 1:
+                continue
+            node_a, node_b = sample(descendants, 2)
+            yield(node_a, node_b)
+        elif strategy < 0.6:
+            descendants = list(descendants_of(choice(compared_generations[1])))
+            if len(descendants) <= 1:
+                continue
+            node_a, node_b = sample(descendants, 2)
+            yield(node_a, node_b)
+        elif strategy < 0.9:
+            yield(choice(compared_generations[2]),
+                  choice(compared_generations[2]))
+        else:
+            yield (choice(choice(compared_generations)),
+                   choice(choice(compared_generations)))
     
 
-def _shared_segment_length(node_1, node_2, minimum_length):
-    by_autosome = common_segment_lengths(node_1.genome, node_2.genome)
+def _shared_segment_length(node_a, node_b, minimum_length):
+    by_autosome = common_segment_lengths(node_a.genome, node_b.genome)
     seg_lengths = filter(lambda x: x >= minimum_length,
                          chain.from_iterable(by_autosome.values()))
     return sum(seg_lengths)
@@ -72,8 +105,7 @@ def _immediate_ancestors_of(nodes):
             continue
         ancestors.add(node.mother)
         ancestors.add(node.father)
-    if None in ancestors:
-        ancestors.remove(None)
+    ancestors.discard(None)
     return ancestors
     
 def common_ancestor_vector(population, node_a, node_b):
@@ -111,5 +143,10 @@ def common_ancestor_vector(population, node_a, node_b):
         distance_to_b = node_b_generation - current_generation
         new_distance = [distance_to_a + distance_to_b] * len(common_ancestors)
         distances_vector.extend(new_distance)
+        # Don't look past the ancestors we have already counted.
+        # eg it is more relevant that siblings share parents rather
+        # than grandparents.
+        ancestors_a.difference_update(common_ancestors)
+        ancestors_b.difference_update(common_ancestors)
     distances_vector.sort() 
     return tuple(distances_vector)
