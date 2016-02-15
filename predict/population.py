@@ -11,6 +11,8 @@ class Population:
         self._generations = []
         self._kinship_coefficients = None
         self._node_to_generation = (None, -1)
+        # The last n generations with genomes defined
+        self._generations_with_genomes = None
         if initial_generation is not None:
             self._generations.append(initial_generation)
 
