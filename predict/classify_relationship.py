@@ -1,19 +1,20 @@
 from collections import namedtuple, defaultdict
 from itertools import chain
-from random import choice, random, sample
+from random import choice, randrange
 
 from scipy.stats import norm
 
 from common_segments import common_segment_lengths
 from util import descendants_of
 
-import pdb
-
 # loc is mean, scale is standard deviation
 NormalDistribution = namedtuple("NormalDistribution", ["loc", "scale"])
 
 # Distributions we want to have a lot of data samples for
-DESIRED_DISTRIBUTIONS = [(2, 2), (4, 4)]
+DESIRED_DISTRIBUTIONS = [(2, 2), (3, 3), (4, 4), (5, 5), (1,), (2,)]
+# The minimum number of data points we must have on a relationship to
+# generate a distribution for that relationship.
+MINIMUM_DATAPOINTS = 50
 
 class LengthClassifier:
     """
@@ -33,7 +34,9 @@ class LengthClassifier:
             if i % 1000 == 0 and _stop_sampling(length_counts):
                 # Don't check the stop condition every time for efficiency
                 break
-        for vector, lengths in length_counts.items():            
+        for vector, lengths in length_counts.items():
+            if len(lengths) < MINIMUM_DATAPOINTS or max(lengths) == 0:
+                continue
             fit = norm.fit(lengths)
             distribution = NormalDistribution(fit[0], fit[1])
             self._distributions[vector] = distribution
@@ -50,41 +53,44 @@ class LengthClassifier:
 
 def _stop_sampling(length_counts):
     # TODO: improve this condition.
-    (lengs_counts[key] for key in DESIRED_DISTRIBUTIONS)
-    return (min(len(lengths) for lengths in ) > 100)
+    datapoints = (length_counts[key] for key in DESIRED_DISTRIBUTIONS)
+    return min(len(datapoint_list) for datapoint_list in datapoints) > 100
 
-def _pair_picker(population, generations_to_use = 3):
+def _pair_picker(population):
     """
     Returns random pairs of individuals from the last
-    generations_to_use generations of population.]
+    generations_to_use generations of population.
     TODO: Improve this sampling algorithm to get better data.
     """
     generations = population.generations
-    compared_generations = [generation.members for generation
-                            in generations[-generations_to_use:]]
+    with_genomes = population._generations_with_genomes
+    compared_generations = [generation.members for generation in generations]
     # If we just chose random pairs from the population, few would be
     # closely related, thus we want to chose pair that we know share
     # recent common ancestors.
     while True:
-        strategy = random()
-        if strategy < 0.3:
-            descendants = list(descendants_of(choice(compared_generations[0])))
-            if len(descendants) <= 1:
+        # We can't have someone in the latest generation as an ancestor
+        ancestor_generation = randrange(population.num_generations - 1)
+        ancestor = choice(compared_generations[ancestor_generation])
+        descendants = descendants_of(ancestor)
+        pairs = set()
+        lower_generation_bound = max(ancestor_generation + 1,
+                                     population.num_generations - with_genomes)
+        for _ in range(10): # reuse an ancestor a few times.
+            node_a_generation = randrange(lower_generation_bound,
+                                          population.num_generations)
+            node_b_generation = randrange(lower_generation_bound,
+                                          population.num_generations)
+            possible_node_a = list(descendants.intersection(compared_generations[node_a_generation]))
+            possible_node_b = list(descendants.intersection(compared_generations[node_b_generation]))
+            if len(possible_node_a) == 0 or len(possible_node_b) == 0:
                 continue
-            node_a, node_b = sample(descendants, 2)
-            yield(node_a, node_b)
-        elif strategy < 0.6:
-            descendants = list(descendants_of(choice(compared_generations[1])))
-            if len(descendants) <= 1:
-                continue
-            node_a, node_b = sample(descendants, 2)
-            yield(node_a, node_b)
-        elif strategy < 0.9:
-            yield(choice(compared_generations[2]),
-                  choice(compared_generations[2]))
-        else:
-            yield (choice(choice(compared_generations)),
-                   choice(choice(compared_generations)))
+            node_a = choice(possible_node_a)
+            node_b = choice(possible_node_b)
+            node_set = frozenset((node_a, node_b)) # ensure no repeats
+            if node_set not in pairs and node_a is not node_b:
+                yield (node_a, node_b)
+                pairs.add(node_set)
     
 
 def _shared_segment_length(node_a, node_b, minimum_length):
