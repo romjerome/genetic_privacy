@@ -11,7 +11,7 @@ from util import descendants_of
 NormalDistribution = namedtuple("NormalDistribution", ["loc", "scale"])
 
 # Distributions we want to have a lot of data samples for
-DESIRED_DISTRIBUTIONS = [(2, 2), (3, 3), (4, 4), (5, 5), (1,), (2,)]
+DESIRED_DISTRIBUTIONS = [(2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (1,), (2,)]
 # The minimum number of data points we must have on a relationship to
 # generate a distribution for that relationship.
 MINIMUM_DATAPOINTS = 50
@@ -21,6 +21,7 @@ class LengthClassifier:
     Classifies based total length of shared segments
     """
     def __init__(self, population, minimum_segment_length = 0):
+        self._minimum_segment_length = minimum_segment_length
         self._distributions = dict()
         length_counts = defaultdict(list)
         i = 0
@@ -31,8 +32,10 @@ class LengthClassifier:
                                                    minimum_segment_length)
             length_counts[relationship_vector].append(shared_length)
             i += 1
-            if i % 1000 == 0 and _stop_sampling(length_counts):
-                # Don't check the stop condition every time for efficiency
+            # if i % 1000 == 0 and _stop_sampling(length_counts):
+            #     # Don't check the stop condition every time for efficiency
+            #     break
+            if i == 1000000:
                 break
         for vector, lengths in length_counts.items():
             if len(lengths) < MINIMUM_DATAPOINTS or max(lengths) == 0:
@@ -41,15 +44,17 @@ class LengthClassifier:
             distribution = NormalDistribution(fit[0], fit[1])
             self._distributions[vector] = distribution
 
-    def classify(self, length):
-        best_distance = -1
+    def classify(self, node_a, node_b):
+        length = _shared_segment_length(node_a, node_b,
+                                        self._minimum_segment_length)
+        best_relationship = -1
         best_likelihood = -1
-        for distance, distribution in self._distributions.items():
+        for relationship, distribution in self._distributions.items():
             likelihood = norm.pdf(length, distribution.loc, distribution.scale)
             if likelihood > best_likelihood:
                 best_likelihood = likelihood
-                best_distance = distance
-        return best_distance
+                best_relationship = relationship
+        return best_relationship
 
 def _stop_sampling(length_counts):
     # TODO: improve this condition.
