@@ -22,7 +22,7 @@ for relationship, length_data in lengths.items():
     if LENGTH_CUTOFF > len(length_data):
         continue
     plt.subplot(num_row, num_col, subplot_num)
-    plt.hist(length_data)
+    plt.hist(length_data, bins = 20)
     plt.title(str(relationship))
     subplot_num += 1
 
