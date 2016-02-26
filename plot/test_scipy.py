@@ -1,4 +1,11 @@
-from scipy.stats import truncnorm
+import matplotlib.pyplot as plt
+from scipy.stats import truncnorm, gamma
+import numpy as np
+from pickle import load
+
+with open("lengths_file.pickle", "rb") as lengths_file:
+    lengths = load(lengths_file)
+
 
 data = [10334157, 49243020, 8054510, 74055442, 29628988, 0, 95662961,
 25858267, 46418312, 94619500, 71168308, 73255226, 15952414, 29958148,
@@ -16,4 +23,28 @@ data = [10334157, 49243020, 8054510, 74055442, 29628988, 0, 95662961,
 106694589, 67063796, 16053222, 101270899, 15620252, 18355964, 839197,
 31083111, 66698677]
 
-print(truncnorm.fit(data, 0, 2866387308))
+# mean = np.mean(data)
+# var = np.var(data)
+# fit = truncnorm.fit(data, 0, 2866387308, loc = mean, scale = var)
+# print(fit)
+# print(truncnorm(*fit).rvs(100))
+# vector = lengths[(2, 2)]
+vector = np.array(sorted(lengths[(5, 5)]))
+
+mean = np.mean(vector)
+var = np.var(vector)
+std = np.std(vector)
+# fit = truncnorm.fit(vector, a = 0, b = 2866387308, loc = mean, scale = var)
+fit = gamma.fit(vector)
+print(fit)
+# pdf = gamma.pdf(vector, *fit[:-2], loc = fit[-2], scale = fit[-1])
+pdf = gamma(*fit).pdf(vector)
+print(pdf)
+# print(gamma.pdf(vector, alpha))
+
+plt.figure()
+plt.hist(vector, bins = 20, normed = True)
+# plt.hist(truncnorm(*fit).rvs(10000), bins = 20, normed = True, alpha = 0.5)
+plt.plot(vector, pdf)
+# plt.hist(gamma(*fit).rvs(10000), bins = 20, normed = True, alpha = 0.5)
+plt.show()
