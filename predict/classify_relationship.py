@@ -2,7 +2,7 @@ from collections import namedtuple, defaultdict
 from itertools import chain
 from random import choice, randrange
 
-from scipy.stats import norm
+from scipy.stats import gamma
 
 from common_segments import common_segment_lengths
 from util import descendants_of
@@ -35,13 +35,13 @@ class LengthClassifier:
             # if i % 1000 == 0 and _stop_sampling(length_counts):
             #     # Don't check the stop condition every time for efficiency
             #     break
-            if i == 1000000:
+            if i == 100000:
                 break
         for vector, lengths in length_counts.items():
             if len(lengths) < MINIMUM_DATAPOINTS or max(lengths) == 0:
                 continue
-            fit = norm.fit(lengths)
-            distribution = NormalDistribution(fit[0], fit[1])
+            fit = gamma.fit(lengths)
+            distribution = gamma(*fit)
             self._distributions[vector] = distribution
 
     def classify(self, node_a, node_b):
@@ -50,7 +50,7 @@ class LengthClassifier:
         best_relationship = -1
         best_likelihood = -1
         for relationship, distribution in self._distributions.items():
-            likelihood = norm.pdf(length, distribution.loc, distribution.scale)
+            likelihood = distribution.pdf(length)
             if likelihood > best_likelihood:
                 best_likelihood = likelihood
                 best_relationship = relationship
