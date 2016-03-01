@@ -24,7 +24,7 @@ for node_a, node_b in _pair_picker(population):
     tested[relationship_vector] += 1
     if sum(tested.values()) == 5000:
         break
-    
+
 format_string = "Tested: {}\ncorrect: {}\nincorrect: {}\n fraction correct: {}"
 print("Overall performance.")
 total_tested = sum(tested.values())
@@ -33,7 +33,9 @@ total_incorrect = sum(incorrect.values())
 print(format_string.format(total_tested, total_correct, total_incorrect,
                            total_correct / total_tested))
 
-for relationship_vector, tested_count in tested.items():
+sorted_relationships = sorted(tested.keys(), key = sum)
+for relationship_vector in sorted_relationships:
+    tested_count = tested[relationship_vector]
     if tested_count < 25:
         continue
     print("Performance for: {}".format(relationship_vector))
