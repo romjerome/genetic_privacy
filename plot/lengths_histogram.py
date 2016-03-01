@@ -18,14 +18,17 @@ plot_count = len(list(filter(lambda x: LENGTH_CUTOFF < len(x),
 num_col = int(floor(sqrt(plot_count)))
 num_row = int(ceil(plot_count / num_col))
 
+sorted_relationships = sorted(lengths.keys(), key = sum)
+
 plt.figure(1)
 subplot_num = 1
-for relationship, length_data in lengths.items():
+for relationship in sorted_relationships:
+    length_data = lengths[relationship]
     length_data.sort()
     if LENGTH_CUTOFF > len(length_data):
         continue
     plt.subplot(num_row, num_col, subplot_num)
-    plt.hist(length_data, bins = 30, normed = True)
+    plt.hist(length_data, bins = 200, normed = True)
     plt.title(str(relationship))
 
     fit = gamma.fit(length_data)
@@ -33,6 +36,6 @@ for relationship, length_data in lengths.items():
     plt.plot(length_data, pdf)
     subplot_num += 1
 
+plt.tight_layout()
 plt.show()
     
-
