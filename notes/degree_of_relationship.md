@@ -24,3 +24,15 @@ http://familypedia.wikia.com/wiki/Double_first_cousin
 >  While double first cousins have the same coefficient of coancestry (1/8) as half-siblings, they do have higher chances of sharing BOTH alleles (1/16 vs 0) and lower chances of sharing one allele (3/8 vs 1/2) with each other than half-siblings.
 
 ie double first cousins have the same % dna shared, but certain combinations are possible in double first cousins that are not possible in half-siblings.
+
+
+Generating graphs of arbitary relationship vectors
+==================================================
+
+Idea for generating genealogies from vectors:
+
+* For each entry, iterate through all possible relationships at each distance
+* Each relationship type has "endpoints" of the common ancestors.
+  eg, for (2,) the endpoints are siblings or grandparent/grandchild.
+* "Stitch" these endpoints together.
+* If the end points can't be stitched together, go up one level, then try to stitch in the relationship.
