@@ -37,12 +37,30 @@ class LengthClassifier:
             #     break
             if i == 100000:
                 break
+            
+        # Generate our conditional probabilities
         for vector, lengths in length_counts.items():
             if len(lengths) < MINIMUM_DATAPOINTS or max(lengths) == 0:
                 continue
             fit = gamma.fit(lengths)
             distribution = gamma(*fit)
             self._distributions[vector] = distribution
+
+    def has_relationship(self, relationship):
+        """
+        Returns true if this LengthClassifier can return probabilities
+        for this type of relationship.
+        """
+        return relationship in self._distributions
+            
+    def get_probability_genomes(self, relationship, genome_a, genome_b):
+        length = shared_segment_length_genomes(genome_a, genome_b,
+                                               self._minimum_segment_length)
+        if relationship in self._distributions:
+            return self._distributions[relationship].pdf(length)
+        else:
+            # TODO: return something more meaningful here
+            return None
 
     def classify(self, node_a, node_b):
         length = _shared_segment_length(node_a, node_b,
@@ -97,13 +115,15 @@ def _pair_picker(population):
                 yield (node_a, node_b)
                 pairs.add(node_set)
     
-
-def _shared_segment_length(node_a, node_b, minimum_length):
-    by_autosome = common_segment_lengths(node_a.genome, node_b.genome)
+def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
+    by_autosome = common_segment_lengths(genome_a, genome_b)
     seg_lengths = filter(lambda x: x >= minimum_length,
                          chain.from_iterable(by_autosome.values()))
     return sum(seg_lengths)
     
+def _shared_segment_length(node_a, node_b, minimum_length):
+    return shared_segment_length_genomes(node_a.genome, node_b.genome,
+                                          minimum_length)
 
 def _immediate_ancestors_of(nodes):
     """
