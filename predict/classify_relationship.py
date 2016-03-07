@@ -53,7 +53,7 @@ class LengthClassifier:
         """
         return relationship in self._distributions
             
-    def get_probability_genomes(self, relationship, genome_a, genome_b):
+    def get_probability(self, relationship, genome_a, genome_b):
         length = shared_segment_length_genomes(genome_a, genome_b,
                                                self._minimum_segment_length)
         if relationship in self._distributions:

@@ -1,5 +1,4 @@
-from classify_relationship import LengthClassifier, common_ancestor_vector,\
-    shared_segment_length_genomes
+from classify_relationship import LengthClassifier, common_ancestor_vector
 from functools import reduce
 from operator import mul
 
@@ -14,11 +13,12 @@ class BayesDeanonymize:
     def _compare_genome_node(self, node, genome):
         probabilities = []
         for labeled_node in self._labeled_nodes:
-            ancestor_vector = common_ancestor_vector(node, labeled_node)
+            ancestor_vector = common_ancestor_vector(self._population,
+                                                     node, labeled_node)
             prob = self._length_classifier.get_probability(ancestor_vector,
                                                            node.genome,
                                                            genome)
-            probabilities.append(probability)
+            probabilities.append(prob)
         return list(filter(lambda x: x is not None, probabilities))
 
         
@@ -27,10 +27,10 @@ class BayesDeanonymize:
         for member in self._population.members:
             if member.genome is None:
                 continue
-            proabilities = self._compare_genome_node(member, genome)]
-            if len(probabilites) < MINIMUM_LABELED_NODES:
+            probabilities = self._compare_genome_node(member, genome)
+            if len(probabilities) < MINIMUM_LABELED_NODES:
                 # We don't want to base our estimation on datapoints
                 # from too few labeled nodes.
                 continue
-            node_probabilities[node] = reduce(mul, proabilities, 1)
+            node_probabilities[member] = reduce(mul, probabilities, 1)
         return max(node_probabilities.iteritems(), key = lambda x: x[1])[0]
