@@ -5,7 +5,7 @@ from random import sample, choice
 
 from bayes_deanonymize import BayesDeanonymize
 
-NUM_LABELED = 1000
+NUM_LABELED = 10
 
 with open("population_40000.pickle", "rb") as pickle_file:
     population = load(pickle_file)

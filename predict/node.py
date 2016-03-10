@@ -59,17 +59,17 @@ class Node:
     def mother(self):
         if self._mother_id is None:
             return None
-        return self._node_generator.mapping[self._mother_id]
+        return self._node_generator._mapping[self._mother_id]
 
     @property
     def father(self):
         if self._father_id is None:
             return None
-        return self._node_generator.mapping[self._father_id]
+        return self._node_generator._mapping[self._father_id]
 
     @property
     def children(self):
-        return [self._node_generator.mapping[node_id]
+        return [self._node_generator._mapping[node_id]
                 for node_id in self._children]
 
     @property

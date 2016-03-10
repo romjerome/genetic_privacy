@@ -23,7 +23,6 @@ class LengthClassifier:
     def __init__(self, population, minimum_segment_length = 0):
         self._minimum_segment_length = minimum_segment_length
         self._distributions = dict()
-        self._shared_length_cache = dict()
         length_counts = defaultdict(list)
         i = 0
         for node_a, node_b in _pair_picker(population):
@@ -55,13 +54,8 @@ class LengthClassifier:
         return relationship in self._distributions
             
     def get_probability(self, relationship, genome_a, genome_b):
-        pair = (genome_a, genome_b)
-        if pair in self._shared_length_cache:
-            length = self._shared_length_cache[pair]
-        else:
-            length = shared_segment_length_genomes(genome_a, genome_b,
-                                                   self._minimum_segment_length)
-            self._shared_length_cache[pair] = length
+        length = shared_segment_length_genomes(genome_a, genome_b,
+                                               self._minimum_segment_length)
         if relationship in self._distributions:
             return self._distributions[relationship].pdf(length)
         else:

@@ -9,18 +9,12 @@ class BayesDeanonymize:
         self._population = population
         self._labeled_nodes = list(labeled_nodes)
         self._length_classifier = LengthClassifier(population, 1000)
-        self._ancestor_vector_cache = dict()
 
     def _compare_genome_node(self, node, genome):
         probabilities = []
         for labeled_node in self._labeled_nodes:
-            pair = (node, labeled_node)
-            if pair in self._ancestor_vector_cache:
-                ancestor_vector = self._ancestor_vector_cache[pair]
-            else:
-                ancestor_vector = common_ancestor_vector(self._population,
-                                                         node, labeled_node)
-                self._ancestor_vector_cache[pair] = ancestor_vector
+            ancestor_vector = common_ancestor_vector(self._population,
+                                                     node, labeled_node)
             prob = self._length_classifier.get_probability(ancestor_vector,
                                                            node.genome,
                                                            genome)
@@ -39,4 +33,4 @@ class BayesDeanonymize:
                 # from too few labeled nodes.
                 continue
             node_probabilities[member] = reduce(mul, probabilities, 1)
-        return max(node_probabilities.iteritems(), key = lambda x: x[1])[0]
+        return max(node_probabilities.items(), key = lambda x: x[1])[0]
