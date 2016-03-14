@@ -1,7 +1,7 @@
 
 from recomb_genome import GENOME_ID_INDEX
 
-def common_segment_lengths(genome_a, genome_b):
+def common_segment_lengths_cython(genome_a, genome_b):
     """
     Given two genomes returns a list of integers for each autosome,
     corresponding to the length of segments that are shared between
@@ -28,6 +28,7 @@ def common_homolog_segments(homolog_a, homolog_b):
     Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
     where the two autosomes have the same underlying sequence.
     """
+    cdef int len_a, len_b, index_a, index_b, start, stop
     len_a = len(homolog_a)
     len_b = len(homolog_b)
     index_a = 0
@@ -57,6 +58,7 @@ def _lengths(segments):
     """
     Takes a list of segments and returns a list of lengths.
     """
+    cdef int a, b
     return [b - a for a, b in segments]
 
 def _consolidate_sequence(sequence):
@@ -64,6 +66,7 @@ def _consolidate_sequence(sequence):
     Takes a list of elements of the form (a, b), (c, d), ...  and
     merges elements where b = c such that (a, b), (c, d) becomes (a, d)
     """
+    cdef int i, j
     assert len(sequence) > 1
     i = 0
     j = 1
