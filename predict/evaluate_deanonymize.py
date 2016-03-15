@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-from pickle import load
 from random import sample, choice
 
 from bayes_deanonymize import BayesDeanonymize
+from population import PopulationUnpickler
 
 NUM_LABELED = 10
 
-with open("population_40000.pickle", "rb") as pickle_file:
-    population = load(pickle_file)
+with open("population_40000_setstate.pickle", "rb") as pickle_file:
+    population = PopulationUnpickler(pickle_file).load()
 
 
 last_generation = population.generations[-1].members

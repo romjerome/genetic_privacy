@@ -3,6 +3,7 @@ from itertools import chain
 from random import choice, randrange
 
 from scipy.stats import gamma
+import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
 from util import descendants_of

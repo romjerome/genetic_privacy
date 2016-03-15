@@ -1,7 +1,8 @@
+# cython: profile=True
 
 from recomb_genome import GENOME_ID_INDEX
 
-def common_segment_lengths_cython(genome_a, genome_b):
+def common_segment_lengths(genome_a, genome_b):
     """
     Given two genomes returns a list of integers for each autosome,
     corresponding to the length of segments that are shared between

@@ -2,6 +2,7 @@ from math import floor
 from random import shuffle, uniform, choice
 from itertools import chain, product, combinations_with_replacement
 from types import GeneratorType
+from pickle import Unpickler
 
 from symmetric_dict import SymmetricDict
 from generation import Generation
@@ -281,3 +282,10 @@ class HierarchicalIslandPopulation(Population):
     @property
     def island_tree(self):
         return self._island_tree
+
+class PopulationUnpickler(Unpickler):
+    def load(self):
+        result = super().load()
+        for member in result.members:
+            member._resolve_parents()
+        return result

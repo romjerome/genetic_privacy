@@ -2,6 +2,7 @@
 
 import unittest
 
+import pyximport; pyximport.install()
 from common_segments import common_homolog_segments, _consolidate_sequence
 
 class TestCommonHomologSegments(unittest.TestCase):

@@ -5,10 +5,10 @@ from sex import Sex, SEXES
 class NodeGenerator:
     """
     We use a node generator so that nodes point to each other by id
-    rather than by reference. This is purely a performance
-    optimization that should allow pickle and other modules that use
-    recursion to work on nodes and populations without overflowing the
-    stack.
+    rather than by reference. Pickle does not handle highly recursive
+    datastructures well. This is purely a performance optimization
+    that should allow pickle and other modules that use recursion to
+    work on nodes and populations without overflowing the stack.
     """
     def __init__(self):
         self._id = 0
@@ -45,27 +45,33 @@ class Node:
         else:
             self.sex = choice(SEXES)
         self._children = []
-        if mother_id is not None:
-            mother = self.mother
-            assert mother.sex == Sex.Female
-            mother._children.append(self._id)
-        if father_id is not None:
-            father = self.father
-            assert father.sex == Sex.Male
-            father._children.append(self._id)
+        self._resolve_parents()
+        if self.mother is not None:
+            assert self.mother.sex == Sex.Female
+            self.mother._children.append(self._id)
+        if self.father is not None:
+            assert self.father.sex == Sex.Male
+            self.father._children.append(self._id)
         self.genome = None
 
-    @property
-    def mother(self):
-        if self._mother_id is None:
-            return None
-        return self._node_generator._mapping[self._mother_id]
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["mother"]
+        del state["father"]
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
-    @property
-    def father(self):
-        if self._father_id is None:
-            return None
-        return self._node_generator._mapping[self._father_id]
+    def _resolve_parents(self):
+        if self._mother_id is not None:
+            self.mother = self._node_generator._mapping[self._mother_id]
+        else:
+            self.mother = None
+        if self._father_id is not None:
+            self.father = self._node_generator._mapping[self._father_id]
+        else:
+            self.father = None
 
     @property
     def children(self):
