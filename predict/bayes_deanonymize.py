@@ -1,8 +1,11 @@
-from classify_relationship import LengthClassifier, common_ancestor_vector
+import pyximport; pyximport.install()
+
+from classify_relationship import LengthClassifier
+from common_ancestor_vector import common_ancestor_vector
 from functools import reduce
 from operator import mul
 
-MINIMUM_LABELED_NODES = 10
+MINIMUM_LABELED_NODES = 1000
 
 class BayesDeanonymize:
     def __init__(self, population, labeled_nodes):

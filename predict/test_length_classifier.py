@@ -3,8 +3,10 @@
 from collections import Counter
 from pickle import load
 
-from classify_relationship import LengthClassifier, common_ancestor_vector,\
-    _pair_picker
+import pyximport; pyximport.install()
+
+from common_ancestor_vector import common_ancestor_vector
+from classify_relationship import LengthClassifier, _pair_picker
 
 with open("population_40000.pickle", "rb") as pickle_file:
     population = load(pickle_file)
