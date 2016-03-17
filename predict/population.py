@@ -40,6 +40,7 @@ class Population:
     def node_to_generation(self):
         """
         Maps nodes in this population to their generation.
+        Higher numbered generations are more recent.
         """
         # Cache the results of this function so it only needs to be
         # computed when new generations are added.
