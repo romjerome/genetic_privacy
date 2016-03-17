@@ -3,7 +3,8 @@
 import unittest
 from unittest.mock import MagicMock
 
-from classify_relationship import common_ancestor_vector
+import pyximport; pyximport.install()
+from common_ancestor_vector import common_ancestor_vector
 
 class MockNode:
     def __init__(self, mother = None, father = None):
