@@ -37,28 +37,16 @@ class RecombGenomeGenerator():
 class Autosome():
     """
     Encapsulates both homologs of a given Autosome.
+    XXX: Should this be replaced with a namedtuple?
     """
     def __init__(self, mother, father):
-        self._mother = tuple(mother)
-        self._father = tuple(father)
-
-    @property
-    def mother(self):
-        return self._mother
-
-    @property
-    def father(self):
-        return self._father
-
+        self.mother = tuple(mother)
+        self.father = tuple(father)
 
 class RecombGenome():
     
     def __init__(self, chromosomes):
-        self._chromosomes = chromosomes
-
-    @property
-    def chromosomes(self):
-        return self._chromosomes
+        self.chromosomes = chromosomes
 
 def recombinators_from_directory(directory):
     """
