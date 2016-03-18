@@ -5,19 +5,31 @@ from common_ancestor_vector import common_ancestor_vector
 from functools import reduce
 from operator import mul
 
-MINIMUM_LABELED_NODES = 1000
+MINIMUM_LABELED_NODES = 5
 
 class BayesDeanonymize:
     def __init__(self, population, labeled_nodes):
         self._population = population
         self._labeled_nodes = list(labeled_nodes)
         self._length_classifier = LengthClassifier(population, 1000)
+        self._vector_intern = dict() # To intern the vector objects
+        self._vector_cache = dict()
 
     def _compare_genome_node(self, node, genome):
         probabilities = []
         for labeled_node in self._labeled_nodes:
-            ancestor_vector = common_ancestor_vector(self._population,
-                                                     node, labeled_node)
+            pair = (node, labeled_node)
+            if pair in self._vector_cache:
+                ancestor_vector = self._vector_cache[pair]
+            else:
+                ancestor_vector = common_ancestor_vector(self._population,
+                                                         node, labeled_node)
+                if ancestor_vector in self._vector_intern:
+                    ancestor_vector = self._vector_intern[ancestor_vector]
+                else:
+                    self._vector_intern[ancestor_vector] = ancestor_vector
+                self._vector_cache[pair] = ancestor_vector
+                    
             prob = self._length_classifier.get_probability(ancestor_vector,
                                                            node.genome,
                                                            genome)

@@ -1,4 +1,4 @@
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from itertools import chain
 from random import choice, randrange
 
@@ -8,9 +8,6 @@ import pyximport; pyximport.install()
 from common_segments import common_segment_lengths
 from common_ancestor_vector import common_ancestor_vector
 from util import descendants_of
-
-# loc is mean, scale is standard deviation
-NormalDistribution = namedtuple("NormalDistribution", ["loc", "scale"])
 
 # Distributions we want to have a lot of data samples for
 DESIRED_DISTRIBUTIONS = [(2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (1,), (2,)]
@@ -25,6 +22,7 @@ class LengthClassifier:
     def __init__(self, population, minimum_segment_length = 0):
         self._minimum_segment_length = minimum_segment_length
         self._distributions = dict()
+        self._length_cache = dict()
         length_counts = defaultdict(list)
         i = 0
         for node_a, node_b in _pair_picker(population):
@@ -56,8 +54,13 @@ class LengthClassifier:
         return relationship in self._distributions
             
     def get_probability(self, relationship, genome_a, genome_b):
-        length = shared_segment_length_genomes(genome_a, genome_b,
-                                               self._minimum_segment_length)
+        pair = (genome_a, genome_b)
+        if pair in self._length_cache:
+            length = self._length_cache[pair]
+        else:
+            length = shared_segment_length_genomes(genome_a, genome_b,
+                                                   self._minimum_segment_length)
+            self._length_cache[pair] = length
         if relationship in self._distributions:
             return self._distributions[relationship].pdf(length)
         else:
