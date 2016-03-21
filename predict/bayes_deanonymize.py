@@ -15,6 +15,13 @@ class BayesDeanonymize:
         self._vector_intern = dict() # To intern the vector objects
         self._vector_cache = dict()
 
+    def _intern_vector(self, ancestor_vector):
+        if ancestor_vector in self._vector_intern:
+            ancestor_vector = self._vector_intern[ancestor_vector]
+        else:
+            self._vector_intern[ancestor_vector] = ancestor_vector
+        return ancestor_vector
+
     def _compare_genome_node(self, node, genome):
         probabilities = []
         for labeled_node in self._labeled_nodes:
@@ -24,14 +31,11 @@ class BayesDeanonymize:
             else:
                 ancestor_vector = common_ancestor_vector(self._population,
                                                          node, labeled_node)
-                if ancestor_vector in self._vector_intern:
-                    ancestor_vector = self._vector_intern[ancestor_vector]
-                else:
-                    self._vector_intern[ancestor_vector] = ancestor_vector
+                ancestor_vector = self._intern_vector(ancestor_vector)
                 self._vector_cache[pair] = ancestor_vector
                     
             prob = self._length_classifier.get_probability(ancestor_vector,
-                                                           node.genome,
+                                                           labeled_node.genome,
                                                            genome)
             probabilities.append(prob)
         return list(filter(lambda x: x is not None, probabilities))
