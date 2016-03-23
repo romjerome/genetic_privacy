@@ -1,4 +1,7 @@
-# cython: profile=True
+"""# cython: profile=True"""
+
+from collections import defaultdict, deque
+from itertools import product
 
 cdef inline set _immediate_ancestors_of(nodes):
     """
@@ -58,3 +61,54 @@ def common_ancestor_vector(population, node_a, node_b):
         ancestors_b.difference_update(common_ancestors)
     distances_vector.sort() 
     return tuple(distances_vector)
+
+def precompute_vectors(population, labeled_nodes):
+    relationship_vectors = defaultdict(list)
+    for member in population.members:
+        distances = _distances(member, labeled_nodes)
+        for pair, distance in distances.items():
+            relationship_vectors[pair].append(distance)
+    for pair in relationship_vectors:
+        relationship_vectors[pair].sort()
+        relationship_vectors[pair] = tuple(relationship_vectors[pair])
+    return defaultdict(tuple, relationship_vectors)
+
+def _distances(ancestor, labeled_nodes):
+    route = dict()
+    distance_to_ancestor = dict()
+    all_descendants = set()
+    # We need to add ancestor to the list of descendants so that its
+    # distance from its labeled children is recorded, and handle the
+    # case it is itself labeled.
+    distance_to_ancestor[ancestor] = 0
+    route[ancestor] = None
+    all_descendants.add(ancestor)
+    for child in ancestor.children:
+        route[child] = child
+        distance_to_ancestor[child] = 1
+        all_descendants.add(child)
+    queue = deque(ancestor.children)
+    while len(queue) > 0:
+        node = queue.popleft()
+        node_distance = distance_to_ancestor[node]
+
+        for child in node.children:
+            if child in all_descendants:
+                continue
+            distance_to_ancestor[child] = node_distance + 1
+            route[child] = route[node]
+            all_descendants.add(child)
+        queue.extend(node.children)
+
+    distance_to_labeled = dict()
+    labeled_descendants = labeled_nodes.intersection(all_descendants)
+    pairs = product(labeled_descendants,
+                    (all_descendants - labeled_descendants))
+
+    for labeled_node, descendant in pairs:
+        if route[labeled_node] == route[descendant]:
+           continue
+        distance = distance_to_ancestor[descendant] + distance_to_ancestor[labeled_node]
+        distance_to_labeled[(labeled_node, descendant)] = distance
+    return distance_to_labeled
+        
