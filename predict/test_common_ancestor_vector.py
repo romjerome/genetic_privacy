@@ -4,12 +4,18 @@ import unittest
 from unittest.mock import MagicMock
 
 import pyximport; pyximport.install()
-from common_ancestor_vector import common_ancestor_vector
+from common_ancestor_vector import (common_ancestor_vector, precompute_vectors,
+                                    _distances)
 
 class MockNode:
     def __init__(self, mother = None, father = None):
         self.mother = mother
         self.father = father
+        self.children = set()
+        if mother is not None:
+            mother.children.add(self)
+        if father is not None:
+            father.children.add(self)
 
 class TestCommonAncestorVector(unittest.TestCase):
     def test_parent_child(self):
@@ -126,6 +132,38 @@ class TestCommonAncestorVector(unittest.TestCase):
         vector = common_ancestor_vector(generation, sibling_cousin_a,
                                         sibling_cousin_b)
         self.assertEqual(vector, (2, 4, 4))
+
+class TestDistancesHelper(unittest.TestCase):
+    def test_child_labeled(self):
+        ancestor = MockNode()
+        labeled = MockNode(ancestor)
+        distances = _distances(ancestor, set([labeled]))
+        self.assertEqual(distances[(labeled, ancestor)], 1)
+        
+    def test_two_children(self):
+        ancestor = MockNode()
+        labeled = MockNode(ancestor)
+        unlabled = MockNode(ancestor)
+        distances = _distances(ancestor, set([labeled]))
+        self.assertEqual(distances[(labeled, unlabled)], 2)
+        
+    def test_grandchildren(self):
+        ancestor = MockNode()
+        a = MockNode(ancestor)
+        b = MockNode(ancestor)
+        labeled = MockNode(a)
+        unlabled = MockNode(b)
+        distances = _distances(ancestor, set([labeled]))
+        self.assertEqual(distances[(labeled, unlabled)], 4)
+
+    def test_not_most_recent_ancestor(self):
+        ancestor = MockNode()
+        true_ancestor = MockNode(ancestor)
+        labeled = MockNode(true_ancestor)
+        unlabled = MockNode(true_ancestor)
+        distances = _distances(ancestor, set([labeled]))
+        self.assertNotIn((labeled, unlabled), distances)
+
 
 
 if __name__ == '__main__':
