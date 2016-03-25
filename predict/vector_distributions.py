@@ -54,8 +54,8 @@ parent_a2 = node_generator.generate_node(grandparent_a2,
 
 
 
-sibiling_0 = node_generator.generate_node(parent_a1, parent_a0)
-sibiling_1 = node_generator.generate_node(parent_a2, parent_a0)
+sibling_0 = node_generator.generate_node(parent_a1, parent_a0)
+sibling_1 = node_generator.generate_node(parent_a2, parent_a0)
 
 def generate_genomes(root_nodes, generator, recombinators):
     queue = deque(root_nodes)
@@ -70,23 +70,30 @@ def generate_genomes(root_nodes, generator, recombinators):
             person.genome = generator.generate()
         queue.extend(person.children)
 
-recombinators = recombinators_from_directory("/home/paul/Documents/genetic_privacy/data/recombination_rates")
+def clear_genomes(root_nodes):
+    pass
+
+recombinators = recombinators_from_directory("../data/recombination_rates")
 chrom_sizes = recombinators[Sex.Male]._num_bases
 genome_generator = RecombGenomeGenerator(chrom_sizes)
 
 
 founders_gparent = [great_grandparent_0, great_grandparent_1,
                     great_grandparent_2, grandparent_2, grandparent_3]
-founders_siblings = [grandparent_a0, grandparent_a1, grandparent_a2]
+founders_siblings = [grandparent_a0, grandparent_a1, grandparent_a2,
+                     parent_a0]
 sharing_gparent = []
 sharing_siblings = []
-for i in range(1000):
+for i in range(10000):
     generate_genomes(founders_gparent, genome_generator, recombinators)
     generate_genomes(founders_siblings, genome_generator, recombinators)
     shared_gparent = shared_segment_length_genomes(grandchild.genome,
-                                                   grandparent_1.genome)
+                                                   grandparent_1.genome, 0)
     shared_siblings = shared_segment_length_genomes(sibling_0.genome,
-                                                    sibling_1.genome)
+                                                    sibling_1.genome, 0)
     sharing_gparent.append(shared_gparent)
     sharing_siblings.append(shared_siblings)
+
+print(abs(np.mean(sharing_gparent) - np.mean(sharing_siblings)))
+print(abs(np.median(sharing_gparent) - np.median(sharing_siblings)))
 pdb.set_trace()
