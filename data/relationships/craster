@@ -1,0 +1,9 @@
+craster Male
+founder Female
+mother Female
+sibling_0
+sibling_1
+#
+mother craster founder
+sibling_0 craster mother
+sibling_1 craster mother
