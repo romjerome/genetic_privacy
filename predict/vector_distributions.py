@@ -1,7 +1,11 @@
-from collections import deque
+from collections import deque, OrderedDict
+from argparse import ArgumentParser
+from os.path import basename
 import pdb
 
+
 import numpy as np
+from matplotlib import pyplot
 
 from node import NodeGenerator
 from sex import Sex
@@ -10,107 +14,101 @@ from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 from classify_relationship import shared_segment_length_genomes
 
 node_generator = NodeGenerator()
-
-# ### <2, 4>
-# ### First configuration, grandchild-grandparent
-
-# great_grandparent_0 = node_generator.generate_node(sex = Sex.Female)
-# great_grandparent_1 = node_generator.generate_node(sex = Sex.Male)
-# great_grandparent_2 = node_generator.generate_node(sex = Sex.Male)
-
-# grandparent_0 = node_generator.generate_node(great_grandparent_1,
-#                                              great_grandparent_0,
-#                                              Sex.Male)
-# grandparent_1 = node_generator.generate_node(great_grandparent_2,
-#                                              great_grandparent_0,
-#                                              Sex.Male)
-# grandparent_2 = node_generator.generate_node(sex = Sex.Female)
-# grandparent_3 = node_generator.generate_node(sex = Sex.Female)
-
-# parent_0 = node_generator.generate_node(grandparent_0,
-#                                         grandparent_2,
-#                                         Sex.Male)
-# parent_1 = node_generator.generate_node(grandparent_1,
-#                                         grandparent_3,
-#                                         Sex.Female)
-
-
-
-# grandchild = node_generator.generate_node(parent_0, parent_1)
-
-
-# ### Second configuration, half siblings and more
-# grandparent_a0 = node_generator.generate_node(sex = Sex.Female)
-# grandparent_a1 = node_generator.generate_node(sex = Sex.Male)
-# grandparent_a2 = node_generator.generate_node(sex = Sex.Male)
-
-# parent_a0 = node_generator.generate_node(sex = Sex.Female)
-# parent_a1 = node_generator.generate_node(grandparent_a1,
-#                                          grandparent_a0,
-#                                          Sex.Male)
-# parent_a2 = node_generator.generate_node(grandparent_a2,
-#                                          grandparent_a0,
-#                                          Sex.Male)
-
-
-
-# sibling_0 = node_generator.generate_node(parent_a1, parent_a0)
-# sibling_1 = node_generator.generate_node(parent_a2, parent_a0)
-
-# Standard full siblings <2, 2>
-
-parent_a0 = node_generator.generate_node(sex = Sex.Male)
-parent_a1 = node_generator.generate_node(sex = Sex.Female)
-
-sibling_a0 = node_generator.generate_node(parent_a0, parent_a1)
-sibling_a1 = node_generator.generate_node(parent_a0, parent_a1)
-
-# Craster's keep
-
-craster_b =  node_generator.generate_node(sex = Sex.Male)
-founder_b = node_generator.generate_node(sex = Sex.Female)
-
-mother_b = node_generator.generate_node(craster_b, founder_b, sex = Sex.Female)
-
-sibling_b0 = node_generator.generate_node(craster_b, mother_b)
-sibling_b1 = node_generator.generate_node(craster_b, mother_b)
-
-
+name_map = None
 def generate_genomes(root_nodes, generator, recombinators):
     queue = deque(root_nodes)
+    visited = set()
     while len(queue) > 0:
         person = queue.popleft()
+        if person in visited:
+            continue
         if person.mother is not None:
             assert person.father is not None
+            if person.mother not in visited or person.father not in visited:
+                continue
             person.genome =  mate(person.mother.genome, person.father.genome,
                                   recombinators[Sex.Female],
                                   recombinators[Sex.Male])
         else:
             person.genome = generator.generate()
         queue.extend(person.children)
+        visited.add(person)
+def parse_genealogy_file(filename):
+    genders = dict()
+    parents = OrderedDict()
+    reading_names = True
+    with open(filename, "r") as genealogy_file:
+        for line in genealogy_file:
+            line = line.strip()
+            if len(line) is 0:
+                continue
+            if line == "#":
+                reading_names = False
+                continue
+            line = line.split()
+            name = line[0]
+            if reading_names:
+                if len(line) > 1:
+                    genders[name] = Sex[line[1].lower().capitalize()]
+                else:
+                    genders[name] = None
+            else:
+                father = line[1]
+                mother = line[2]
+                assert father in genders
+                assert mother in genders
+                parents[name] = (father, mother)
+    founder_names = set(genders.keys()) - parents.keys()
+    founders = {name : node_generator.generate_node(sex = genders[name])
+                for name in founder_names}
+    all_nodes = dict(founders)
+    for name, (father_name, mother_name) in parents.items():
+        all_nodes[name] = node_generator.generate_node(all_nodes[father_name],
+                                                       all_nodes[mother_name],
+                                                       genders[name])
+    return (all_nodes, set(founders.values()))
 
-def clear_genomes(root_nodes):
-    pass
+def simulate_sharing(founders, pair, genome_generator, recombinators,
+                     iterations = 10000):
+    sharing = []
+    for i in range(iterations):
+        generate_genomes(founders, genome_generator, recombinators)
+        shared = shared_segment_length_genomes(pair[0].genome, pair[1].genome,
+                                               0)
+        sharing.append(shared)
+    return sharing
+        
+parser = ArgumentParser(description = "Examine the distributions of various relationships.")
+parser.add_argument("relationship_file", nargs = 2,
+                    help = "File to describe the genealogy.")
+parser.add_argument("pair_1", nargs = 2)
+parser.add_argument("pair_2", nargs = 2)
+
+args = parser.parse_args()
+
+all_nodes_0, founders_0 = parse_genealogy_file(args.relationship_file[0])
+name_map = {node: node_name for node_name, node in all_nodes_0.items()}
+all_nodes_1, founders_1 = parse_genealogy_file(args.relationship_file[1])
 
 recombinators = recombinators_from_directory("../data/recombination_rates")
 chrom_sizes = recombinators[Sex.Male]._num_bases
 genome_generator = RecombGenomeGenerator(chrom_sizes)
 
-founders_siblings = (parent_a0, parent_a1)
-founders_craster = (craster_b, founder_b)
+pair_0 = [all_nodes_0[name] for name in args.pair_1]
+sharing_0 = simulate_sharing(founders_0, pair_0, genome_generator,
+                             recombinators)
 
-sharing_siblings = []
-sharing_craster = []
-for i in range(10000):
-    generate_genomes(founders_siblings, genome_generator, recombinators)
-    generate_genomes(founders_craster, genome_generator, recombinators)
-    shared_siblings = shared_segment_length_genomes(sibling_a0.genome,
-                                                   sibling_a1.genome, 0)
-    shared_craster = shared_segment_length_genomes(sibling_b0.genome,
-                                                    sibling_b1.genome, 0)
-    sharing_siblings.append(shared_siblings)
-    sharing_craster.append(shared_craster)
+pair_1 = [all_nodes_1[name] for name in args.pair_2]
+sharing_1 = simulate_sharing(founders_1, pair_1, genome_generator,
+                             recombinators)
 
-print(abs(np.mean(sharing_siblings) - np.mean(sharing_craster)))
-print(abs(np.median(sharing_siblings) - np.median(sharing_craster)))
-pdb.set_trace()
+pyplot.hist(sharing_0, bins = 30, alpha = 0.5, normed = False,
+            label = basename(args.relationship_file[0]))
+pyplot.hist(sharing_1, bins = 30, alpha = 0.5, normed = False,
+            label = basename(args.relationship_file[1]))
+pyplot.legend(loc='upper right')
+pyplot.show()
+print(abs(np.mean(sharing_0) - np.mean(sharing_1)))
+print(abs(np.median(sharing_0) - np.median(sharing_1)))
+
+
