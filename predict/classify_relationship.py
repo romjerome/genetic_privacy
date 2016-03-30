@@ -35,7 +35,7 @@ class LengthClassifier:
             # if i % 1000 == 0 and _stop_sampling(length_counts):
             #     # Don't check the stop condition every time for efficiency
             #     break
-            if i == 100000:
+            if i == 200000:
                 break
             
         # Generate our conditional probabilities

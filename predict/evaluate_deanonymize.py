@@ -5,7 +5,7 @@ from random import sample, choice
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
 
-NUM_LABELED = 10
+NUM_LABELED = 400
 
 with open("population_40000.pickle", "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
@@ -16,8 +16,8 @@ labeled_nodes = set(sample(last_generation, NUM_LABELED))
 
 bayes = BayesDeanonymize(population, labeled_nodes)
 
-# unlabeled = sample(list(set(last_generation) - labeled_nodes), 2)
-unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
+unlabeled = sample(list(set(last_generation) - labeled_nodes), 1000)
+# unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0
 incorrect = 0
 for node in unlabeled:

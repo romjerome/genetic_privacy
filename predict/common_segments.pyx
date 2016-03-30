@@ -1,4 +1,4 @@
-# cython: profile=True
+"""# cython: profile=True"""
 
 from recomb_genome import GENOME_ID_INDEX
 
