@@ -18,6 +18,9 @@ sibling_1
 gg_parent_0 founder_0 founder_1
 gg_parent_1 founder_0 founder_1
 
+g_parent_0 gg_parent_0 gg_parent_2
+g_parent_1 gg_parent_1 gg_parent_3
+
 parent_0 g_parent_0 g_parent_1
 
 sibling_0 parent_0 parent_1

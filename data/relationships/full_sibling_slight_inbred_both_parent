@@ -1,0 +1,45 @@
+founder_a0 Male
+founder_a1 Female
+
+gg_parent_a0 Male
+gg_parent_a1 Male
+gg_parent_a2 Female
+gg_parent_a3 Female
+
+g_parent_a0 Male
+g_parent_a1 Female
+
+founder_b0 Male
+founder_b1 Female
+
+gg_parent_b0 Male
+gg_parent_b1 Male
+gg_parent_b2 Female
+gg_parent_b3 Female
+
+g_parent_b0 Male
+g_parent_b1 Female
+
+parent_a Male
+parent_b Female
+
+sibling_0
+sibling_1
+#
+gg_parent_a0 founder_a0 founder_a1
+gg_parent_a1 founder_a0 founder_a1
+
+gg_parent_b0 founder_b0 founder_b1
+gg_parent_b1 founder_b0 founder_b1
+
+g_parent_a0 gg_parent_a0 gg_parent_a2
+g_parent_a1 gg_parent_a1 gg_parent_a3
+
+g_parent_b0 gg_parent_b0 gg_parent_b2
+g_parent_b1 gg_parent_b1 gg_parent_b3
+
+parent_a g_parent_a0 g_parent_a1
+parent_b g_parent_b0 g_parent_b1
+
+sibling_0 parent_a parent_b
+sibling_1 parent_a parent_b
