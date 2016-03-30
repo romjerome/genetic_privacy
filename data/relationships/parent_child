@@ -1,0 +1,7 @@
+parent_0 Male
+parent_1 Female
+
+child
+
+#
+child parent_0 parent_1

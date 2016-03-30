@@ -1,0 +1,24 @@
+founder_0 Male
+founder_1 Female
+
+gparent_0 Male
+gparent_1 Female
+gparent_2 Male
+gparent_3 Female
+
+parent_0 Male
+parent_1 Female
+
+sibling_0
+sibling_1
+
+#
+
+gparent_0 founder_0 founder_1
+gparent_2 founder_0 founder_1
+
+parent_0 gparent_0 gparent_1
+parent_1 gparent_2 gparent_3
+
+sibling_0 parent_0 parent_1
+sibling_1 parent_0 parent_1
