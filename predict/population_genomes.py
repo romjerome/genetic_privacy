@@ -25,6 +25,25 @@ def mate(mother, father, mother_recombinator, father_recombinator):
         offspring_autosomes[chrom_name] = Autosome(mother, father)
     return RecombGenome(offspring_autosomes)
 
+def generate_genomes_ancestors(root_nodes, generator, recombinators):
+    queue = deque(root_nodes)
+    visited = set()
+    while len(queue) > 0:
+        person = queue.popleft()
+        if person in visited:
+            continue
+        if person.mother is not None:
+            assert person.father is not None
+            if person.mother not in visited or person.father not in visited:
+                continue
+            person.genome =  mate(person.mother.genome, person.father.genome,
+                                  recombinators[Sex.Female],
+                                  recombinators[Sex.Male])
+        else:
+            person.genome = generator.generate()
+        queue.extend(person.children)
+        visited.add(person)
+
 def generate_genomes(population, generator, recombinators, keep_last = None):
     assert keep_last is None or keep_last > 0
     for generation_num, generation in enumerate(population.generations):

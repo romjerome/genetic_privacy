@@ -58,11 +58,10 @@ class Population:
     def clean_genomes(self, generations = None):
         """
         Remove genomes from the first n given number of generations.
-        If generations is not specified, clears all but the last
-        generations genomes.
+        If generations is not specified, clears all generations genomes.
         """
         if generations is None:
-            generations = self.num_generations - 1
+            generations = self.num_generations
         for person in chain.from_iterable(generation.members for generation
                                           in self._generations[:generations]):
             person.genome = None

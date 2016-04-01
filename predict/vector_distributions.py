@@ -9,30 +9,13 @@ from matplotlib import pyplot
 
 from node import NodeGenerator
 from sex import Sex
-from population_genomes import mate
+from population_genomes import generate_genomes_ancestors
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 from classify_relationship import shared_segment_length_genomes
 
 node_generator = NodeGenerator()
 name_map = None
-def generate_genomes(root_nodes, generator, recombinators):
-    queue = deque(root_nodes)
-    visited = set()
-    while len(queue) > 0:
-        person = queue.popleft()
-        if person in visited:
-            continue
-        if person.mother is not None:
-            assert person.father is not None
-            if person.mother not in visited or person.father not in visited:
-                continue
-            person.genome =  mate(person.mother.genome, person.father.genome,
-                                  recombinators[Sex.Female],
-                                  recombinators[Sex.Male])
-        else:
-            person.genome = generator.generate()
-        queue.extend(person.children)
-        visited.add(person)
+
 def parse_genealogy_file(filename):
     genders = dict()
     parents = OrderedDict()
@@ -72,7 +55,7 @@ def simulate_sharing(founders, pair, genome_generator, recombinators,
                      iterations = 10000):
     sharing = []
     for i in range(iterations):
-        generate_genomes(founders, genome_generator, recombinators)
+        generate_genomes_ancestors(founders, genome_generator, recombinators)
         shared = shared_segment_length_genomes(pair[0].genome, pair[1].genome,
                                                0)
         sharing.append(shared)
