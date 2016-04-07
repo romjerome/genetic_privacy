@@ -1,54 +1,63 @@
-from collections import defaultdict, deque
+from collections import deque
 from itertools import chain, product
+from os.path import isfile
+from os import remove
+
+import sqlite3
 
 from scipy.stats import gamma
 import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
-from population_genomes import generate_genomes_ancestors
+from population_genomes import generate_genomes
+
+DB_FILE = "/media/paul/Storage/scratch/lengths_2.db"
 
 class LengthClassifier:
     """
     Classifies based total length of shared segments
     """
     def __init__(self, population, labeled_nodes, genome_generator,
-                 recombinator, min_segment_length = 0):
+                 recombinators, min_segment_length = 0):
         self._distributions = dict()
-        distribution_calculated_for = set()
-        labeled_founders = set(chain.from_iterable(_founders(labeled)
-                                                   for labeled
-                                                   in labeled_nodes))
-        desired_dist = chain.from_iterable(generation.members
-                                           for generation
-                                           in population.generations[-3:])
-        for node in desired_dist:
-            population.clean_genomes()
-            if node in distribution_calculated_for:
-                continue
-            unlabeled_founders = _founders(node)
-            all_founders = unlabeled_founders.union(labeled_founders)
-            to_fit = None
-            length_counts = defaultdict(list)
-            for _ in range(1000):
-                generate_genomes_ancestors(all_founders, genome_generator,
-                                           recombinator)
-                if to_fit is None:
-                    has_genomes = set(member for member in population.members
-                                      if member.genome is not None)
-                    to_fit = has_genomes - distribution_calculated_for
-                    to_fit.difference_update(labeled_nodes)
-                    assert len(to_fit) > 0
-                for unlabeled, labeled in product(to_fit, labeled_nodes):
-                    assert labeled.genome is not None
-                    length = shared_segment_length_genomes(unlabeled.genome,
+        labeled_nodes = set(labeled_nodes)
+        unlabeled_nodes = chain.from_iterable(generation.members
+                                              for generation
+                                              in population.generations[-3:])
+        unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
+        con = self._set_up_sqlite()
+        cur = con.cursor()
+        for i in range(50):
+            print("Generating genomes")
+            generate_genomes(population, genome_generator, recombinators, 3)
+            print("Calculating shared length")
+            lengths_iter = ((unlabeled._id, labeled._id,
+                             shared_segment_length_genomes(unlabeled.genome,
                                                            labeled.genome,
-                                                           min_segment_length)
-                    length_counts[unlabeled, labeled].append(length)
-            for (unlabeled, labeled), lengths in length_counts.items():
-                distribution = gamma(*gamma.fit(lengths))
-                self._distributions[(unlabeled, labeled)] = distribution
-                distribution_calculated_for.add(unlabeled)
-        population.clean_genomes()
+                                                           min_segment_length))
+                            for unlabeled, labeled
+                            in product(unlabeled_nodes, labeled_nodes))
+            cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
+                            lengths_iter)
+            con.commit()
+        print("Generating distributions")
+        for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
+            query = cur.execute("""SELECT shared
+                                   FROM lengths
+                                   WHERE unlabeled = ? AND labeled = ?""",
+                                (unlabeled._id, labeled._id))
+            lengths = [value[0] for value in query]
+            self._distributions[unlabeled, labeled] = gamma(*gamma.fit(lengths))
+        cur.close()
+            
+    def _set_up_sqlite(self):
+        if isfile(DB_FILE): # Clear old versions of this file
+            remove(DB_FILE)
+        temp_storage = sqlite3.connect(DB_FILE)
+        temp_storage.execute("""CREATE TABLE lengths
+                                (unlabeled integer, labeled integer, shared integer)""")
+        return temp_storage
+
             
     def get_probability(self, shared_length, query_node, labeled_node):
         """
