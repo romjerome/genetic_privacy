@@ -1,11 +1,11 @@
-from collections import deque
+from collections import deque, defaultdict
 from itertools import chain, product
 from os.path import isfile
 from os import remove
-
 import sqlite3
 
 from scipy.stats import gamma
+import numpy as np
 import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
@@ -27,7 +27,7 @@ class LengthClassifier:
         unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
         con = self._set_up_sqlite()
         cur = con.cursor()
-        for i in range(2):
+        for i in range(100):
             print("Generating genomes")
             generate_genomes(population, genome_generator, recombinators, 3)
             print("Calculating shared length")
@@ -41,13 +41,13 @@ class LengthClassifier:
                             lengths_iter)
             con.commit()
         print("Generating distributions")
-        for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
-            query = cur.execute("""SELECT shared
-                                   FROM lengths
-                                   WHERE unlabeled = ? AND labeled = ?""",
-                                (unlabeled._id, labeled._id))
-            lengths = [value[0] for value in query]
-            self._distributions[unlabeled, labeled] = gamma(*gamma.fit(lengths))
+        # for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
+        #     query = cur.execute("""SELECT shared
+        #                            FROM lengths
+        #                            WHERE unlabeled = ? AND labeled = ?""",
+        #                         (unlabeled._id, labeled._id))
+        #     lengths = [value[0] for value in query]
+        #     self._distributions[unlabeled, labeled] = gamma(*gamma.fit(lengths))
         cur.close()
             
     def _set_up_sqlite(self):
@@ -58,8 +58,6 @@ class LengthClassifier:
                                 (unlabeled integer, labeled integer, shared integer)""")
         temp_storage.execute("""CREATE INDEX labeled_index
                                 ON lengths (labeled)""")
-        temp_storage.execute("""CREATE INDEX unlabeled_index
-                                ON lengths (unlabeled)""")
         temp_storage.commit()
         return temp_storage
 
