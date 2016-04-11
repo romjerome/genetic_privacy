@@ -62,8 +62,14 @@ class Population:
         """
         if generations is None:
             generations = self.num_generations
+        # We want to start with the nodes that have genomes defined.
+        if self._generations_with_genomes is None:
+            start = 0
+        else:
+            start = self._generations_with_genomes
+        generations_to_clear = self._generations[start:generations]
         for person in chain.from_iterable(generation.members for generation
-                                          in self._generations[:generations]):
+                                          in generations_to_clear):
             person.genome = None
 
 
