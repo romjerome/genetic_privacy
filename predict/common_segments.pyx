@@ -1,9 +1,5 @@
 # cython: profile=True
 
-from recomb_genome import GENOME_ID_INDEX
-# Pull GENOME_ID_INDEX into this scope for performance
-cdef int ID_INDEX = GENOME_ID_INDEX
-
 def common_segment_lengths(genome_a, genome_b):
     """
     Given two genomes returns a list of integers for each autosome,
@@ -32,28 +28,29 @@ cpdef common_homolog_segments(homolog_a, homolog_b):
     where the two autosomes have the same underlying sequence.
     """
     cdef int len_a, len_b, index_a, index_b, start, stop
+    cdef int a_start, a_stop, a_id, b_start, b_stop, b_id
     len_a = len(homolog_a)
     len_b = len(homolog_b)
     index_a = 0
     index_b = 0
     shared_segments = []
     while index_a < len_a and index_b < len_b:
-        segment_a = homolog_a[index_a]
-        segment_b = homolog_b[index_b]
-        if segment_a[ID_INDEX] == segment_b[ID_INDEX]:
-            if segment_a[0] > segment_b[0]:
-                start = segment_a[0]
+        a_start, a_stop, a_id = homolog_a[index_a]
+        b_start, b_stop, b_id = homolog_b[index_b]
+        if a_id == b_id:
+            if a_start > b_start:
+                start = a_start
             else:
-                start = segment_b[0]
-            if segment_a[1] < segment_b[1]:
-                stop = segment_a[1]
+                start = b_start
+            if a_stop < b_stop:
+                stop = a_stop
             else:
-                stop = segment_b[1]
+                stop = b_stop
             shared_segments.append((start, stop))
-        if segment_a[1] == segment_b[1]:
+        if a_stop == b_stop:
             index_a += 1
             index_b += 1
-        elif segment_a[1] > segment_b[1]:
+        elif a_stop > b_stop:
             index_b += 1
         else:
             index_a += 1
