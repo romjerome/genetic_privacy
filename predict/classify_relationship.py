@@ -11,7 +11,8 @@ import pyximport; pyximport.install()
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes
 
-DB_FILE = "/media/paul/Storage/scratch/lengths.db"
+# DB_FILE = "/media/paul/Storage/scratch/lengths.db"
+DB_FILE = "/media/paul/Storage Monster/scratch/lengths_1000.db"
 
 class LengthClassifier:
     """
@@ -27,7 +28,10 @@ class LengthClassifier:
         unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
         con = self._set_up_sqlite()
         cur = con.cursor()
-        for i in range(100):
+        for i in range(1000):
+            print("iteration {}".format(i))
+            print("Cleaning genomes.")
+            population.clean_genomes()
             print("Generating genomes")
             generate_genomes(population, genome_generator, recombinators, 3)
             print("Calculating shared length")
@@ -54,6 +58,7 @@ class LengthClassifier:
         if isfile(DB_FILE): # Clear old versions of this file
             remove(DB_FILE)
         temp_storage = sqlite3.connect(DB_FILE)
+        temp_storage.execute("""PRAGMA page_size = 32768""");
         temp_storage.execute("""CREATE TABLE lengths
                                 (unlabeled integer, labeled integer, shared integer)""")
         temp_storage.execute("""CREATE INDEX labeled_index
