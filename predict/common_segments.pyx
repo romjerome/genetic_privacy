@@ -1,6 +1,8 @@
-"""# cython: profile=True"""
+# cython: profile=True
 
 from recomb_genome import GENOME_ID_INDEX
+# Pull GENOME_ID_INDEX into this scope for performance
+cdef int ID_INDEX = GENOME_ID_INDEX
 
 def common_segment_lengths(genome_a, genome_b):
     """
@@ -24,7 +26,7 @@ def common_segment_lengths(genome_a, genome_b):
         common_segment_lengths[name] = lengths
     return common_segment_lengths
 
-def common_homolog_segments(homolog_a, homolog_b):
+cpdef common_homolog_segments(homolog_a, homolog_b):
     """
     Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
     where the two autosomes have the same underlying sequence.
@@ -38,9 +40,15 @@ def common_homolog_segments(homolog_a, homolog_b):
     while index_a < len_a and index_b < len_b:
         segment_a = homolog_a[index_a]
         segment_b = homolog_b[index_b]
-        if segment_a[GENOME_ID_INDEX] == segment_b[GENOME_ID_INDEX]:
-            start = max(segment_a[0], segment_b[0])
-            stop = min(segment_a[1], segment_b[1])
+        if segment_a[ID_INDEX] == segment_b[ID_INDEX]:
+            if segment_a[0] > segment_b[0]:
+                start = segment_a[0]
+            else:
+                start = segment_b[0]
+            if segment_a[1] < segment_b[1]:
+                stop = segment_a[1]
+            else:
+                stop = segment_b[1]
             shared_segments.append((start, stop))
         if segment_a[1] == segment_b[1]:
             index_a += 1
@@ -55,14 +63,14 @@ def common_homolog_segments(homolog_a, homolog_b):
     # (0, 5) and (5, 10), then we should merge them into (0, 10).
     return _consolidate_sequence(shared_segments)
 
-def _lengths(segments):
+cdef _lengths(segments):
     """
     Takes a list of segments and returns a list of lengths.
     """
     cdef int a, b
     return [b - a for a, b in segments]
 
-def _consolidate_sequence(sequence):
+cpdef _consolidate_sequence(sequence):
     """
     Takes a list of elements of the form (a, b), (c, d), ...  and
     merges elements where b = c such that (a, b), (c, d) becomes (a, d)
