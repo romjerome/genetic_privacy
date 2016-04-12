@@ -1,7 +1,9 @@
 from collections import deque, defaultdict
 from itertools import chain, product
 from os.path import isfile
-from os import remove
+from os import remove, popen
+from functools import partial
+from multiprocessing import Pool
 import sqlite3
 
 from scipy.stats import gamma
@@ -13,6 +15,13 @@ from population_genomes import generate_genomes
 
 DB_FILE = "/media/paul/Storage/scratch/lengths_profile.db"
 
+cpu_info = dict([x.strip() for x in line.split(":")]
+                for line in popen('lscpu').readlines())
+try:
+    NUM_CPU = int(cpu_info["Socket(s)"]) * int(cpu_info["Core(s) per socket"])
+except KeyError:
+    NUM_CPU = 1
+
 class LengthClassifier:
     """
     Classifies based total length of shared segments
@@ -21,12 +30,17 @@ class LengthClassifier:
                  recombinators, min_segment_length = 0):
         self._distributions = dict()
         labeled_nodes = set(labeled_nodes)
+        labeled_nodes_l = list(labeled_nodes)
         unlabeled_nodes = chain.from_iterable(generation.members
                                               for generation
                                               in population.generations[-3:])
         unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
         con = self._set_up_sqlite()
         cur = con.cursor()
+        parallel_func = partial(_parallel_pairwise,
+                                unlabeled_nodes = unlabeled_nodes,
+                                min_segment_length = min_segment_length)
+                                
         for i in range(3):
             print("iteration {}".format(i))
             print("Cleaning genomes.")
@@ -34,14 +48,15 @@ class LengthClassifier:
             print("Generating genomes")
             generate_genomes(population, genome_generator, recombinators, 3)
             print("Calculating shared length")
-            lengths_iter = ((unlabeled._id, labeled._id,
-                             shared_segment_length_genomes(unlabeled.genome,
-                                                           labeled.genome,
-                                                           min_segment_length))
-                            for unlabeled, labeled
-                            in product(unlabeled_nodes, labeled_nodes))
-            cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
-                            lengths_iter)
+            partition_size = len(labeled_nodes_l) // (NUM_CPU * 2)
+            chunked_labeled = [labeled_nodes_l[i:i+ partition_size] for i
+                               in range(0, len(labeled_nodes_l),
+                                        partition_size)]
+            with Pool(NUM_CPU) as p:
+                lengths_iter = chain.from_iterable(p.imap(parallel_func,
+                                                          chunked_labeled))
+                cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
+                                lengths_iter)
             con.commit()
         # print("Generating distributions")
         # for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
@@ -73,11 +88,13 @@ class LengthClassifier:
         """
         return self._distributions[query_node, labeled_node].pdf(shared_length)
 
-def parallel_pairwise(unlabeled_nodes, labeled_node, minimum_length):
-    return [shared_segment_length_genomes(unlabeled.genome,
-                                          labeled_node.genome,
-                                          min_segment_length)
-            for unlabeled in unlabeled_nodes]
+def _parallel_pairwise(labeled_nodes, unlabeled_nodes, min_segment_length):
+    return [(unlabeled._id, labeled._id,
+             shared_segment_length_genomes(unlabeled.genome,
+                                           labeled.genome,
+                                           min_segment_length))
+            for unlabeled, labeled
+            in product(unlabeled_nodes, labeled_nodes)]
     
 def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
     by_autosome = common_segment_lengths(genome_a, genome_b)
