@@ -13,7 +13,7 @@ import pyximport; pyximport.install()
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes
 
-DB_FILE = "/media/paul/Storage/scratch/lengths_profile.db"
+DB_FILE = "/media/paul/Storage/scratch/lengths_4000.db"
 
 cpu_info = dict([x.strip() for x in line.split(":")]
                 for line in popen('lscpu').readlines())
@@ -43,7 +43,7 @@ class LengthClassifier:
                                 unlabeled_nodes = unlabeled_nodes,
                                 min_segment_length = min_segment_length)
                                 
-        for i in range(10):
+        for i in range(4000):
             print("iteration {}".format(i))
             print("Cleaning genomes.")
             population.clean_genomes()
@@ -56,14 +56,14 @@ class LengthClassifier:
                 cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
                                 lengths_iter)
             con.commit()
-        print("Generating distributions")
-        for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
-            query = cur.execute("""SELECT shared
-                                   FROM lengths
-                                   WHERE unlabeled = ? AND labeled = ?""",
-                                (unlabeled._id, labeled._id))
-            lengths = [value[0] for value in query]
-            self._distributions[unlabeled, labeled] = gamma(*gamma.fit(lengths))
+        # print("Generating distributions")
+        # for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
+        #     query = cur.execute("""SELECT shared
+        #                            FROM lengths
+        #                            WHERE unlabeled = ? AND labeled = ?""",
+        #                         (unlabeled._id, labeled._id))
+        #     lengths = [value[0] for value in query]
+        #     self._distributions[unlabeled, labeled] = gamma(*gamma.fit(lengths))
         cur.close()
             
 
@@ -97,6 +97,10 @@ def _pairwise_shared(labeled_nodes, unlabeled_nodes, min_segment_length):
             in product(unlabeled_nodes, labeled_nodes)]
 
 def _partition_labeled_nodes(labeled_nodes):
+    """
+    Partitions labeled nodes into equally sized sets
+    The number of sets is roughly twice the number of CPUs.
+    """
     l = list(labeled_nodes)
     partition_size = len(l) // (NUM_CPU * 2)
     return [l[i:i+ partition_size] for i in range(0, len(l), partition_size)]
