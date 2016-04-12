@@ -11,8 +11,7 @@ import pyximport; pyximport.install()
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes
 
-# DB_FILE = "/media/paul/Storage/scratch/lengths.db"
-DB_FILE = "/media/paul/Storage Monster/scratch/lengths_1000.db"
+DB_FILE = "/media/paul/Storage/scratch/lengths_profile.db"
 
 class LengthClassifier:
     """
@@ -28,7 +27,7 @@ class LengthClassifier:
         unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
         con = self._set_up_sqlite()
         cur = con.cursor()
-        for i in range(1000):
+        for i in range(3):
             print("iteration {}".format(i))
             print("Cleaning genomes.")
             population.clean_genomes()
@@ -44,7 +43,7 @@ class LengthClassifier:
             cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
                             lengths_iter)
             con.commit()
-        print("Generating distributions")
+        # print("Generating distributions")
         # for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
         #     query = cur.execute("""SELECT shared
         #                            FROM lengths
@@ -73,6 +72,12 @@ class LengthClassifier:
         shared segment length shared_length
         """
         return self._distributions[query_node, labeled_node].pdf(shared_length)
+
+def parallel_pairwise(unlabeled_nodes, labeled_node, minimum_length):
+    return [shared_segment_length_genomes(unlabeled.genome,
+                                          labeled_node.genome,
+                                          min_segment_length)
+            for unlabeled in unlabeled_nodes]
     
 def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
     by_autosome = common_segment_lengths(genome_a, genome_b)
