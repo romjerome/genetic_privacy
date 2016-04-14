@@ -12,8 +12,9 @@ import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes
+from gamma import fit_gamma
 
-DB_FILE = "/media/paul/Storage/scratch/lengths_4000.db"
+DB_FILE = "/media/paul/Storage/scratch/lengths.db"
 
 cpu_info = dict([x.strip() for x in line.split(":")]
                 for line in popen('lscpu').readlines())
@@ -43,7 +44,7 @@ class LengthClassifier:
                                 unlabeled_nodes = unlabeled_nodes,
                                 min_segment_length = min_segment_length)
                                 
-        for i in range(4000):
+        for i in range(10):
             print("iteration {}".format(i))
             print("Cleaning genomes.")
             population.clean_genomes()
@@ -56,14 +57,17 @@ class LengthClassifier:
                 cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
                                 lengths_iter)
             con.commit()
-        # print("Generating distributions")
-        # for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
-        #     query = cur.execute("""SELECT shared
-        #                            FROM lengths
-        #                            WHERE unlabeled = ? AND labeled = ?""",
-        #                         (unlabeled._id, labeled._id))
-        #     lengths = [value[0] for value in query]
-        #     self._distributions[unlabeled, labeled] = gamma(*gamma.fit(lengths))
+        print("Generating distributions")
+        for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
+            query = cur.execute("""SELECT shared
+                                   FROM lengths
+                                   WHERE unlabeled = ? AND labeled = ?""",
+                                (unlabeled._id, labeled._id))
+            lengths = np.fromiter((value[0] for value in query),
+                                  dtype = np.float64)
+            shape, scale = fit_gamma(lengths)
+            self._distributions[unlabeled, labeled] = gamma(shape,
+                                                            scale = scale)
         cur.close()
             
 

@@ -1,4 +1,4 @@
-# cython: profile=True
+"""# cython: profile=True"""
 
 def common_segment_lengths(genome_a, genome_b):
     """
