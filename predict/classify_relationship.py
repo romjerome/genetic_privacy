@@ -1,4 +1,4 @@
-from collections import deque, defaultdict
+from collections import deque, defaultdict, namedtuple
 from itertools import chain, product
 from os.path import isfile
 from os import remove, popen
@@ -13,6 +13,8 @@ import pyximport; pyximport.install()
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes
 from gamma import fit_gamma
+
+GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 
 DB_FILE = "/media/paul/Storage/scratch/lengths.db"
 
@@ -52,24 +54,25 @@ class LengthClassifier:
             generate_genomes(population, genome_generator, recombinators, 3)
             print("Calculating shared length")
             with Pool(NUM_CPU) as p:
-                lengths_iter = chain.from_iterable(p.imap(parallel_shared,
-                                                          partitioned_labeled))
+                lengths_iter = p.imap_unordered(parallel_shared,
+                                                partitioned_labeled)
+                chain_lengths = chain.from_iterable(lengths_iter)
                 cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)",
-                                lengths_iter)
+                                chain_lengths)
             con.commit()
-        print("Generating distributions")
-        for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
-            query = cur.execute("""SELECT shared
-                                   FROM lengths
-                                   WHERE unlabeled = ? AND labeled = ?""",
-                                (unlabeled._id, labeled._id))
-            lengths = np.fromiter((value[0] for value in query),
-                                  dtype = np.float64)
-            shape, scale = fit_gamma(lengths)
-            self._distributions[unlabeled, labeled] = gamma(shape,
-                                                            scale = scale)
+        cur.execute("VACUUM")
         cur.close()
-            
+        
+        print("Generating distributions")
+        parallel_params = partial(_fit_distributions,
+                                  unlabeled_nodes = unlabeled_nodes)
+        mapping = next(iter(labeled_nodes)).mapping
+        with Pool(NUM_CPU) as p:
+            params = chain.from_iterable(p.imap(parallel_params,
+                                                partitioned_labeled))
+            self._distributions = {(mapping[pair[0]],
+                                    mapping[pair[1]]): parameters
+                                   for pair, parameters in params}
 
 
             
@@ -78,7 +81,8 @@ class LengthClassifier:
         Returns the probability that query_node and labeled_node have total
         shared segment length shared_length
         """
-        return self._distributions[query_node, labeled_node].pdf(shared_length)
+        shape, scale =  self._distributions[query_node, labeled_node]
+        return gamma.pdf(shared_length, a = shape, scale = scale)
 
 def _set_up_sqlite():
     if isfile(DB_FILE): # Clear old versions of this file
@@ -100,6 +104,24 @@ def _pairwise_shared(labeled_nodes, unlabeled_nodes, min_segment_length):
             for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)]
 
+def _fit_distributions(labeled_nodes, unlabeled_nodes):
+    db_connection = sqlite3.connect(DB_FILE)
+    cur = db_connection.cursor()
+    ret_values = []
+    for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
+            query = cur.execute("""SELECT shared
+                                   FROM lengths
+                                   WHERE unlabeled = ? AND labeled = ?""",
+                                (unlabeled._id, labeled._id))
+            lengths = np.fromiter((value[0] for value in query),
+                                  dtype = np.float64)
+            shape, scale = fit_gamma(lengths)
+            params = GammaParams(shape, scale)
+            pair = (unlabeled._id, labeled._id)            
+            ret_values.append((pair, params))
+    cur.close()
+    db_connection.close()
+    return ret_values
 def _partition_labeled_nodes(labeled_nodes):
     """
     Partitions labeled nodes into equally sized sets
