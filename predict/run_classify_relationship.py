@@ -2,6 +2,7 @@
 
 from random import sample
 from itertools import chain
+from pickle import dump
 
 from population import PopulationUnpickler
 from sex import Sex
@@ -24,6 +25,10 @@ labeled_nodes = sample(potentially_labeled, 10)
 print("Populating length classifier.")
 classifier = LengthClassifier(population, labeled_nodes, genome_generator,
                               recombinators)
+
+print("Pickling classifier")
+with open("classifier.pickle", "wb") as pickle_file:
+    dump(classifier, pickle_file)
 
 # import pdb
 # pdb.set_trace()
