@@ -72,6 +72,10 @@ class Node:
             self.father = self._node_generator._mapping[self._father_id]
         else:
             self.father = None
+            
+    @property
+    def mapping(self):
+        return self._node_generator._mapping
 
     @property
     def children(self):
