@@ -101,8 +101,8 @@ def _pairwise_shared(labeled_nodes, unlabeled_nodes, min_segment_length):
              shared_segment_length_genomes(unlabeled.genome,
                                            labeled.genome,
                                            min_segment_length))
-            for unlabeled, labeled
-            in product(unlabeled_nodes, labeled_nodes)]
+            for labeled, unlabeled
+            in product(labeled_nodes, unlabeled_nodes)]
 
 def _fit_distributions(labeled_nodes, unlabeled_nodes):
     db_connection = sqlite3.connect(DB_FILE)

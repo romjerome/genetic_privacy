@@ -66,11 +66,11 @@ class Population:
         if self._generations_with_genomes is None:
             start = 0
         else:
-            start = self._generations_with_genomes
+            start = self.num_generations - self._generations_with_genomes
         generations_to_clear = self._generations[start:generations]
         for person in chain.from_iterable(generation.members for generation
                                           in generations_to_clear):
-            person.genome = None
+            del person.genome
 
 
     @property
