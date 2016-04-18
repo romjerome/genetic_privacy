@@ -2,6 +2,7 @@ from random import choice
 from os import getpid
 from uuid import uuid4
 from weakref import ref
+from pickle import HIGHEST_PROTOCOL
 import shelve
 
 from sex import Sex, SEXES
@@ -65,7 +66,7 @@ class GenomeManager:
     def _setup_db(self):
         self._db_pid = getpid()
         self._db = shelve.open(self._filename, flag = "cuf",
-                               protocol = 4)        
+                               protocol = HIGHEST_PROTOCOL)
 
     def __getitem__(self, key):
         if self._db_pid != getpid():
