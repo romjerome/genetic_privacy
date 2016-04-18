@@ -33,6 +33,7 @@ class LengthClassifier:
                  recombinators, min_segment_length = 0):
         self._distributions = dict()
         labeled_nodes = set(labeled_nodes)
+        self._labeled_nodes = labeled_nodes
         unlabeled_nodes = chain.from_iterable(generation.members
                                               for generation
                                               in population.generations[-3:])
@@ -46,7 +47,7 @@ class LengthClassifier:
                                 unlabeled_nodes = unlabeled_nodes,
                                 min_segment_length = min_segment_length)
                                 
-        for i in range(10):
+        for i in range(1000):
             print("iteration {}".format(i))
             print("Cleaning genomes.")
             population.clean_genomes()
@@ -68,8 +69,8 @@ class LengthClassifier:
                                   unlabeled_nodes = unlabeled_nodes)
         mapping = next(iter(labeled_nodes)).mapping
         with Pool(NUM_CPU) as p:
-            params = chain.from_iterable(p.imap(parallel_params,
-                                                partitioned_labeled))
+            params = chain.from_iterable(p.imap_unordered(parallel_params,
+                                                          partitioned_labeled))
             self._distributions = {(mapping[pair[0]],
                                     mapping[pair[1]]): parameters
                                    for pair, parameters in params}
@@ -128,7 +129,7 @@ def _partition_labeled_nodes(labeled_nodes):
     The number of sets is roughly twice the number of CPUs.
     """
     l = list(labeled_nodes)
-    partition_size = len(l) // (NUM_CPU * 2)
+    partition_size = len(l) // (NUM_CPU * 8)
     return [l[i:i+ partition_size] for i in range(0, len(l), partition_size)]
     
 def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
