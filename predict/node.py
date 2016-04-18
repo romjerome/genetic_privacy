@@ -50,13 +50,22 @@ class GenomeManager:
     """
     def __init__(self, filename = None):
         if filename is None:
-            filename = str(uuid4()) + ".shelve"
+            filename = "genome_db_" + str(uuid4()) + ".shelve"
         self._filename = filename
         self._setup_db()
 
+    def reorganize(self):
+        """
+        Call "reorganize" on underlying database.
+        Useful when a lot of elements have been deleted from the database.
+        """
+        self._db.sync()
+        self._db.dict.reorganize()
+
     def _setup_db(self):
         self._db_pid = getpid()
-        self._db = shelve.open(self._filename, protocol = 4)        
+        self._db = shelve.open(self._filename, flag = "cuf",
+                               protocol = 4)        
 
     def __getitem__(self, key):
         if self._db_pid != getpid():
