@@ -24,6 +24,17 @@ class Population:
         return self._kinship_coefficients
 
     @property
+    def id_mapping(self):
+        """
+        Returns the node_id -> node mapping.
+        Assumes all nodes use the same mapping
+        """
+        # Return any nodes mapping, because they should all share the
+        # same mapping
+        return self._generations[0].members[0].mapping
+        
+
+    @property
     def generations(self):
         return list(self._generations)
 
@@ -60,6 +71,7 @@ class Population:
         Remove genomes from the first n given number of generations.
         If generations is not specified, clears all generations genomes.
         """
+        # TODO: This only works if generations is None
         if generations is None:
             generations = self.num_generations
         # We want to start with the nodes that have genomes defined.
@@ -71,6 +83,7 @@ class Population:
         for person in chain.from_iterable(generation.members for generation
                                           in generations_to_clear):
             del person.genome
+        self._generations_with_genomes = self._generations_with_genomes - generations
 
 
     @property
