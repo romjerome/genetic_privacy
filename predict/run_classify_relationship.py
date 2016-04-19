@@ -10,7 +10,7 @@ from classify_relationship import LengthClassifier
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 
 print("Loading population")
-with open("population_1000_genome.pickle", "rb") as pickle_file:
+with open("population_10000_genome.pickle", "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
 print("Loading recombination data.")
@@ -21,7 +21,7 @@ genome_generator = RecombGenomeGenerator(chrom_sizes)
 potentially_labeled = list(chain.from_iterable([generation.members
                                                 for generation
                                                 in population.generations[-3:]]))
-labeled_nodes = sample(potentially_labeled, 10)
+labeled_nodes = sample(potentially_labeled, 500)
 print("Populating length classifier.")
 classifier = LengthClassifier(population, labeled_nodes, genome_generator,
                               recombinators)
