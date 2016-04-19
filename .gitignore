@@ -1,4 +1,5 @@
 *.pyc
 *.svg
 *.pickle
+*.shelve
 genetic_map_chr*
