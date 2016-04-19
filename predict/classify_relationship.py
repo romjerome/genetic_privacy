@@ -38,7 +38,7 @@ class LengthClassifier:
                                               for generation
                                               in population.generations[-3:])
         unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
-        con = _set_up_sqlite()
+        con = _set_up_sqlite(DB_FILE)
         cur = con.cursor()
 
         # Setup for parallelism
@@ -85,10 +85,49 @@ class LengthClassifier:
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
-def _set_up_sqlite():
-    if isfile(DB_FILE): # Clear old versions of this file
-        remove(DB_FILE)
-    temp_storage = sqlite3.connect(DB_FILE)
+def calculate_shared_to_db(labeled_nodes, unlabeled_nodes, database_name,
+                     min_segment_length = None):
+    """
+    Calculate the shared segment lengths of each pair in
+    product(labeled_nodes, unlabeled_nodes) and store it in the given databse
+    """
+    if isfile(database_name):
+        con = sqlite3.connect(databse_name)
+    else:
+        con = _set_up_sqlite(database_name)
+    cur = con.cursor()
+    shared_iter = ((unlabeled._id, labeled._id,
+                    shared_segment_length_genomes(unlabeled.genome,
+                                                  labeled.genome,
+                                                  min_segment_length))
+                   for labeled, unlabeled
+                   in product(labeled_nodes, unlabeled_nodes))
+    cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)", shared_iter)
+    cur.execute("VACUUM")
+    cur.close()
+
+def calculate_distributions(labeled_nodes, unlabeled_nodes, database_name):
+    db_connection = sqlite3.connect(database_name)
+    cur = db_connection.cursor()
+    distributions = dict()
+    for unlabeled, labeled in product(unlabeled_nodes, labeled_nodes):
+            query = cur.execute("""SELECT shared
+                                   FROM lengths
+                                   WHERE unlabeled = ? AND labeled = ?""",
+                                (unlabeled._id, labeled._id))
+            lengths = np.fromiter((value[0] for value in query),
+                                  dtype = np.float64)
+            shape, scale = fit_gamma(lengths)
+            params = GammaParams(shape, scale)
+            distributions[(unlabeled._id, labeled._id)] = params
+    cur.close()
+    db_connection.close()
+    return ret_values
+
+def _set_up_sqlite(filename):
+    if isfile(filename): # Clear old versions of this file
+        remove(filename)
+    temp_storage = sqlite3.connect(filename)
     temp_storage.execute("""PRAGMA page_size = 32768""");
     temp_storage.execute("""CREATE TABLE lengths
                             (unlabeled integer, labeled integer, shared integer)""")
