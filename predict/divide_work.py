@@ -9,11 +9,11 @@ from pickle import load, dump
 from os.path import join, isdir
 from os import makedirs
 
-from population import PopulationUnpickler
+from population import population_from_directory
 
 parser = ArgumentParser(description = "Split up work for parallization")
 
-parser.add_argument("population_file")
+parser.add_argument("population_dirname")
 parser.add_argument("partition_size", type = int)
 parser.add_argument("--labeled_nodes_file", default = None)
 parser.add_argument("--num_labeled", type = int, default = 0)
@@ -26,8 +26,7 @@ if args.labeled_nodes_file is None and args.num_labeled <= 0:
     parser.error("If no labeled nodes file is provided, positive num_labeled must be specified.")
 
 print("Loading population")
-with open(args.population_file, "rb") as pickle_file:
-    population = PopulationUnpickler(pickle_file).load()
+population = population_from_directory(args.population_dirname)
 
 if not isdir(args.output_dir):
     makedirs(args.output_dir)
