@@ -130,6 +130,8 @@ class Node:
         del state["mother"]
         del state["father"]
         del state["_genome"]
+        # Genome manager must be attached during population unpickling
+        del state["_genome_manager"]
         return state
     
     def __setstate__(self, state):
