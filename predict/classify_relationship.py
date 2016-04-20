@@ -86,13 +86,13 @@ class LengthClassifier:
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
 def calculate_shared_to_db(labeled_nodes, unlabeled_nodes, database_name,
-                     min_segment_length = None):
+                           min_segment_length = 0):
     """
     Calculate the shared segment lengths of each pair in
     product(labeled_nodes, unlabeled_nodes) and store it in the given databse
     """
     if isfile(database_name):
-        con = sqlite3.connect(databse_name)
+        con = sqlite3.connect(database_name)
     else:
         con = _set_up_sqlite(database_name)
     cur = con.cursor()
@@ -122,7 +122,7 @@ def calculate_distributions(labeled_nodes, unlabeled_nodes, database_name):
             distributions[(unlabeled._id, labeled._id)] = params
     cur.close()
     db_connection.close()
-    return ret_values
+    return distributions
 
 def _set_up_sqlite(filename):
     if isfile(filename): # Clear old versions of this file
@@ -173,8 +173,8 @@ def _partition_labeled_nodes(labeled_nodes):
     
 def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
     by_autosome = common_segment_lengths(genome_a, genome_b)
-    seg_lengths = filter(lambda x: x >= minimum_length,
-                         chain.from_iterable(by_autosome.values()))
+    seg_lengths = (x for x in chain.from_iterable(by_autosome.values())
+                   if x >= minimum_length)
     return sum(seg_lengths)
     
 def _shared_segment_length(node_a, node_b, minimum_length):
