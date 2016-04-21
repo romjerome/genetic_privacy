@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This scripts divides up a population so that length distributions can be comptued in parallel.
 """
