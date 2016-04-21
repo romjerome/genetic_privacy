@@ -16,14 +16,14 @@ parser.add_argument("population_dirname",
 parser.add_argument("labeled_filename",
                     help = "Name of the pickle file with the ids of the labeled nodes")
 parser.add_argument("work_dir", help = "directory to store intermediate data, and to store output files.")
-parser.add_argument("--database_name", default = None,
+parser.add_argument("--database", default = None,
                     help = "name of sqlite database to use.")
 args = parser.parse_args()
 
-if args.database_name is None:
+if args.database is None:
     db_name  = join(args.work_dir, "lengths_" + str(uuid4()) + ".db")
 else:
-    db_name = join(args.work_dir, args.database_name)
+    db_name = join(args.work_dir, args.database)
 
 print("Loading population")
 population = population_from_directory(args.population_dirname)
