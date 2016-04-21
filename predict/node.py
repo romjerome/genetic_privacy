@@ -66,7 +66,7 @@ class GenomeManager:
     def _setup_db(self):
         self._db_pid = getpid()
         self._db = shelve.open(self._filename, flag = "cuf",
-                               protocol = HIGHEST_PROTOCOL)
+                               protocol = min(HIGHEST_PROTOCOL, 3))
 
     def __getitem__(self, key):
         if self._db_pid != getpid():
