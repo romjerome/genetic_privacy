@@ -4,8 +4,6 @@ from argparse import ArgumentParser
 from random import choice
 from pickle import dump, HIGHEST_PROTOCOL
 
-from pympler import asizeof, tracker, summary, muppy
-
 from population import HierarchicalIslandPopulation
 from population_genomes import generate_genomes
 from node import NodeGenerator
