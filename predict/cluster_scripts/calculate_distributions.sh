@@ -21,7 +21,8 @@ cp -r "${POPULATION_DIR}" "${SCRATCH_POP_DIR}"
 
 echo "Dividing up labeled nodes."
 DIVIDE_ID=$(sbatch -o "${OUTPUT_DIR}/outfiles/slurm-%A_%a.out" --mem=4GB \
-                   "${CODE_DIR}/divide_work.py" "${POPULATION_DIR}" 5 \
+                   --workdir="${CODE_DIR}" \
+                   "divide_work.py" "${POPULATION_DIR}" 5 \
                    --num_labeled 50 --output_dir "${OUTPUT_DIR}" | \
                    grep -Eo "[0-9]+")
 
