@@ -20,7 +20,6 @@ parser.add_argument("--generation_size", type = int, default = 10000)
 parser.add_argument("--num_generations", type = int, default = 10)
 parser.add_argument("--no_genomes", action="store_true", default = False,
                     help = "Don't generate genomes for the individuals in the population.")
-parser.add_argument("--genome_file", default = None)
 parser.add_argument("--output_file")
 
 args = parser.parse_args()
@@ -28,7 +27,7 @@ if args.num_generations < 1:
     parser.error("num_generations must be >= 1")
 
 
-node_generator = NodeGenerator(args.genome_file)
+node_generator = NodeGenerator()
 founders = [node_generator.generate_node() for _ in range(args.generation_size)]
 
 tree = tree_from_file(args.tree_file)

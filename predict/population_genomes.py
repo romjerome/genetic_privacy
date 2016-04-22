@@ -64,7 +64,6 @@ def generate_genomes(population, generator, recombinators, keep_last = None):
             to_delete = population.generations[generation_num - keep_last]
             for person in to_delete.members:
                 del person.genome
-    population.generations[0].members[0]._genome_manager.reorganize()
     if keep_last is not None:
         population._generations_with_genomes = keep_last
     else:

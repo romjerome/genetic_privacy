@@ -3,12 +3,9 @@ from random import shuffle, uniform, choice
 from itertools import chain, product, combinations_with_replacement
 from types import GeneratorType
 from pickle import Unpickler
-from os.path import join
-from os import listdir
 
 from symmetric_dict import SymmetricDict
 from generation import Generation
-from node import GenomeManager
 
 class Population:
     def __init__(self, initial_generation = None):
@@ -306,28 +303,10 @@ class HierarchicalIslandPopulation(Population):
         return self._island_tree
 
 class PopulationUnpickler(Unpickler):
-    def __init__(self, *args, **kwargs):
-        self._genome_manager_filename = kwargs.pop("genome_manager")
-        super().__init__(*args, **kwargs)
-
+    
     def load(self):
         result = super().load()
-        genome_manager = GenomeManager(self._genome_manager_filename)
         for member in result.members:
             member._resolve_parents()
-            member._genome_manager = genome_manager
         return result
 
-
-def population_from_directory(dirname):
-    input_files = listdir(dirname)
-    population_file = [filename for filename in input_files
-                       if "population" in filename][0]
-    population_file = join(dirname, population_file)
-    genome_file = [filename for filename in input_files
-                   if "genome_db" in filename][0]
-    genome_file = join(dirname, genome_file)
-    with open(population_file, "rb") as pickle_file:
-        population = PopulationUnpickler(pickle_file,
-                                         genome_manager = genome_file).load()
-    return population
