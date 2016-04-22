@@ -17,22 +17,27 @@ DECODE_FILENAME = "decode_recombination_data.tab"
 GENOME_ID_INDEX = 2
 
 class RecombGenomeGenerator():
-    def __init__(self, chromosome_lengths):
+    def __init__(self, chromosome_lengths, num_founders):
         self._chromosome_lengths = chromosome_lengths
+        self._num_founders = num_founders
         self._genome_id = 0
 
     def generate(self):
+        assert self._genome_id < self._num_founders
         chromosomes = dict()
         for chromosome, length in self._chromosome_lengths.items():
             # TODO: Consider making this a two element tuple, where
             # range is implicit in the sequence of tuples.
             mother = [(0, length, self._genome_id)]
-            self._genome_id += 1
             father = [(0, length, self._genome_id)]
-            self._genome_id += 1
             chromosomes[chromosome] = Autosome(mother, father)
-            
-        return RecombGenome(chromosomes)
+        
+        founder_bits = np.zeros(self._num_founders, dtype = np.uint8)
+        founder_bits[self._genome_id] = 1
+        
+        self._genome_id += 1
+        return RecombGenome(chromosomes, num_founders,
+                            np.packbits(founder_bits))
 
 class Autosome():
     """
@@ -45,8 +50,23 @@ class Autosome():
 
 class RecombGenome():
     
-    def __init__(self, chromosomes):
+    def __init__(self, chromosomes, num_founders, founder_bits = None):
         self.chromosomes = chromosomes
+        self._num_founders = num_founders
+        if founder_bits is None:
+            self._founder_bits = self._extract_founder_bits(chromosomes,
+                                                            num_founders)
+        else:
+            self._founder_bits = founder_bits
+            
+    def _extract_founder_bits(chromosomes):
+        founder_bits = np.zeros(self._num_founders, dtype = np.uint8)
+        for chrom, autosome in chromosomes.items():
+            mother_founders = [segment[2] for segment in autosome.mother]
+            father_founders = [segment[2] for segment in autosome.father]
+            founder_bits[mother_founders] = 1
+            founder_bits[father_founders] = 1
+        return np.packbits(founder_bits)
 
 def recombinators_from_directory(directory):
     """
