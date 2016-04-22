@@ -20,7 +20,7 @@ mkdir -p "${OUTPUT_DIR}/outfiles"
 cp -r "${POPULATION_DIR}" "${SCRATCH_POP_DIR}"
 
 echo "Dividing up labeled nodes."
-DIVIDE_ID=$(sbatch -o "${OUTPUT_DIR}/outfiles/slurm-%A_%a.out" --mem=4GB \
+DIVIDE_ID=$(sbatch -o "${OUTPUT_DIR}/outfiles/slurm-%j.out" --mem=4GB \
                    --workdir="${CODE_DIR}" \
                    "divide_work.py" "${POPULATION_DIR}" 5 \
                    --num_labeled 50 --output_dir "${OUTPUT_DIR}" | \
