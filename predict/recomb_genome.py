@@ -1,12 +1,13 @@
 import re
 import csv
 
+from array import array
 from itertools import tee
 from os import listdir
 from os.path import isfile, join
 from random import uniform
 from bisect import bisect_left
-from collections import defaultdict
+from collections import defaultdict, namedtuple, deque
 
 import numpy as np
 
@@ -15,6 +16,8 @@ from sex import Sex
 MEGABASE = 10 ** 6
 DECODE_FILENAME = "decode_recombination_data.tab"
 GENOME_ID_INDEX = 2
+
+Diploid = namedtuple("Diploid", ["starts", "stops", "founder"])
 
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths, num_founders):
@@ -28,8 +31,10 @@ class RecombGenomeGenerator():
         for chromosome, length in self._chromosome_lengths.items():
             # TODO: Consider making this a two element tuple, where
             # range is implicit in the sequence of tuples.
-            mother = [(0, length, self._genome_id)]
-            father = [(0, length, self._genome_id + 1)]
+            mother = Diploid(array("L", [0]), array("L", [length]),
+                             array("L", [self._genome_id]))
+            father = Diploid(array("L", [0]), array("L", [length]),
+                             array("L", [self._genome_id + 1]))
             chromosomes[chromosome] = Autosome(mother, father)
         
         founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
@@ -45,8 +50,8 @@ class Autosome():
     XXX: Should this be replaced with a namedtuple?
     """
     def __init__(self, mother, father):
-        self.mother = tuple(mother)
-        self.father = tuple(father)
+        self.mother = mother
+        self.father = father
 
 class RecombGenome():
     
@@ -61,8 +66,8 @@ class RecombGenome():
     def _extract_founder_bits(self, chromosomes):
         founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
         for chrom, autosome in chromosomes.items():
-            mother_founders = [segment[2] for segment in autosome.mother]
-            father_founders = [segment[2] for segment in autosome.father]
+            mother_founders = autosome.mother.founder
+            father_founders = autosome.father.founder
             founder_bits[mother_founders] = 1
             founder_bits[father_founders] = 1
         return np.packbits(founder_bits)
@@ -265,18 +270,51 @@ class Recombinator():
             locations = self._recombination_locations(chrom_name)
             if len(locations) % 2 == 1:
                 locations.append(self._num_bases[chrom_name])
-            mother_modified = list(autosome.mother)
-            father_modified = list(autosome.father)
             # The zip is the pairs of adjecent list members.
             # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
             # that yields (0, 1) then (2, 3)
-            _swap_at_locations(mother_modified, father_modified,
-                               zip(locations[::2], locations[1::2]))
+            mother, father = _swap_at_locations(autosome.mother,
+                                                autosome.father,
+                                                zip(locations[::2],
+                                                    locations[1::2]))
                 
-            new_autosomes[chrom_name] = Autosome(mother_modified,
-                                                 father_modified)
+            new_autosomes[chrom_name] = Autosome(mother,
+                                                 father)
         return RecombGenome(new_autosomes, genome._num_founders,
                             genome._founder_bits)
+
+def _new_sequence(diploid, locations):
+    """
+    Return a new sequence, broken up at the given start, stop locations.
+    Eg the sequence starts: 0  10 20
+                    stops:  10 20 30
+    passed with the locations [(15, 25)] should produce the sequence
+                    starts: 0  10 15 20 25
+                    stops:  10 15 20 25 30
+    """
+    new_len = len(diploid.starts)
+    start_indices = deque()
+    stop_indices = deque()
+    for start, stop in locations:
+        start_index = bisect_left(diploid.starts, start)
+        stop_index = bisect_left(diploid.starts, start)
+        start_indices.append(start_index)
+        stop_indices.append(stop_index)
+        if diploid.stops[start_index] != start:
+            new_len += 1
+        if diploid.stops[stop_index] != stop:
+            new_len += 1
+    return_starts = array(diploid.starts.typecode, [0] * new_len)
+    return_stops = array(diploid.stops.typecode, [0] * new_len)
+    return_founder = array(diploid.founder.typecode, [0] * new_len)
+
+    # TODO : Finish this part.
+    source_i, destination_i = 0, 0
+    while destination_i < len(return_starts):
+        start_index = start_indices.popleft()
+        stop_index = stop_indices.popleft()
+        return_starts[destination_i:start_index] = diploid.starts[source_i:start_index]
+        return_stops[destination_i:start_index] = diploid.stops[source_i:start_index]
 
 def _swap_at_locations(mother, father, locations):
     """
@@ -284,18 +322,37 @@ def _swap_at_locations(mother, father, locations):
     Locations is given by basepair locations, rather than centimorgans
     or list index.
     """
+    #TODO: Implement this
+    locations = list(locations)
+    mother_start_indicies = [bisect_left(mother.starts, start)
+                             for start, _ in locations]
+    mother_stop_indicies = [bisect_left(mother.starts, stop)
+                             for _, stop in locations]
+    father_start_indicies = [bisect_left(father.starts, start)
+                             for start, _ in locations]
+    father_stop_indicies = [bisect_left(father.starts, stop)
+                             for _, stop in locations]
+
+    new_mother_len = len(mother.starts)
+    for start_index, (start, _) in zip(mother_start_indices, locations):
+        if mother.stops[start_index] != start:
+            new_mother_len += 1
+    for stop_index, (_, stop) in zip(mother_stop_indices, locations):
+        if mother.stops[stop_index] != stop:
+            new_mother_len += 1
+        
     for start, end in locations:
         assert start < end,\
         "start must be less than end. Start: {}, end : {}".format(start, end)
         # Identify and break up the ranges to swap (cross over)
-        mother_start_index = bisect_left(mother, (start,))
+        mother_start_index = bisect_left(mother.starts, start)
         _break_sequence(mother, start, mother_start_index)
-        mother_end_index = bisect_left(mother, (end,))
+        mother_end_index = bisect_left(mother.starts, end)
         _break_sequence(mother, end, mother_end_index)
                 
-        father_start_index = bisect_left(father, (start,))
+        father_start_index = bisect_left(father, array("L", (start,)))
         _break_sequence(father, start, father_start_index)
-        father_end_index = bisect_left(father, (end,))
+        father_end_index = bisect_left(father, array("L", (end,)))
         _break_sequence(father, end, father_end_index)
 
         # Perform the swap
@@ -321,9 +378,9 @@ def _break_sequence(sequence, location, index):
         # If the location is at the beginning or end of a range, then
         # it is considered split already.
         return    
-    first_half = (sequence[index - 1][0], location,
-                  sequence[index - 1][GENOME_ID_INDEX])
-    second_half = (location, sequence[index - 1][1],
-                   sequence[index - 1][GENOME_ID_INDEX])
+    first_half = array("L", (sequence[index - 1][0], location,
+                             sequence[index - 1][GENOME_ID_INDEX]))
+    second_half = array("L", (location, sequence[index - 1][1],
+                              sequence[index - 1][GENOME_ID_INDEX]))
     sequence[index - 1] = first_half
     sequence.insert(index, second_half)
