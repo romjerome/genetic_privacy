@@ -23,20 +23,20 @@ class RecombGenomeGenerator():
         self._genome_id = 0
 
     def generate(self):
-        assert self._genome_id < self._num_founders
+        assert self._genome_id < 2 * self._num_founders
         chromosomes = dict()
         for chromosome, length in self._chromosome_lengths.items():
             # TODO: Consider making this a two element tuple, where
             # range is implicit in the sequence of tuples.
             mother = [(0, length, self._genome_id)]
-            father = [(0, length, self._genome_id)]
+            father = [(0, length, self._genome_id + 1)]
             chromosomes[chromosome] = Autosome(mother, father)
         
-        founder_bits = np.zeros(self._num_founders, dtype = np.uint8)
+        founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
         founder_bits[self._genome_id] = 1
         
-        self._genome_id += 1
-        return RecombGenome(chromosomes, num_founders,
+        self._genome_id += 2
+        return RecombGenome(chromosomes, self._num_founders,
                             np.packbits(founder_bits))
 
 class Autosome():
@@ -54,13 +54,12 @@ class RecombGenome():
         self.chromosomes = chromosomes
         self._num_founders = num_founders
         if founder_bits is None:
-            self._founder_bits = self._extract_founder_bits(chromosomes,
-                                                            num_founders)
+            self._founder_bits = self._extract_founder_bits(chromosomes)
         else:
             self._founder_bits = founder_bits
             
-    def _extract_founder_bits(chromosomes):
-        founder_bits = np.zeros(self._num_founders, dtype = np.uint8)
+    def _extract_founder_bits(self, chromosomes):
+        founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
         for chrom, autosome in chromosomes.items():
             mother_founders = [segment[2] for segment in autosome.mother]
             father_founders = [segment[2] for segment in autosome.father]
@@ -276,7 +275,8 @@ class Recombinator():
                 
             new_autosomes[chrom_name] = Autosome(mother_modified,
                                                  father_modified)
-        return RecombGenome(new_autosomes)
+        return RecombGenome(new_autosomes, genome._num_founders,
+                            genome._founder_bits)
 
 def _swap_at_locations(mother, father, locations):
     """

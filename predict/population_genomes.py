@@ -13,7 +13,9 @@ def mate(mother, father, mother_recombinator, father_recombinator):
     mother_recomb = mother_recombinator.recombination(mother)
     father_recomb = father_recombinator.recombination(father)
     offspring_autosomes = dict()
+    num_founders = mother._num_founders
     for chrom_name, chromosome in mother_recomb.chromosomes.items():
+        # TODO: Don't clobber mother and father references.
         if random() < 0.5:
             mother = mother_recomb.chromosomes[chrom_name].mother
         else:
@@ -23,7 +25,7 @@ def mate(mother, father, mother_recombinator, father_recombinator):
         else:
             father = father_recomb.chromosomes[chrom_name].father
         offspring_autosomes[chrom_name] = Autosome(mother, father)
-    return RecombGenome(offspring_autosomes)
+    return RecombGenome(offspring_autosomes, num_founders)
 
 def generate_genomes_ancestors(root_nodes, generator, recombinators):
     queue = deque(root_nodes)

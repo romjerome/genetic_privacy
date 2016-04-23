@@ -43,7 +43,7 @@ if not args.no_genomes:
     # tr = tracker.SummaryTracker()
     recombinators = recombinators_from_directory(args.recombination_dir)
     chrom_sizes = recombinators[Sex.Male]._num_bases
-    genome_generator = RecombGenomeGenerator(chrom_sizes)
+    genome_generator = RecombGenomeGenerator(chrom_sizes, args.generation_size)
     generate_genomes(population, genome_generator, recombinators, 3)
     # tr.print_diff()
     # summary.print_(summary.summarize(muppy.get_objects()))
