@@ -27,16 +27,24 @@ cpdef common_homolog_segments(homolog_a, homolog_b):
     Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
     where the two autosomes have the same underlying sequence.
     """
-    cdef int len_a, len_b, index_a, index_b, start, stop
-    cdef int a_start, a_stop, a_id, b_start, b_stop, b_id
-    len_a = len(homolog_a)
-    len_b = len(homolog_b)
+    cdef unsigned long len_a, len_b, index_a, index_b, start, stop
+    cdef unsigned long a_start, a_stop, a_id, b_start, b_stop, b_id
+    cdef unsigned long[:] starts_a = homolog_a.starts
+    cdef unsigned long[:] stops_a = homolog_a.stops
+    cdef unsigned long[:] founder_a = homolog_a.founder
+    cdef unsigned long[:] starts_b = homolog_b.starts
+    cdef unsigned long[:] stops_b = homolog_b.stops
+    cdef unsigned long[:] founder_b = homolog_b.founder
+    len_a = len(starts_a)
+    len_b = len(starts_b)
     index_a = 0
     index_b = 0
     shared_segments = []
     while index_a < len_a and index_b < len_b:
-        a_start, a_stop, a_id = homolog_a[index_a]
-        b_start, b_stop, b_id = homolog_b[index_b]
+        a_start, a_stop = starts_a[index_a], stops_a[index_a]
+        a_id = founder_a[index_a]
+        b_start, b_stop = starts_b[index_b], stops_b[index_b]
+        b_id = founder_b[index_b]
         if a_id == b_id:
             if a_start > b_start:
                 start = a_start
