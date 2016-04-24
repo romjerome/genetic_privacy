@@ -7,7 +7,7 @@ from os import listdir
 from os.path import isfile, join
 from random import uniform
 from bisect import bisect_left
-from collections import defaultdict, namedtuple, deque
+from collections import defaultdict, namedtuple
 
 import numpy as np
 
@@ -288,78 +288,115 @@ def _new_sequence(diploid, locations):
     Return a new sequence, broken up at the given start, stop locations.
     Eg the sequence starts: 0  10 20
                     stops:  10 20 30
-    passed with the locations [(15, 25)] should produce the sequence
+    passed with the locations [15, 25] should produce the sequence
                     starts: 0  10 15 20 25
                     stops:  10 15 20 25 30
     """
-    new_len = len(diploid.starts)
-    start_indices = deque()
-    stop_indices = deque()
-    for start, stop in locations:
-        start_index = bisect_left(diploid.starts, start)
-        stop_index = bisect_left(diploid.starts, start)
-        start_indices.append(start_index)
-        stop_indices.append(stop_index)
-        if diploid.stops[start_index] != start:
-            new_len += 1
-        if diploid.stops[stop_index] != stop:
-            new_len += 1
-    return_starts = array(diploid.starts.typecode, [0] * new_len)
-    return_stops = array(diploid.stops.typecode, [0] * new_len)
-    return_founder = array(diploid.founder.typecode, [0] * new_len)
+    non_duplicate = []
+    for break_location in locations:
+        break_index = bisect_left(diploid.starts, break_location)
+        if (break_index == len(diploid.starts) or
+            diploid.starts[break_index] != break_location):
+            non_duplicate.append(break_location)
+    list_starts = list(diploid.starts)
+    list_starts.extend(non_duplicate)
+    list_starts.sort()
 
-    # TODO : Finish this part.
-    source_i, destination_i = 0, 0
-    while destination_i < len(return_starts):
-        start_index = start_indices.popleft()
-        stop_index = stop_indices.popleft()
-        return_starts[destination_i:start_index] = diploid.starts[source_i:start_index]
-        return_stops[destination_i:start_index] = diploid.stops[source_i:start_index]
+    return_starts = array(diploid.starts.typecode, list_starts)
+    return_stops = array(diploid.stops.typecode, [0] * len(return_starts))
+    for i in range(len(return_starts) - 1):
+        return_stops[i] = return_starts[i + 1]
+    return_stops[len(return_starts) - 1] = diploid.stops[-1]
+    
+    return_founder = array(diploid.founder.typecode, [0] * len(return_starts))
+    j = 0
+    for i in range(len(return_starts)):
+        if j < len(diploid.starts) and return_starts[i] == diploid.starts[j]:
+            return_founder[i] = diploid.founder[j]
+            j += 1
+        else:
+            return_founder[i] = diploid.founder[j - 1]
+            
+    # new_len = len(diploid.starts)
+    # break_indices = []
+    # for break_location in locations:
+    #     break_index = bisect_left(diploid.starts, break_location)
+    #     if (break_index == len(diploid.starts) or
+    #         diploid.starts[break_index] != break_location):
+    #         pass
 
-def _swap_at_locations(mother, father, locations):
-    """
-    Swap elements at the given (start, stop) locations in locations.
-    Locations is given by basepair locations, rather than centimorgans
-    or list index.
-    """
-    #TODO: Implement this
-    locations = list(locations)
-    mother_start_indicies = [bisect_left(mother.starts, start)
-                             for start, _ in locations]
-    mother_stop_indicies = [bisect_left(mother.starts, stop)
-                             for _, stop in locations]
-    father_start_indicies = [bisect_left(father.starts, start)
-                             for start, _ in locations]
-    father_stop_indicies = [bisect_left(father.starts, stop)
-                             for _, stop in locations]
 
-    new_mother_len = len(mother.starts)
-    for start_index, (start, _) in zip(mother_start_indices, locations):
-        if mother.stops[start_index] != start:
-            new_mother_len += 1
-    for stop_index, (_, stop) in zip(mother_stop_indices, locations):
-        if mother.stops[stop_index] != stop:
-            new_mother_len += 1
+    # return_starts = array(diploid.starts.typecode, [0] * new_len)
+    # return_stops = array(diploid.stops.typecode, [0] * new_len)
+    # return_founder = array(diploid.founder.typecode, [0] * new_len)
+
+    # import pdb
+    # pdb.set_trace()
+
+    # i = 0
+    # index_diff = 0
+    # for break_index, break_location in zip(break_indices, locations):
+    #     if diploid.stops[break_index] == break_location:
+    #         continue
+            
+    #     if break_location == 0:
+    #         continue
+    #     to_copy = diploid.starts[i:break_index - 1]
+    #     return_starts[i + index_diff:break_index + index_diff - 1] = to_copy
+    #     to_copy = diploid.stops[i:break_index - 1]
+    #     return_stops[i + index_diff:break_index + index_diff - 1] = to_copy
+    #     to_copy = diploid.founder[i:break_index - 1]
+    #     return_founder[i + index_diff : break_index + index_diff - 1] = to_copy
+    #     if diploid.stops[break_index] != break_location:
+    #         i += 1
+    #     i = break_index
+
+    return Diploid(return_starts, return_stops, return_founder)
+
+# def _swap_at_locations(mother, father, locations):
+#     """
+#     Swap elements at the given (start, stop) locations in locations.
+#     Locations is given by basepair locations, rather than centimorgans
+#     or list index.
+#     """
+#     #TODO: Implement this
+#     locations = list(locations)
+#     mother_start_indicies = [bisect_left(mother.starts, start)
+#                              for start, _ in locations]
+#     mother_stop_indicies = [bisect_left(mother.starts, stop)
+#                              for _, stop in locations]
+#     father_start_indicies = [bisect_left(father.starts, start)
+#                              for start, _ in locations]
+#     father_stop_indicies = [bisect_left(father.starts, stop)
+#                              for _, stop in locations]
+
+#     new_mother_len = len(mother.starts)
+#     for start_index, (start, _) in zip(mother_start_indices, locations):
+#         if mother.stops[start_index] != start:
+#             new_mother_len += 1
+#     for stop_index, (_, stop) in zip(mother_stop_indices, locations):
+#         if mother.stops[stop_index] != stop:
+#             new_mother_len += 1
         
-    for start, end in locations:
-        assert start < end,\
-        "start must be less than end. Start: {}, end : {}".format(start, end)
-        # Identify and break up the ranges to swap (cross over)
-        mother_start_index = bisect_left(mother.starts, start)
-        _break_sequence(mother, start, mother_start_index)
-        mother_end_index = bisect_left(mother.starts, end)
-        _break_sequence(mother, end, mother_end_index)
+#     for start, end in locations:
+#         assert start < end,\
+#         "start must be less than end. Start: {}, end : {}".format(start, end)
+#         # Identify and break up the ranges to swap (cross over)
+#         mother_start_index = bisect_left(mother.starts, start)
+#         _break_sequence(mother, start, mother_start_index)
+#         mother_end_index = bisect_left(mother.starts, end)
+#         _break_sequence(mother, end, mother_end_index)
                 
-        father_start_index = bisect_left(father, array("L", (start,)))
-        _break_sequence(father, start, father_start_index)
-        father_end_index = bisect_left(father, array("L", (end,)))
-        _break_sequence(father, end, father_end_index)
+#         father_start_index = bisect_left(father, array("L", (start,)))
+#         _break_sequence(father, start, father_start_index)
+#         father_end_index = bisect_left(father, array("L", (end,)))
+#         _break_sequence(father, end, father_end_index)
 
-        # Perform the swap
-        temp = list(mother[mother_start_index:mother_end_index])
-        father_range = father[father_start_index:father_end_index]
-        mother[mother_start_index:mother_end_index] = father_range
-        father[father_start_index:father_end_index] = temp
+#         # Perform the swap
+#         temp = list(mother[mother_start_index:mother_end_index])
+#         father_range = father[father_start_index:father_end_index]
+#         mother[mother_start_index:mother_end_index] = father_range
+#         father[father_start_index:father_end_index] = temp
 
 def _break_sequence(sequence, location, index):
     """
