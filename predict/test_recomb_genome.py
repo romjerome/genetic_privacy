@@ -113,16 +113,79 @@ class TestSwapAtLocations(unittest.TestCase):
         father.starts = array("L", [0])
         father.stops = array("L", [10])
         father.founder = array("L", [2])
-        locations = [(0, 5)]
+        locations = [(5, 10)]
         new_mother, new_father = recomb_genome._swap_at_locations(mother,
                                                                   father,
                                                                   locations)
         self.assertEqual(new_mother.starts, array("L", [0, 5]))
         self.assertEqual(new_mother.stops, array("L", [5, 10]))
-        self.assertEqual(new_mother.founder, array("L", [2, 1]))
+        self.assertEqual(new_mother.founder, array("L", [1, 2]))
         self.assertEqual(new_father.starts, array("L", [0, 5]))
         self.assertEqual(new_father.stops, array("L", [5, 10]))
-        self.assertEqual(new_father.founder, array("L", [1, 2]))
+        self.assertEqual(new_father.founder, array("L", [2, 1]))
+
+    def test_single_location_middle_boundary(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0])
+        mother.stops = array("L", [10])
+        mother.founder = array("L", [1])
+        father = MagicMock()
+        father.starts = array("L", [0])
+        father.stops = array("L", [10])
+        father.founder = array("L", [2])
+        locations = [(2, 8)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 2, 8]))
+        self.assertEqual(new_mother.stops, array("L", [2, 8, 10]))
+        self.assertEqual(new_mother.founder, array("L", [1, 2, 1]))
+        self.assertEqual(new_father.starts, array("L", [0, 2, 8]))
+        self.assertEqual(new_father.stops, array("L", [2, 8, 10]))
+        self.assertEqual(new_father.founder, array("L", [2, 1, 2]))
+
+    def test_multiple_locations_single_segment(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0])
+        mother.stops = array("L", [10])
+        mother.founder = array("L", [1])
+        father = MagicMock()
+        father.starts = array("L", [0])
+        father.stops = array("L", [10])
+        father.founder = array("L", [2])
+        locations = [(0, 4), (6, 10)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 4, 6]))
+        self.assertEqual(new_mother.stops, array("L", [4, 6, 10]))
+        self.assertEqual(new_mother.founder, array("L", [2, 1, 2]))
+        self.assertEqual(new_father.starts, array("L", [0, 4, 6]))
+        self.assertEqual(new_father.stops, array("L", [4, 6, 10]))
+        self.assertEqual(new_father.founder, array("L", [1, 2, 1]))
+
+    def test_single_location_two_segments_first_segment(self):
+        # TODO: CHANGE THIS
+        mother = MagicMock()
+        mother.starts = array("L", [0])
+        mother.stops = array("L", [10])
+        mother.founder = array("L", [1])
+        father = MagicMock()
+        father.starts = array("L", [0])
+        father.stops = array("L", [10])
+        father.founder = array("L", [2])
+        locations = [(2, 8)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 2, 8]))
+        self.assertEqual(new_mother.stops, array("L", [2, 8, 10]))
+        self.assertEqual(new_mother.founder, array("L", [1, 2, 1]))
+        self.assertEqual(new_father.starts, array("L", [0, 2, 8]))
+        self.assertEqual(new_father.stops, array("L", [2, 8, 10]))
+        self.assertEqual(new_father.founder, array("L", [2, 1, 2]))
+
+
 
     
 if __name__ == '__main__':
