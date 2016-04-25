@@ -1,8 +1,42 @@
+from array import array
+from bisect import bisect_left
 from collections import deque
 from random import random
 
 from sex import Sex
-from recomb_genome import Autosome, RecombGenome
+from recomb_genome import RecombGenome, Diploid, CHROMOSOME_ORDER
+
+def _pick_chroms_for_diploid(genome, recombinator):
+    """
+    Takes a genome and returns a diploid chromosome that is the result
+    of recombination events and randomly picking a diploid for each
+    autosome.
+    """
+    recomb_genome = recombinator.recombination(genome)
+    mother = recomb_genome.mother
+    father = recomb_genome.father
+    starts = []
+    stops = []
+    founder = []
+    offsets = recombinator._chrom_start_offset
+    for chrom_name in CHROMOSOME_ORDER:
+        if random() < 0.5:
+            tmp_diploid = mother
+        else:
+            tmp_diploid = father
+
+        chrom_start = bisect_left(tmp_diploid.starts, offsets[chrom_name])
+        if chrom_name != CHROMOSOME_ORDER[-1]:
+            chrom_stop = bisect_left(tmp_diploid.starts,
+                                     offsets[chrom_name + 1])
+        else:
+            chrom_stop = len(tmp_diploid.starts)
+                
+        starts.extend(tmp_diploid.starts[chrom_start:chrom_stop])
+        stops.extend(tmp_diploid.stops[chrom_start:chrom_stop])
+        founder.extend(tmp_diploid.founder[chrom_start:chrom_stop])
+    return Diploid(array("L", starts), array("L", stops), array("L", founder))
+
 
 def mate(mother, father, mother_recombinator, father_recombinator):
     """
@@ -10,22 +44,10 @@ def mate(mother, father, mother_recombinator, father_recombinator):
     """
     assert mother is not None
     assert father is not None
-    mother_recomb = mother_recombinator.recombination(mother)
-    father_recomb = father_recombinator.recombination(father)
-    offspring_autosomes = dict()
+    from_mother = _pick_chroms_for_diploid(mother, mother_recombinator)
+    from_father = _pick_chroms_for_diploid(father, father_recombinator)
     num_founders = mother._num_founders
-    for chrom_name, chromosome in mother_recomb.chromosomes.items():
-        # TODO: Don't clobber mother and father references.
-        if random() < 0.5:
-            mother = mother_recomb.chromosomes[chrom_name].mother
-        else:
-            mother = mother_recomb.chromosomes[chrom_name].father
-        if random() < 0.5:
-            father = father_recomb.chromosomes[chrom_name].mother
-        else:
-            father = father_recomb.chromosomes[chrom_name].father
-        offspring_autosomes[chrom_name] = Autosome(mother, father)
-    return RecombGenome(offspring_autosomes, num_founders)
+    return RecombGenome(from_mother, from_father, num_founders)
 
 def generate_genomes_ancestors(root_nodes, generator, recombinators):
     queue = deque(root_nodes)

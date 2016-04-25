@@ -17,9 +17,10 @@ from sex import Sex
 
 MEGABASE = 10 ** 6
 DECODE_FILENAME = "decode_recombination_data.tab"
-GENOME_ID_INDEX = 2
+CHROMOSOME_ORDER = list(range(1, 23))
 
 Diploid = namedtuple("Diploid", ["starts", "stops", "founder"])
+IndexMap = namedtuple("IndexMap", ["mother", "father"])
 
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths, num_founders):
@@ -36,42 +37,39 @@ class RecombGenomeGenerator():
         father = Diploid(array("L", [0]), array("L", [self._total_length]),
                          array("L", [self._genome_id + 1]))
         
-        founder_bits[self._genome_id] = 1
-        founder_bits[self._genome_id + 1] = 1
-        
         self._genome_id += 2
-        return RecombGenome(mother, father, self._num_founders,
-                            np.packbits(founder_bits))
+        return RecombGenome(mother, father, self._num_founders)
 
 class RecombGenome():
     
     def __init__(self, mother, father, num_founders):
-        extract = self._extract_founder_bits(mother, father)
+        self.mother = mother
+        self.father = father
+        self._num_founders = num_founders
+        extract = self._extract_founder_bits_and_map(mother, father)
         self._founder_bits, self._index_map = extract
-        self._mother = mother
-        self._father = father
             
     def _extract_founder_bits_and_map(self, mother, father):
-        #TODO: Finish this
-        founder_bits = np.zeros(self._num_founders * 2, dtype = np.bool)
+        founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
         founder_bits[mother.founder] = 1
         founder_bits[father.founder] = 1
-        
-        index_map = defaultdict(dict)
-        for index, founder in enumerate(mother.founder):
-            if "mother" not in index_map[founder]:
-                index_map[founder]["mother"] = []
-            index_map[founder]["mother"].append(index)
-        for index, founder in enumerate(father.founder):
-            if "father" not in index_map[founder]:
-                index_map[founder]["father"] = []
-            index_map[founder]["father"].append(index)
 
-        for founder, parent_dict in index_map.items():
-            for parent, founders in index_map[founder].items():
-                pass
+        mother_map = defaultdict(list)
+        father_map = defaultdict(list)
+        # index_map = IndexMap(, defaultdict(list))
+        for index, founder in enumerate(mother.founder):
+            mother_map[founder].append(index)
+        for index, founder in enumerate(father.founder):
+            father_map[founder].append(index)
+
+        # Compact things using smaller data structures
+        mother_map = {founder: array("L", mother_map[founder])
+                      for founder in mother_map}
+        father_map = {founder: array("L", father_map[founder])
+                      for founder in father_map}
+        index_map = IndexMap(mother_map, father_map)
         
-        return (founder_bits, index_map)
+        return (np.packbits(founder_bits), index_map)
 
 def recombinators_from_directory(directory):
     """
@@ -222,6 +220,10 @@ class Recombinator():
                 end_point = l_2[2]
                 range_lookup[end_point] = (pos_1, pos_2)
             self._end_point_range[chrom] = range_lookup
+        ordered_cum_bases = np.cumsum([self._num_bases[chrom]
+                                      for chrom in CHROMOSOME_ORDER])
+        self._chrom_start_offset = dict(zip(CHROMOSOME_ORDER,
+                                            ordered_cum_bases))
 
     def _recombination_locations(self, chrom):
         """
@@ -266,23 +268,22 @@ class Recombinator():
         is the product of recombination on the given RecombGenome.
         """
         assert genome is not None
-        new_autosomes = dict()
-        for chrom_name, autosome in genome.chromosomes.items():
+        global_locations = []
+        for chrom_name in CHROMOSOME_ORDER:
             locations = self._recombination_locations(chrom_name)
             if len(locations) % 2 == 1:
                 locations.append(self._num_bases[chrom_name])
-            # The zip is the pairs of adjecent list members.
-            # eg if x = [0, 1, 2, 3], then zip(x[::2], x[1::2]) is an iterable
-            # that yields (0, 1) then (2, 3)
-            mother, father = _swap_at_locations(autosome.mother,
-                                                autosome.father,
-                                                zip(locations[::2],
-                                                    locations[1::2]))
+            # Adjust the locations for our global genome
+            offset = self._chrom_start_offset[chrom_name]
+            global_locations.extend(location + offset
+                                    for location in locations)
+            
+        mother, father = _swap_at_locations(genome.mother,
+                                            genome.father,
+                                            zip(global_locations[::2],
+                                                global_locations[1::2]))
                 
-            new_autosomes[chrom_name] = Autosome(mother,
-                                                 father)
-        return RecombGenome(new_autosomes, genome._num_founders,
-                            genome._founder_bits)
+        return RecombGenome(mother, father, genome._num_founders)
 
 def _new_sequence(diploid, locations):
     """
