@@ -165,25 +165,146 @@ class TestSwapAtLocations(unittest.TestCase):
         self.assertEqual(new_father.founder, array("L", [1, 2, 1]))
 
     def test_single_location_two_segments_first_segment(self):
-        # TODO: CHANGE THIS
         mother = MagicMock()
-        mother.starts = array("L", [0])
-        mother.stops = array("L", [10])
-        mother.founder = array("L", [1])
+        mother.starts = array("L", [0, 10])
+        mother.stops = array("L", [10, 20])
+        mother.founder = array("L", [1, 2])
         father = MagicMock()
-        father.starts = array("L", [0])
-        father.stops = array("L", [10])
-        father.founder = array("L", [2])
-        locations = [(2, 8)]
+        father.starts = array("L", [0, 10])
+        father.stops = array("L", [10, 20])
+        father.founder = array("L", [3, 4])
+        locations = [(0, 10)]
         new_mother, new_father = recomb_genome._swap_at_locations(mother,
                                                                   father,
                                                                   locations)
-        self.assertEqual(new_mother.starts, array("L", [0, 2, 8]))
-        self.assertEqual(new_mother.stops, array("L", [2, 8, 10]))
-        self.assertEqual(new_mother.founder, array("L", [1, 2, 1]))
-        self.assertEqual(new_father.starts, array("L", [0, 2, 8]))
-        self.assertEqual(new_father.stops, array("L", [2, 8, 10]))
-        self.assertEqual(new_father.founder, array("L", [2, 1, 2]))
+        self.assertEqual(new_mother.starts, array("L", [0, 10]))
+        self.assertEqual(new_mother.stops, array("L", [10, 20]))
+        self.assertEqual(new_mother.founder, array("L", [3, 2]))
+        self.assertEqual(new_father.starts, array("L", [0, 10]))
+        self.assertEqual(new_father.stops, array("L", [10, 20]))
+        self.assertEqual(new_father.founder, array("L", [1, 4]))
+
+    def test_single_location_two_segments_last_segment(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0, 10])
+        mother.stops = array("L", [10, 20])
+        mother.founder = array("L", [1, 2])
+        father = MagicMock()
+        father.starts = array("L", [0, 10])
+        father.stops = array("L", [10, 20])
+        father.founder = array("L", [3, 4])
+        locations = [(10, 20)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 10]))
+        self.assertEqual(new_mother.stops, array("L", [10, 20]))
+        self.assertEqual(new_mother.founder, array("L", [1, 4]))
+        self.assertEqual(new_father.starts, array("L", [0, 10]))
+        self.assertEqual(new_father.stops, array("L", [10, 20]))
+        self.assertEqual(new_father.founder, array("L", [3, 2]))
+
+
+    def test_single_location_overlapping_two_segments(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0, 10])
+        mother.stops = array("L", [10, 20])
+        mother.founder = array("L", [1, 2])
+        father = MagicMock()
+        father.starts = array("L", [0, 10])
+        father.stops = array("L", [10, 20])
+        father.founder = array("L", [3, 4])
+        locations = [(5, 15)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 5, 10, 15]))
+        self.assertEqual(new_mother.stops, array("L", [5, 10, 15, 20]))
+        self.assertEqual(new_mother.founder, array("L", [1, 3, 4, 2]))
+        self.assertEqual(new_father.starts, array("L", [0, 5, 10, 15]))
+        self.assertEqual(new_father.stops, array("L", [5, 10, 15, 20]))
+        self.assertEqual(new_father.founder, array("L", [3, 1, 2, 4]))
+
+    def test_single_location_overlapping_three_segments(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0, 10, 20])
+        mother.stops = array("L", [10, 20, 30])
+        mother.founder = array("L", [1, 2, 3])
+        father = MagicMock()
+        father.starts = array("L", [0, 10, 20])
+        father.stops = array("L", [10, 20, 30])
+        father.founder = array("L", [4, 5, 6])
+        locations = [(5, 25)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 5, 10, 20, 25]))
+        self.assertEqual(new_mother.stops, array("L", [5, 10, 20, 25, 30]))
+        self.assertEqual(new_mother.founder, array("L", [1, 4, 5, 6, 3]))
+        self.assertEqual(new_father.starts, array("L", [0, 5, 10, 20, 25]))
+        self.assertEqual(new_father.stops, array("L", [5, 10, 20, 25, 30]))
+        self.assertEqual(new_father.founder, array("L", [4, 1, 2, 3, 6]))
+
+    def test_two_locations_at_boundary_two_segments (self):
+        mother = MagicMock()
+        mother.starts = array("L", [0, 10])
+        mother.stops = array("L", [10, 20])
+        mother.founder = array("L", [1, 2])
+        father = MagicMock()
+        father.starts = array("L", [0, 10])
+        father.stops = array("L", [10, 20])
+        father.founder = array("L", [3, 4])
+        locations = [(0, 5), (15, 20)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 5, 10, 15]))
+        self.assertEqual(new_mother.stops, array("L", [5, 10, 15, 20]))
+        self.assertEqual(new_mother.founder, array("L", [3, 1, 2, 4]))
+        self.assertEqual(new_father.starts, array("L", [0, 5, 10, 15]))
+        self.assertEqual(new_father.stops, array("L", [5, 10, 15, 20]))
+        self.assertEqual(new_father.founder, array("L", [1, 3, 4, 2]))
+
+    def test_two_locations_at_boundary_two_segments(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0, 10])
+        mother.stops = array("L", [10, 20])
+        mother.founder = array("L", [1, 2])
+        father = MagicMock()
+        father.starts = array("L", [0, 10])
+        father.stops = array("L", [10, 20])
+        father.founder = array("L", [3, 4])
+        locations = [(2, 5), (15, 18)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 2, 5, 10, 15, 18]))
+        self.assertEqual(new_mother.stops, array("L", [2, 5, 10, 15, 18, 20]))
+        self.assertEqual(new_mother.founder, array("L", [1, 3, 1, 2, 4, 2]))
+        self.assertEqual(new_father.starts, array("L", [0, 2, 5, 10, 15, 18]))
+        self.assertEqual(new_father.stops, array("L", [2, 5, 10, 15, 18, 20]))
+        self.assertEqual(new_father.founder, array("L", [3, 1, 3, 4, 2, 4]))
+
+    
+    def test_single_location_two_segments_uneven(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0, 5])
+        mother.stops = array("L", [5, 20])
+        mother.founder = array("L", [1, 2])
+        father = MagicMock()
+        father.starts = array("L", [0, 10])
+        father.stops = array("L", [10, 20])
+        father.founder = array("L", [3, 4])
+        locations = [(2, 11)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 2, 10, 11]))
+        self.assertEqual(new_mother.stops, array("L", [2, 10, 11, 20]))
+        self.assertEqual(new_mother.founder, array("L", [1, 3, 4, 2]))
+        self.assertEqual(new_father.starts, array("L", [0, 2, 5, 11]))
+        self.assertEqual(new_father.stops, array("L", [2, 5, 11, 20]))
+        self.assertEqual(new_father.founder, array("L", [3, 1, 2, 4]))
 
 
 
