@@ -1,3 +1,4 @@
+3
 import re
 import csv
 
@@ -325,7 +326,6 @@ def _swap_at_locations(mother, father, locations):
     Locations is given by basepair locations, rather than centimorgans
     or list index.
     """
-    #TODO: Implement this
     locations = list(locations)
     new_mother = _new_sequence(mother, chain.from_iterable(locations))
     new_father = _new_sequence(father, chain.from_iterable(locations))
