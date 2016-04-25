@@ -24,55 +24,54 @@ Diploid = namedtuple("Diploid", ["starts", "stops", "founder"])
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths, num_founders):
         self._chromosome_lengths = chromosome_lengths
+        self._total_length = sum(chromosome_lengths.values())
         self._num_founders = num_founders
         self._genome_id = 0
 
     def generate(self):
         assert self._genome_id < 2 * self._num_founders
-        chromosomes = dict()
-        for chromosome, length in self._chromosome_lengths.items():
-            # TODO: Consider making this a two element tuple, where
-            # range is implicit in the sequence of tuples.
-            mother = Diploid(array("L", [0]), array("L", [length]),
-                             array("L", [self._genome_id]))
-            father = Diploid(array("L", [0]), array("L", [length]),
-                             array("L", [self._genome_id + 1]))
-            chromosomes[chromosome] = Autosome(mother, father)
         
-        founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
+        mother = Diploid(array("L", [0]), array("L", [self._total_length]),
+                         array("L", [self._genome_id]))
+        father = Diploid(array("L", [0]), array("L", [self._total_length]),
+                         array("L", [self._genome_id + 1]))
+        
         founder_bits[self._genome_id] = 1
+        founder_bits[self._genome_id + 1] = 1
         
         self._genome_id += 2
-        return RecombGenome(chromosomes, self._num_founders,
+        return RecombGenome(mother, father, self._num_founders,
                             np.packbits(founder_bits))
-
-class Autosome():
-    """
-    Encapsulates both homologs of a given Autosome.
-    XXX: Should this be replaced with a namedtuple?
-    """
-    def __init__(self, mother, father):
-        self.mother = mother
-        self.father = father
 
 class RecombGenome():
     
-    def __init__(self, chromosomes, num_founders, founder_bits = None):
-        self.chromosomes = chromosomes
-        self._num_founders = num_founders
-        if founder_bits is None:
-            self._founder_bits = self._extract_founder_bits(chromosomes)
-        else:
-            self._founder_bits = founder_bits
+    def __init__(self, mother, father, num_founders):
+        extract = self._extract_founder_bits(mother, father)
+        self._founder_bits, self._index_map = extract
+        self._mother = mother
+        self._father = father
             
-    def _extract_founder_bits(self, chromosomes):
-        founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
-        for chrom, autosome in chromosomes.items():
-            mother_founders = autosome.mother.founder
-            father_founders = autosome.father.founder
-            founder_bits[mother_founders] = 1
-            founder_bits[father_founders] = 1
-        return np.packbits(founder_bits)
+    def _extract_founder_bits_and_map(self, mother, father):
+        #TODO: Finish this
+        founder_bits = np.zeros(self._num_founders * 2, dtype = np.bool)
+        founder_bits[mother.founder] = 1
+        founder_bits[father.founder] = 1
+        
+        index_map = defaultdict(dict)
+        for index, founder in enumerate(mother.founder):
+            if "mother" not in index_map[founder]:
+                index_map[founder]["mother"] = []
+            index_map[founder]["mother"].append(index)
+        for index, founder in enumerate(father.founder):
+            if "father" not in index_map[founder]:
+                index_map[founder]["father"] = []
+            index_map[founder]["father"].append(index)
+
+        for founder, parent_dict in index_map.items():
+            for parent, founders in index_map[founder].items():
+                pass
+        
+        return (founder_bits, index_map)
 
 def recombinators_from_directory(directory):
     """
