@@ -308,7 +308,6 @@ def _new_sequence(diploid, locations):
     return_stops = return_starts[1:]
     return_stops.append(diploid.stops[-1])
     
-    # return_founder = array(diploid.founder.typecode, [0] * len(return_starts))
     return_founder = []
     j = 0
     for i in range(len(return_starts)):
@@ -331,8 +330,32 @@ def _swap_at_locations(mother, father, locations):
     new_mother = _new_sequence(mother, chain.from_iterable(locations))
     new_father = _new_sequence(father, chain.from_iterable(locations))
     for start, stop in locations:
-        mother_start_index = bisect_left(new_mother.starts, start)
-        mother_stop_index = bisect_left(new_mother.starts, stop)
-        father_start_index = bisect_left(new_father.starts, start)
-        father_stop_index = bisect_left(new_father.starts, stop)
+        mother_start_i = bisect_left(new_mother.starts, start)
+        mother_stop_i = bisect_left(new_mother.starts, stop)
+        father_start_i = bisect_left(new_father.starts, start)
+        father_stop_i = bisect_left(new_father.starts, stop)
+        temp_mother = new_mother.starts[mother_start_i:mother_stop_i]
+        temp_father = new_father.starts[father_start_i:father_stop_i]
+        new_mother.starts[mother_start_i:mother_stop_i], \
+            new_father.starts[father_start_i:father_stop_i] = (temp_father,
+                                                               temp_mother)
+
+        temp_mother = new_mother.stops[mother_start_i:mother_stop_i]
+        temp_father = new_father.stops[father_start_i:father_stop_i]
+        new_mother.stops[mother_start_i:mother_stop_i], \
+            new_father.stops[father_start_i:father_stop_i] = (temp_father,
+                                                              temp_mother)
+
+        temp_mother = new_mother.founder[mother_start_i:mother_stop_i]
+        temp_father = new_father.founder[father_start_i:father_stop_i]
+        new_mother.founder[mother_start_i:mother_stop_i], \
+            new_father.founder[father_start_i:father_stop_i] = (temp_father,
+                                                                temp_mother)
+    return_mother = Diploid(array("L", new_mother.starts),
+                            array("L", new_mother.stops),
+                            array("L", new_mother.founder))
+    return_father = Diploid(array("L", new_father.starts),
+                            array("L", new_father.stops),
+                            array("L", new_father.founder))
+    return (return_mother, return_father)
         

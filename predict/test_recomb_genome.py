@@ -83,6 +83,47 @@ class TestNewSequence(unittest.TestCase):
         self.assertEqual(ret_diploid.stops, [10] )
         self.assertEqual(ret_diploid.founder, [1] )
 
+class TestSwapAtLocations(unittest.TestCase):
+    def test_single_location_left_boundary(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0])
+        mother.stops = array("L", [10])
+        mother.founder = array("L", [1])
+        father = MagicMock()
+        father.starts = array("L", [0])
+        father.stops = array("L", [10])
+        father.founder = array("L", [2])
+        locations = [(0, 5)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 5]))
+        self.assertEqual(new_mother.stops, array("L", [5, 10]))
+        self.assertEqual(new_mother.founder, array("L", [2, 1]))
+        self.assertEqual(new_father.starts, array("L", [0, 5]))
+        self.assertEqual(new_father.stops, array("L", [5, 10]))
+        self.assertEqual(new_father.founder, array("L", [1, 2]))
+        
+    def test_single_location_right_boundary(self):
+        mother = MagicMock()
+        mother.starts = array("L", [0])
+        mother.stops = array("L", [10])
+        mother.founder = array("L", [1])
+        father = MagicMock()
+        father.starts = array("L", [0])
+        father.stops = array("L", [10])
+        father.founder = array("L", [2])
+        locations = [(0, 5)]
+        new_mother, new_father = recomb_genome._swap_at_locations(mother,
+                                                                  father,
+                                                                  locations)
+        self.assertEqual(new_mother.starts, array("L", [0, 5]))
+        self.assertEqual(new_mother.stops, array("L", [5, 10]))
+        self.assertEqual(new_mother.founder, array("L", [2, 1]))
+        self.assertEqual(new_father.starts, array("L", [0, 5]))
+        self.assertEqual(new_father.stops, array("L", [5, 10]))
+        self.assertEqual(new_father.founder, array("L", [1, 2]))
+
     
 if __name__ == '__main__':
     unittest.main()
