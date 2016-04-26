@@ -172,9 +172,8 @@ def _partition_labeled_nodes(labeled_nodes):
     return [l[i:i+ partition_size] for i in range(0, len(l), partition_size)]
     
 def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
-    by_autosome = common_segment_lengths(genome_a, genome_b)
-    seg_lengths = (x for x in chain.from_iterable(by_autosome.values())
-                   if x >= minimum_length)
+    lengths = common_segment_lengths(genome_a, genome_b)
+    seg_lengths = (x for x in lengths if x >= minimum_length)
     return sum(seg_lengths)
     
 def _shared_segment_length(node_a, node_b, minimum_length):
