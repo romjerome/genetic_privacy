@@ -1,4 +1,3 @@
-3
 import re
 import csv
 
@@ -26,16 +25,31 @@ class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths, num_founders):
         self._chromosome_lengths = chromosome_lengths
         self._total_length = sum(chromosome_lengths.values())
+        ordered_cum_bases = np.cumsum([chromosome_lengths[chrom]
+                                       for chrom in CHROMOSOME_ORDER])
+        self._chrom_start_offset = dict(zip(CHROMOSOME_ORDER[1:],
+                                            ordered_cum_bases[:-1]))
+        self._chrom_start_offset[1] = 0
+        self._chrom_stop_offset =  dict(zip(CHROMOSOME_ORDER,
+                                            ordered_cum_bases))
+
         self._num_founders = num_founders
         self._genome_id = 0
 
     def generate(self):
         assert self._genome_id < 2 * self._num_founders
         
-        mother = Diploid(array("L", [0]), array("L", [self._total_length]),
-                         array("L", [self._genome_id]))
-        father = Diploid(array("L", [0]), array("L", [self._total_length]),
-                         array("L", [self._genome_id + 1]))
+        mother = Diploid(array("L", (self._chrom_start_offset[chrom]
+                                     for chrom in CHROMOSOME_ORDER)),
+                         array("L", (self._chrom_stop_offset[chrom]
+                                     for chrom in CHROMOSOME_ORDER)),
+                         array("L", [self._genome_id] * len(CHROMOSOME_ORDER)))
+        father = Diploid(array("L", (self._chrom_start_offset[chrom]
+                                     for chrom in CHROMOSOME_ORDER)),
+                         array("L", (self._chrom_stop_offset[chrom]
+                                     for chrom in CHROMOSOME_ORDER)),
+                         array("L",
+                               [self._genome_id + 1] * len(CHROMOSOME_ORDER)))
         
         self._genome_id += 2
         return RecombGenome(mother, father, self._num_founders)
@@ -48,6 +62,7 @@ class RecombGenome():
         self._num_founders = num_founders
         extract = self._extract_founder_bits_and_map(mother, father)
         self._founder_bits, self._index_map = extract
+
             
     def _extract_founder_bits_and_map(self, mother, father):
         founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
@@ -221,9 +236,10 @@ class Recombinator():
                 range_lookup[end_point] = (pos_1, pos_2)
             self._end_point_range[chrom] = range_lookup
         ordered_cum_bases = np.cumsum([self._num_bases[chrom]
-                                      for chrom in CHROMOSOME_ORDER])
-        self._chrom_start_offset = dict(zip(CHROMOSOME_ORDER,
-                                            ordered_cum_bases))
+                                       for chrom in CHROMOSOME_ORDER])
+        self._chrom_start_offset = dict(zip(CHROMOSOME_ORDER[1:],
+                                            ordered_cum_bases[:-1]))
+        self._chrom_start_offset[1] = 0
 
     def _recombination_locations(self, chrom):
         """
@@ -317,7 +333,6 @@ def _new_sequence(diploid, locations):
             j += 1
         else:
             return_founder.append(diploid.founder[j - 1])
-
     return Diploid(return_starts, return_stops, return_founder)
 
 def _swap_at_locations(mother, father, locations):
@@ -359,3 +374,8 @@ def _swap_at_locations(mother, father, locations):
                             array("L", new_father.founder))
     return (return_mother, return_father)
         
+def _check_diploid_bounds(diploid):
+    """This a useful function for finding bugs in diploid generation."""
+    assert diploid.stops[-1] == 2866387308
+    for start, stop in zip(diploid.starts, diploid.stops):
+        assert start < stop
