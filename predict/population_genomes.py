@@ -1,7 +1,8 @@
-from array import array
 from bisect import bisect_left
 from collections import deque
 from random import random
+
+import numpy as np
 
 from sex import Sex
 from recomb_genome import RecombGenome, Diploid, CHROMOSOME_ORDER
@@ -35,7 +36,9 @@ def _pick_chroms_for_diploid(genome, recombinator):
         starts.extend(tmp_diploid.starts[chrom_start:chrom_stop])
         stops.extend(tmp_diploid.stops[chrom_start:chrom_stop])
         founder.extend(tmp_diploid.founder[chrom_start:chrom_stop])
-    return Diploid(array("L", starts), array("L", stops), array("L", founder))
+    return Diploid(np.array(starts, dtype = np.uint32),
+                   np.array(stops, dtype = np.uint32),
+                   np.array(founder, dtype = np.uint32))
 
 
 def mate(mother, father, mother_recombinator, father_recombinator):

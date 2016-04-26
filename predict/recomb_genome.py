@@ -1,7 +1,6 @@
 import re
 import csv
 
-from array import array
 from itertools import tee
 from os import listdir
 from os.path import isfile, join
@@ -17,6 +16,7 @@ from sex import Sex
 MEGABASE = 10 ** 6
 DECODE_FILENAME = "decode_recombination_data.tab"
 CHROMOSOME_ORDER = list(range(1, 23))
+NUM_CHROMS = len(CHROMOSOME_ORDER)
 
 Diploid = namedtuple("Diploid", ["starts", "stops", "founder"])
 IndexMap = namedtuple("IndexMap", ["mother", "father"])
@@ -38,18 +38,19 @@ class RecombGenomeGenerator():
 
     def generate(self):
         assert self._genome_id < 2 * self._num_founders
-        
-        mother = Diploid(array("L", (self._chrom_start_offset[chrom]
-                                     for chrom in CHROMOSOME_ORDER)),
-                         array("L", (self._chrom_stop_offset[chrom]
-                                     for chrom in CHROMOSOME_ORDER)),
-                         array("L", [self._genome_id] * len(CHROMOSOME_ORDER)))
-        father = Diploid(array("L", (self._chrom_start_offset[chrom]
-                                     for chrom in CHROMOSOME_ORDER)),
-                         array("L", (self._chrom_stop_offset[chrom]
-                                     for chrom in CHROMOSOME_ORDER)),
-                         array("L",
-                               [self._genome_id + 1] * len(CHROMOSOME_ORDER)))
+        starts = np.fromiter((self._chrom_start_offset[chrom]
+                              for chrom in CHROMOSOME_ORDER),
+                             dtype = np.uint32, count = NUM_CHROMS)
+        stops = np.fromiter((self._chrom_stop_offset[chrom]
+                             for chrom in CHROMOSOME_ORDER),
+                            dtype = np.uint32, count = NUM_CHROMS)
+        mother_founder = np.empty(NUM_CHROMS, dtype = np.uint32)
+        mother_founder.fill(self._genome_id)
+        father_founder = np.empty(NUM_CHROMS, dtype = np.uint32)
+        father_founder.fill(self._genome_id + 1)
+        mother = Diploid(starts, stops, mother_founder)
+        # XXX: Can the start array be shared across some individuals?
+        father = Diploid(np.array(starts), np.array(stops), father_founder)
         
         self._genome_id += 2
         return RecombGenome(mother, father, self._num_founders)
@@ -60,31 +61,31 @@ class RecombGenome():
         self.mother = mother
         self.father = father
         self._num_founders = num_founders
-        extract = self._extract_founder_bits_and_map(mother, father)
-        self._founder_bits, self._index_map = extract
+        # extract = self._extract_founder_bits_and_map(mother, father)
+        # self._founder_bits, self._index_map = extract
 
             
-    def _extract_founder_bits_and_map(self, mother, father):
-        founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
-        founder_bits[mother.founder] = 1
-        founder_bits[father.founder] = 1
+    # def _extract_founder_bits_and_map(self, mother, father):
+    #     founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
+    #     founder_bits[mother.founder] = 1
+    #     founder_bits[father.founder] = 1
 
-        mother_map = defaultdict(list)
-        father_map = defaultdict(list)
-        # index_map = IndexMap(, defaultdict(list))
-        for index, founder in enumerate(mother.founder):
-            mother_map[founder].append(index)
-        for index, founder in enumerate(father.founder):
-            father_map[founder].append(index)
+    #     mother_map = defaultdict(list)
+    #     father_map = defaultdict(list)
+    #     # index_map = IndexMap(, defaultdict(list))
+    #     for index, founder in enumerate(mother.founder):
+    #         mother_map[founder].append(index)
+    #     for index, founder in enumerate(father.founder):
+    #         father_map[founder].append(index)
 
-        # Compact things using smaller data structures
-        mother_map = {founder: array("L", mother_map[founder])
-                      for founder in mother_map}
-        father_map = {founder: array("L", father_map[founder])
-                      for founder in father_map}
-        index_map = IndexMap(mother_map, father_map)
+    #     # Compact things using smaller data structures
+    #     mother_map = {founder: array("L", mother_map[founder])
+    #                   for founder in mother_map}
+    #     father_map = {founder: array("L", father_map[founder])
+    #                   for founder in father_map}
+    #     index_map = IndexMap(mother_map, father_map)
         
-        return (np.packbits(founder_bits), index_map)
+    #     return (np.packbits(founder_bits), index_map)
 
 def recombinators_from_directory(directory):
     """
@@ -366,12 +367,12 @@ def _swap_at_locations(mother, father, locations):
         new_mother.founder[mother_start_i:mother_stop_i], \
             new_father.founder[father_start_i:father_stop_i] = (temp_father,
                                                                 temp_mother)
-    return_mother = Diploid(array("L", new_mother.starts),
-                            array("L", new_mother.stops),
-                            array("L", new_mother.founder))
-    return_father = Diploid(array("L", new_father.starts),
-                            array("L", new_father.stops),
-                            array("L", new_father.founder))
+    return_mother = Diploid(np.array(new_mother.starts, dtype = np.uint32),
+                            np.array(new_mother.stops, dtype = np.uint32),
+                            np.array(new_mother.founder, dtype = np.uint32))
+    return_father = Diploid(np.array(new_father.starts, dtype = np.uint32),
+                            np.array(new_father.stops, dtype = np.uint32),
+                            np.array(new_father.founder, dtype = np.uint32))
     return (return_mother, return_father)
         
 def _check_diploid_bounds(diploid):
