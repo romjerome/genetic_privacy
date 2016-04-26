@@ -136,12 +136,12 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
     """
     cdef unsigned long len_a, len_b, index_a, index_b, start, stop
     cdef unsigned long a_start, a_stop, a_id, b_start, b_stop, b_id
-    cdef unsigned long[:] starts_a = homolog_a.starts
-    cdef unsigned long[:] stops_a = homolog_a.stops
-    cdef unsigned long[:] founder_a = homolog_a.founder
-    cdef unsigned long[:] starts_b = homolog_b.starts
-    cdef unsigned long[:] stops_b = homolog_b.stops
-    cdef unsigned long[:] founder_b = homolog_b.founder
+    cdef np.ndarray[np.uint32_t, ndim=1] starts_a = homolog_a.starts
+    cdef np.ndarray[np.uint32_t, ndim=1] stops_a = homolog_a.stops
+    cdef np.ndarray[np.uint32_t, ndim=1] founder_a = homolog_a.founder
+    cdef np.ndarray[np.uint32_t, ndim=1] starts_b = homolog_b.starts
+    cdef np.ndarray[np.uint32_t, ndim=1] stops_b = homolog_b.stops
+    cdef np.ndarray[np.uint32_t, ndim=1] founder_b = homolog_b.founder
     len_a = len(starts_a)
     len_b = len(starts_b)
     index_a = 0
