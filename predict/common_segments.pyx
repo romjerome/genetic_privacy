@@ -3,6 +3,7 @@ import numpy as np
 from array import array
 
 cimport numpy as np
+cimport cython
 
 
 def common_segment_lengths_bit_vector(genome_a, genome_b):
@@ -129,6 +130,9 @@ def common_segment_lengths(genome_a, genome_b):
                                                     genome_b.father)))
     return lengths
 
+# We don't need bounds checks, because the condition of the while loop
+# ensures array access is within bounds.
+@cython.boundscheck(False)
 cpdef list common_homolog_segments(homolog_a, homolog_b):
     """
     Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
