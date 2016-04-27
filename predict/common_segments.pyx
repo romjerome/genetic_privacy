@@ -133,6 +133,7 @@ def common_segment_lengths(genome_a, genome_b):
 # We don't need bounds checks, because the condition of the while loop
 # ensures array access is within bounds.
 @cython.boundscheck(False)
+@cython.wraparound(False)
 cpdef list common_homolog_segments(homolog_a, homolog_b):
     """
     Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
@@ -155,8 +156,8 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
         a_start, a_stop = starts_a[index_a], stops_a[index_a]
         a_id = founder_a[index_a]
         b_start, b_stop = starts_b[index_b], stops_b[index_b]
-        assert a_start < a_stop
-        assert b_start < b_stop
+        # assert a_start < a_stop
+        # assert b_start < b_stop
         b_id = founder_b[index_b]
         if a_id == b_id:
             if a_start > b_start:
