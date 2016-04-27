@@ -312,14 +312,14 @@ def _new_sequence(diploid, locations):
                     stops:  10 15 20 25 30
     """
     non_duplicate = []
-    for break_location in locations:
+    break_indices = np.searchsorted(diploid.starts, locations)
+    for break_location, break_index in zip(locations, break_indices):
         if break_location == diploid.stops[-1]:
             continue
-        break_index = bisect_left(diploid.starts, break_location)
         if (break_index == len(diploid.starts) or
             diploid.starts[break_index] != break_location):
             non_duplicate.append(break_location)
-    return_starts = list(diploid.starts)
+    return_starts = diploid.starts.tolist()
     return_starts.extend(non_duplicate)
     return_starts.sort()
 
@@ -342,9 +342,10 @@ def _swap_at_locations(mother, father, locations):
     Locations is given by basepair locations, rather than centimorgans
     or list index.
     """
-    locations = list(locations)
-    new_mother = _new_sequence(mother, chain.from_iterable(locations))
-    new_father = _new_sequence(father, chain.from_iterable(locations))
+    locations = tuple(locations)
+    flat_locations = tuple(chain.from_iterable(locations))
+    new_mother = _new_sequence(mother, flat_locations)
+    new_father = _new_sequence(father, flat_locations)
     for start, stop in locations:
         mother_start_i = bisect_left(new_mother.starts, start)
         mother_stop_i = bisect_left(new_mother.starts, stop)
