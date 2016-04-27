@@ -142,20 +142,28 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
     cdef unsigned long len_a, len_b, index_a, index_b, start, stop
     cdef unsigned long a_start, a_stop, a_id, b_start, b_stop, b_id
     cdef np.ndarray[np.uint32_t, ndim=1] starts_a = homolog_a.starts
-    cdef np.ndarray[np.uint32_t, ndim=1] stops_a = homolog_a.stops
     cdef np.ndarray[np.uint32_t, ndim=1] founder_a = homolog_a.founder
     cdef np.ndarray[np.uint32_t, ndim=1] starts_b = homolog_b.starts
-    cdef np.ndarray[np.uint32_t, ndim=1] stops_b = homolog_b.stops
     cdef np.ndarray[np.uint32_t, ndim=1] founder_b = homolog_b.founder
+    cdef unsigned long end = homolog_a.end
     len_a = len(starts_a)
     len_b = len(starts_b)
     index_a = 0
     index_b = 0
     cdef list shared_segments = []
-    while index_a < len_a and index_b < len_b:        
-        a_start, a_stop = starts_a[index_a], stops_a[index_a]
+    while index_a < len_a and index_b < len_b:
+        a_start = starts_a[index_a]
+        if index_a + 1 < len_a:
+            a_stop = starts_a[index_a + 1]
+        else:
+            a_stop = end
         a_id = founder_a[index_a]
-        b_start, b_stop = starts_b[index_b], stops_b[index_b]
+
+        b_start = starts_b[index_b]
+        if index_b + 1 < len_b:
+            b_stop = starts_b[index_b + 1]
+        else:
+            b_stop = end
         # assert a_start < a_stop
         # assert b_start < b_stop
         b_id = founder_b[index_b]
@@ -167,7 +175,7 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
             if a_stop < b_stop:
                 stop = a_stop
             else:
-                stop = b_stop            
+                stop = b_stop
             shared_segments.append((start, stop))
         if a_stop == b_stop:
             index_a += 1

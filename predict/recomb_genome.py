@@ -18,7 +18,7 @@ DECODE_FILENAME = "decode_recombination_data.tab"
 CHROMOSOME_ORDER = list(range(1, 23))
 NUM_CHROMS = len(CHROMOSOME_ORDER)
 
-Diploid = namedtuple("Diploid", ["starts", "stops", "founder"])
+Diploid = namedtuple("Diploid", ["starts", "end", "founder"])
 IndexMap = namedtuple("IndexMap", ["mother", "father"])
 
 class RecombGenomeGenerator():
@@ -30,9 +30,6 @@ class RecombGenomeGenerator():
         self._chrom_start_offset = dict(zip(CHROMOSOME_ORDER[1:],
                                             ordered_cum_bases[:-1]))
         self._chrom_start_offset[1] = 0
-        self._chrom_stop_offset =  dict(zip(CHROMOSOME_ORDER,
-                                            ordered_cum_bases))
-
         self._num_founders = num_founders
         self._genome_id = 0
 
@@ -41,16 +38,13 @@ class RecombGenomeGenerator():
         starts = np.fromiter((self._chrom_start_offset[chrom]
                               for chrom in CHROMOSOME_ORDER),
                              dtype = np.uint32, count = NUM_CHROMS)
-        stops = np.fromiter((self._chrom_stop_offset[chrom]
-                             for chrom in CHROMOSOME_ORDER),
-                            dtype = np.uint32, count = NUM_CHROMS)
         mother_founder = np.empty(NUM_CHROMS, dtype = np.uint32)
         mother_founder.fill(self._genome_id)
         father_founder = np.empty(NUM_CHROMS, dtype = np.uint32)
         father_founder.fill(self._genome_id + 1)
-        mother = Diploid(starts, stops, mother_founder)
+        mother = Diploid(starts, self._total_length, mother_founder)
         # XXX: Can the start array be shared across some individuals?
-        father = Diploid(np.array(starts), np.array(stops), father_founder)
+        father = Diploid(np.array(starts), self._total_length, father_founder)
         
         self._genome_id += 2
         return RecombGenome(mother, father, self._num_founders)
@@ -314,7 +308,7 @@ def _new_sequence(diploid, locations):
     non_duplicate = []
     break_indices = np.searchsorted(diploid.starts, locations)
     for break_location, break_index in zip(locations, break_indices):
-        if break_location == diploid.stops[-1]:
+        if break_location == diploid.end:
             continue
         if (break_index == len(diploid.starts) or
             diploid.starts[break_index] != break_location):
@@ -322,9 +316,6 @@ def _new_sequence(diploid, locations):
     return_starts = diploid.starts.tolist()
     return_starts.extend(non_duplicate)
     return_starts.sort()
-
-    return_stops = return_starts[1:]
-    return_stops.append(diploid.stops[-1])
     
     return_founder = []
     j = 0
@@ -334,7 +325,7 @@ def _new_sequence(diploid, locations):
             j += 1
         else:
             return_founder.append(diploid.founder[j - 1])
-    return Diploid(return_starts, return_stops, return_founder)
+    return Diploid(return_starts, diploid.end, return_founder)
 
 def _swap_at_locations(mother, father, locations):
     """
@@ -357,22 +348,16 @@ def _swap_at_locations(mother, father, locations):
             new_father.starts[father_start_i:father_stop_i] = (temp_father,
                                                                temp_mother)
 
-        temp_mother = new_mother.stops[mother_start_i:mother_stop_i]
-        temp_father = new_father.stops[father_start_i:father_stop_i]
-        new_mother.stops[mother_start_i:mother_stop_i], \
-            new_father.stops[father_start_i:father_stop_i] = (temp_father,
-                                                              temp_mother)
-
         temp_mother = new_mother.founder[mother_start_i:mother_stop_i]
         temp_father = new_father.founder[father_start_i:father_stop_i]
         new_mother.founder[mother_start_i:mother_stop_i], \
             new_father.founder[father_start_i:father_stop_i] = (temp_father,
                                                                 temp_mother)
     return_mother = Diploid(np.array(new_mother.starts, dtype = np.uint32),
-                            np.array(new_mother.stops, dtype = np.uint32),
+                            mother.end,
                             np.array(new_mother.founder, dtype = np.uint32))
     return_father = Diploid(np.array(new_father.starts, dtype = np.uint32),
-                            np.array(new_father.stops, dtype = np.uint32),
+                            father.end,
                             np.array(new_father.founder, dtype = np.uint32))
     return (return_mother, return_father)
         

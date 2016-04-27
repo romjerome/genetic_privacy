@@ -17,7 +17,6 @@ def _pick_chroms_for_diploid(genome, recombinator):
     mother = recomb_genome.mother
     father = recomb_genome.father
     starts = []
-    stops = []
     founder = []
     offsets = recombinator._chrom_start_offset
     for chrom_name in CHROMOSOME_ORDER:
@@ -34,10 +33,9 @@ def _pick_chroms_for_diploid(genome, recombinator):
             chrom_stop = len(tmp_diploid.starts)
                 
         starts.extend(tmp_diploid.starts[chrom_start:chrom_stop])
-        stops.extend(tmp_diploid.stops[chrom_start:chrom_stop])
         founder.extend(tmp_diploid.founder[chrom_start:chrom_stop])
     return Diploid(np.array(starts, dtype = np.uint32),
-                   np.array(stops, dtype = np.uint32),
+                   mother.end,
                    np.array(founder, dtype = np.uint32))
 
 
