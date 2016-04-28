@@ -5,8 +5,10 @@ from unittest.mock import MagicMock
 import unittest
 
 import numpy as np
+import pyximport; pyximport.install()
 
 import recomb_genome
+from recomb_helper import new_sequence
 
 def break_sequence_wrapper(sequence, location):
     return recomb_genome._break_sequence(sequence, location,
@@ -18,7 +20,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [5])
+        ret_diploid = new_sequence(diploid, [5])
         self.assertEqual(ret_diploid.starts, [0, 5])
         self.assertEqual(ret_diploid.founder, [1, 1])
 
@@ -28,7 +30,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [0])
+        ret_diploid = new_sequence(diploid, [0])
         self.assertEqual(ret_diploid.starts, [0])
         self.assertEqual(ret_diploid.founder, [1])
 
@@ -37,7 +39,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [0, 4, 6, 8])
+        ret_diploid = new_sequence(diploid, [0, 4, 6, 8])
         self.assertEqual(ret_diploid.starts, [0, 4, 6, 8])
         self.assertEqual(ret_diploid.founder, [1, 1, 1, 1])
 
@@ -46,7 +48,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [10])
+        ret_diploid = new_sequence(diploid, [10])
         self.assertEqual(ret_diploid.starts, [0, 10])
         self.assertEqual(ret_diploid.founder, [1, 2])
 
@@ -55,7 +57,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.stops = np.array([10, 20], dtype = np.uint32)
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [0])
+        ret_diploid = new_sequence(diploid, [0])
         self.assertEqual(ret_diploid.starts, [0, 10])
         self.assertEqual(ret_diploid.founder, [1, 2])
 
@@ -64,7 +66,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [5])
+        ret_diploid = new_sequence(diploid, [5])
         self.assertEqual(ret_diploid.starts, [0, 5, 10])
         self.assertEqual(ret_diploid.founder, [1, 1, 2])
 
@@ -73,7 +75,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [5, 15])
+        ret_diploid = new_sequence(diploid, [5, 15])
         self.assertEqual(ret_diploid.starts, [0, 5, 10, 15])
         self.assertEqual(ret_diploid.founder, [1, 1, 2, 2])
 
@@ -82,7 +84,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = recomb_genome._new_sequence(diploid, [10])
+        ret_diploid = new_sequence(diploid, [10])
         self.assertEqual(ret_diploid.starts, [0])
         self.assertEqual(ret_diploid.founder, [1])
 

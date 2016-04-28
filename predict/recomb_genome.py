@@ -10,15 +10,17 @@ from collections import defaultdict, namedtuple
 from itertools import chain
 
 import numpy as np
+import pyximport; pyximport.install()
 
 from sex import Sex
+from diploid import Diploid
+from recomb_helper import new_sequence
 
 MEGABASE = 10 ** 6
 DECODE_FILENAME = "decode_recombination_data.tab"
 CHROMOSOME_ORDER = list(range(1, 23))
 NUM_CHROMS = len(CHROMOSOME_ORDER)
 
-Diploid = namedtuple("Diploid", ["starts", "end", "founder"])
 IndexMap = namedtuple("IndexMap", ["mother", "father"])
 
 class RecombGenomeGenerator():
@@ -296,37 +298,6 @@ class Recombinator():
                 
         return RecombGenome(mother, father, genome._num_founders)
 
-def _new_sequence(diploid, locations):
-    """
-    Return a new sequence, broken up at the given start, stop locations.
-    Eg the sequence starts: 0  10 20
-                    stops:  10 20 30
-    passed with the locations [15, 25] should produce the sequence
-                    starts: 0  10 15 20 25
-                    stops:  10 15 20 25 30
-    """
-    non_duplicate = []
-    break_indices = np.searchsorted(diploid.starts, locations)
-    for break_location, break_index in zip(locations, break_indices):
-        if break_location == diploid.end:
-            continue
-        if (break_index == len(diploid.starts) or
-            diploid.starts[break_index] != break_location):
-            non_duplicate.append(break_location)
-    return_starts = diploid.starts.tolist()
-    return_starts.extend(non_duplicate)
-    return_starts.sort()
-    
-    return_founder = []
-    j = 0
-    for i in range(len(return_starts)):
-        if j < len(diploid.starts) and return_starts[i] == diploid.starts[j]:
-            return_founder.append(diploid.founder[j])
-            j += 1
-        else:
-            return_founder.append(diploid.founder[j - 1])
-    return Diploid(return_starts, diploid.end, return_founder)
-
 def _swap_at_locations(mother, father, locations):
     """
     Swap elements at the given (start, stop) locations in locations.
@@ -335,8 +306,8 @@ def _swap_at_locations(mother, father, locations):
     """
     locations = tuple(locations)
     flat_locations = tuple(chain.from_iterable(locations))
-    new_mother = _new_sequence(mother, flat_locations)
-    new_father = _new_sequence(father, flat_locations)
+    new_mother = new_sequence(mother, flat_locations)
+    new_father = new_sequence(father, flat_locations)
     for start, stop in locations:
         mother_start_i = bisect_left(new_mother.starts, start)
         mother_stop_i = bisect_left(new_mother.starts, stop, mother_start_i)
