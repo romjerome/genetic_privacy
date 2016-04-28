@@ -339,9 +339,9 @@ def _swap_at_locations(mother, father, locations):
     new_father = _new_sequence(father, flat_locations)
     for start, stop in locations:
         mother_start_i = bisect_left(new_mother.starts, start)
-        mother_stop_i = bisect_left(new_mother.starts, stop)
+        mother_stop_i = bisect_left(new_mother.starts, stop, mother_start_i)
         father_start_i = bisect_left(new_father.starts, start)
-        father_stop_i = bisect_left(new_father.starts, stop)
+        father_stop_i = bisect_left(new_father.starts, stop, father_start_i)
         temp_mother = new_mother.starts[mother_start_i:mother_stop_i]
         temp_father = new_father.starts[father_start_i:father_stop_i]
         new_mother.starts[mother_start_i:mother_stop_i], \

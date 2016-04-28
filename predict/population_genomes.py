@@ -19,16 +19,19 @@ def _pick_chroms_for_diploid(genome, recombinator):
     starts = []
     founder = []
     offsets = recombinator._chrom_start_offset
+    chrom_stop = 0
     for chrom_name in CHROMOSOME_ORDER:
         if random() < 0.5:
             tmp_diploid = mother
         else:
             tmp_diploid = father
 
-        chrom_start = bisect_left(tmp_diploid.starts, offsets[chrom_name])
+        # chrom_start = bisect_left(tmp_diploid.starts, offsets[chrom_name])
+        chrom_start = chrom_stop
         if chrom_name != CHROMOSOME_ORDER[-1]:
             chrom_stop = bisect_left(tmp_diploid.starts,
-                                     offsets[chrom_name + 1])
+                                     offsets[chrom_name + 1],
+                                     chrom_start)
         else:
             chrom_stop = len(tmp_diploid.starts)
                 
