@@ -26,7 +26,6 @@ def _pick_chroms_for_diploid(genome, recombinator):
         else:
             tmp_diploid = father
 
-        # chrom_start = bisect_left(tmp_diploid.starts, offsets[chrom_name])
         chrom_start = chrom_stop
         if chrom_name != CHROMOSOME_ORDER[-1]:
             chrom_stop = bisect_left(tmp_diploid.starts,
