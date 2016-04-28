@@ -62,7 +62,7 @@ class TestNewSequence(unittest.TestCase):
     def test_middle_boundary_two_element(self):
         diploid = MagicMock()
         diploid.starts = np.array([0, 10], dtype = np.uint32)
-        diploid.end = 10
+        diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
         ret_diploid = recomb_genome._new_sequence(diploid, [5])
         self.assertEqual(ret_diploid.starts, [0, 5, 10])
