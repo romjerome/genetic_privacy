@@ -85,7 +85,7 @@ def generate_genomes(population, generator, recombinators, keep_last = None):
             person.genome = mate(mother.genome, father.genome,
                                  recombinators[Sex.Female],
                                  recombinators[Sex.Male])
-        if keep_last is not None and keep_last < generation_num:
+        if keep_last is not None and keep_last <= generation_num:
             to_delete = population.generations[generation_num - keep_last]
             for person in to_delete.members:
                 del person.genome
