@@ -47,7 +47,8 @@ class RecombGenomeGenerator():
         father_founder.fill(self._genome_id + 1)
         mother = Diploid(starts, self._total_length, mother_founder)
         # XXX: Can the start array be shared across some individuals?
-        father = Diploid(np.array(starts), self._total_length, father_founder)
+        father = Diploid(np.array(starts, dtype = np.uint32),
+                         self._total_length, father_founder)
         
         self._genome_id += 2
         return RecombGenome(mother, father)
