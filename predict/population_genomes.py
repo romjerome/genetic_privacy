@@ -49,8 +49,7 @@ def mate(mother, father, mother_recombinator, father_recombinator):
     assert father is not None
     from_mother = _pick_chroms_for_diploid(mother, mother_recombinator)
     from_father = _pick_chroms_for_diploid(father, father_recombinator)
-    num_founders = mother._num_founders
-    return RecombGenome(from_mother, from_father, num_founders)
+    return RecombGenome(from_mother, from_father)
 
 def generate_genomes_ancestors(root_nodes, generator, recombinators):
     queue = deque(root_nodes)

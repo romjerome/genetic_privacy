@@ -22,6 +22,7 @@ CHROMOSOME_ORDER = list(range(1, 23))
 NUM_CHROMS = len(CHROMOSOME_ORDER)
 
 IndexMap = namedtuple("IndexMap", ["mother", "father"])
+RecombGenome = namedtuple("RecombGenome", ["mother", "father"])
 
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths, num_founders):
@@ -49,39 +50,7 @@ class RecombGenomeGenerator():
         father = Diploid(np.array(starts), self._total_length, father_founder)
         
         self._genome_id += 2
-        return RecombGenome(mother, father, self._num_founders)
-
-class RecombGenome():
-    
-    def __init__(self, mother, father, num_founders):
-        self.mother = mother
-        self.father = father
-        self._num_founders = num_founders
-        # extract = self._extract_founder_bits_and_map(mother, father)
-        # self._founder_bits, self._index_map = extract
-
-            
-    # def _extract_founder_bits_and_map(self, mother, father):
-    #     founder_bits = np.zeros(self._num_founders * 2, dtype = np.uint8)
-    #     founder_bits[mother.founder] = 1
-    #     founder_bits[father.founder] = 1
-
-    #     mother_map = defaultdict(list)
-    #     father_map = defaultdict(list)
-    #     # index_map = IndexMap(, defaultdict(list))
-    #     for index, founder in enumerate(mother.founder):
-    #         mother_map[founder].append(index)
-    #     for index, founder in enumerate(father.founder):
-    #         father_map[founder].append(index)
-
-    #     # Compact things using smaller data structures
-    #     mother_map = {founder: array("L", mother_map[founder])
-    #                   for founder in mother_map}
-    #     father_map = {founder: array("L", father_map[founder])
-    #                   for founder in father_map}
-    #     index_map = IndexMap(mother_map, father_map)
-        
-    #     return (np.packbits(founder_bits), index_map)
+        return RecombGenome(mother, father)
 
 def recombinators_from_directory(directory):
     """
@@ -296,7 +265,7 @@ class Recombinator():
                                             zip(global_locations[::2],
                                                 global_locations[1::2]))
                 
-        return RecombGenome(mother, father, genome._num_founders)
+        return RecombGenome(mother, father)
 
 def _swap_at_locations(mother, father, locations):
     """
