@@ -4,7 +4,6 @@ from collections import Counter
 
 import numpy as np
 
-from common_segments import common_segment_lengths
 from util import descendants_of, get_sample_of_cousins
 
 def proportion_within_distance(population, distance, percent_labeled):
@@ -100,11 +99,3 @@ def shared_segment_distribution(population, distance):
             by_autosome = common_segment_lengths(p_1.genome, p_2.genome)
             lengths.extend(chain.from_iterable(by_autosome.values()))
     return lengths
-                                    
-def length_shared(population):
-    pass
-
-def most_recent_common_ancestor(population):
-    last_generation = population.generations[-1]
-    for pair in combinations(last_generation.members):
-        pass
