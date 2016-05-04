@@ -82,7 +82,7 @@ class Population:
         generations_to_clear = self._generations[start:generations]
         for person in chain.from_iterable(generation.members for generation
                                           in generations_to_clear):
-            del person.genome
+            person.genome = None
         self._generations_with_genomes = self._generations_with_genomes - generations
 
 
