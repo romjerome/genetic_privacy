@@ -24,6 +24,7 @@ NUM_CHROMS = len(CHROMOSOME_ORDER)
 IndexMap = namedtuple("IndexMap", ["mother", "father"])
 RecombGenome = namedtuple("RecombGenome", ["mother", "father"])
 
+
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths):
         self._chromosome_lengths = chromosome_lengths
@@ -302,6 +303,16 @@ def _swap_at_locations(mother, father, locations):
         
 def _check_diploid_bounds(diploid):
     """This a useful function for finding bugs in diploid generation."""
-    assert diploid.stops[-1] == 2866387308
-    for start, stop in zip(diploid.starts, diploid.stops):
-        assert start < stop
+    assert diploid.end == 2866387308
+    starts = diploid.starts
+    for i in range(len(starts) - 1):
+        assert starts[i] < starts[i + 1]
+
+# Class for debugging issues in RecombGenome.
+# Uncomment this class and commnent out the namedtuple version to debug.
+# class RecombGenome:
+#     def __init__(self, mother, father):
+#         _check_diploid_bounds(mother)
+#         _check_diploid_bounds(father)
+#         self.mother = mother
+#         self.father = father
