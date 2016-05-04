@@ -26,14 +26,13 @@ def _pick_chroms_for_diploid(genome, recombinator):
         else:
             tmp_diploid = father
 
-        chrom_start = chrom_stop
+        chrom_start = bisect_left(tmp_diploid.starts, offsets[chrom_name])
         if chrom_name != CHROMOSOME_ORDER[-1]:
             chrom_stop = bisect_left(tmp_diploid.starts,
                                      offsets[chrom_name + 1],
                                      chrom_start)
         else:
             chrom_stop = len(tmp_diploid.starts)
-                
         starts.extend(tmp_diploid.starts[chrom_start:chrom_stop])
         founder.extend(tmp_diploid.founder[chrom_start:chrom_stop])
     return Diploid(np.array(starts, dtype = np.uint32),
