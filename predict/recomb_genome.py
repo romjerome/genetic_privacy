@@ -25,7 +25,7 @@ IndexMap = namedtuple("IndexMap", ["mother", "father"])
 RecombGenome = namedtuple("RecombGenome", ["mother", "father"])
 
 class RecombGenomeGenerator():
-    def __init__(self, chromosome_lengths, num_founders):
+    def __init__(self, chromosome_lengths):
         self._chromosome_lengths = chromosome_lengths
         self._total_length = sum(chromosome_lengths.values())
         ordered_cum_bases = np.cumsum([chromosome_lengths[chrom]
@@ -33,11 +33,9 @@ class RecombGenomeGenerator():
         self._chrom_start_offset = dict(zip(CHROMOSOME_ORDER[1:],
                                             ordered_cum_bases[:-1]))
         self._chrom_start_offset[1] = 0
-        self._num_founders = num_founders
         self._genome_id = 0
 
     def generate(self):
-        assert self._genome_id < 2 * self._num_founders
         starts = np.fromiter((self._chrom_start_offset[chrom]
                               for chrom in CHROMOSOME_ORDER),
                              dtype = np.uint32, count = NUM_CHROMS)
