@@ -39,7 +39,7 @@ class LengthClassifier:
         unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
         con = _set_up_sqlite(DB_FILE)
         print("Finding related pairs.")
-        pairs = related_pairs(unlabeled_nodes, labeled_nodes)
+        pairs = related_pairs(unlabeled_nodes, labeled_nodes, population)
         print("{} related pairs.".format(len(pairs)))
         print("Calculating shared lengths.")
         for i in range(1000):
@@ -64,24 +64,33 @@ class LengthClassifier:
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
-def related_pairs(unlabeled_nodes, labeled_nodes, generations = 7):
+def related_pairs(unlabeled_nodes, labeled_nodes, population,
+                  generations = 8):
     """
     Given a population and labeled nodes, returns a list of pairs of nodes
     (unlabeled node, labeled node)
     where the labeled node and unlabeled node share at least 1 common ancestor
-    within generation generations.
+    going back generation generations from the latest generation.
     """
+    # import pdb
+    generation_map = population.node_to_generation
+    num_generations = population.num_generations
     if type(labeled_nodes) != set:
         labeled_nodes = set(labeled_nodes)
     ancestors = dict()
     for node in chain(unlabeled_nodes, labeled_nodes):
-        ancestors[node] = ancestors_of(node, generations)
+        node_generation = generation_map[node]
+        from_latest = (num_generations - node_generation - 1)
+        generations_back =  generations - from_latest
+        current_ancestors = ancestors_of(node, generations_back)
+        for ancestor in current_ancestors:
+            assert generation_map[ancestor] == 1
+        # pdb.set_trace()
+        ancestors[node] = current_ancestors
     return [(unlabeled, labeled) for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)
             if len(ancestors[unlabeled].intersection(ancestors[labeled])) == 0]
         
-        
-
 def calculate_shared_to_db(pairs, con, min_segment_length = 0):
     """
     Calculate the shared segment lengths of each pair in pairs and
