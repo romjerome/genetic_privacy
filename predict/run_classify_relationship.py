@@ -10,7 +10,7 @@ from classify_relationship import LengthClassifier
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 
 print("Loading population")
-with open("population_10000_genome.pickle", "rb") as pickle_file:
+with open("population_10000.pickle", "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
 print("Loading recombination data.")
