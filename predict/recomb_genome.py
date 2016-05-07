@@ -223,6 +223,8 @@ class Recombinator():
         centimorgans = self._num_centimorgans[chrom]
         recomb_events = np.random.binomial(bases,
                                            (centimorgans * 0.01)/ bases)
+        if recomb_events is 0:
+            return []
         recomb_locations = [uniform(0, centimorgans)
                             for _ in range(recomb_events)]
         recomb_locations.sort()
