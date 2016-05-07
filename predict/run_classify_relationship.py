@@ -25,7 +25,7 @@ potentially_labeled = list(chain.from_iterable([generation.members
 labeled_nodes = sample(potentially_labeled, 500)
 print("Populating length classifier.")
 classifier = generate_classifier(population, labeled_nodes, genome_generator,
-                                 recombinators, OUTPUT_DIR, iterations = 3)
+                                 recombinators, OUTPUT_DIR, iterations = 1000)
 
 print("Pickling classifier")
 with open("classifier.pickle", "wb") as pickle_file:
