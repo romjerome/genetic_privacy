@@ -3,7 +3,7 @@ import sqlite3
 from time import perf_counter
 from random import randint, choice
 from os.path import join, isfile
-from os import remove
+from os import remove, listdir
 
 DIR = "/media/paul/Storage/scratch/test"
 
@@ -45,8 +45,21 @@ def write_to_directory(data, labeled):
         fd = fds[labeled]
         fd.write(str(unlabeled))
         fd.write("\t")
-        fd.write(str(value))
+        fd.write(str(value) + "\n")
+    for fd in fds.values():
+        fd.close()
 
+def read_from_directory():
+    directory = join(DIR, "test")
+    data = []
+    for labeled_filename in listdir(directory):
+        labeled = int(labeled_filename)
+        with open(join(directory, labeled_filename), "r") as labeled_file:
+            for line in labeled_file:
+                unlabeled, shared = line.split("\t")
+                data.append((labeled, int(unlabeled), int(shared)))
+    return data
+    
 print("Testing DB speed.")
 start = perf_counter()
 write_to_sqlite(data)
@@ -65,3 +78,9 @@ start = perf_counter()
 write_to_directory(data, labeled)
 stop = perf_counter()
 print("Write to directory speed: {}".format(stop - start))
+
+print("Testing read from directory speed.")
+start = perf_counter()
+read_from_directory()
+stop = perf_counter()
+print("Read directory speed: {}".format(stop - start))

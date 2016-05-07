@@ -1,8 +1,8 @@
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from itertools import chain, product
-from os.path import isfile
-from os import remove, popen
-import sqlite3
+from os import popen, listdir, makedirs
+from os.path import join, exists
+from shutil import rmtree
 
 from scipy.stats import gamma
 import numpy as np
@@ -28,32 +28,9 @@ class LengthClassifier:
     """
     Classifies based total length of shared segments
     """
-    def __init__(self, population, labeled_nodes, genome_generator,
-                 recombinators, min_segment_length = 0):
-        self._distributions = dict()
-        labeled_nodes = set(labeled_nodes)
+    def __init__(self, distributions, labeled_nodes):
+        self._distributions = distributions
         self._labeled_nodes = labeled_nodes
-        unlabeled_nodes = chain.from_iterable(generation.members
-                                              for generation
-                                              in population.generations[-3:])
-        unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
-        con = _set_up_sqlite(DB_FILE)
-        print("Finding related pairs.")
-        pairs = related_pairs(unlabeled_nodes, labeled_nodes, population)
-        print("{} related pairs.".format(len(pairs)))
-        print("Calculating shared lengths.")
-        for i in range(1000):
-            print("iteration {}".format(i))
-            print("Cleaning genomes.")
-            population.clean_genomes()
-            print("Generating genomes")
-            generate_genomes(population, genome_generator, recombinators, 3)
-            print("Calculating shared length")
-            calculate_shared_to_db(pairs, con)
-            con.commit()
-        
-        print("Generating distributions")
-        self._distributions = calculate_distributions(pairs, con)
 
             
     def get_probability(self, shared_length, query_node, labeled_node):
@@ -63,6 +40,9 @@ class LengthClassifier:
         """
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
+
+    def __contains__(self, item):
+        return item in self._distributions
 
 def related_pairs(unlabeled_nodes, labeled_nodes, population,
                   generations = 7):
@@ -85,50 +65,96 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population,
     return [(unlabeled, labeled) for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)
             if len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0]
+
+
+def generate_classifier(population, labeled_nodes, genome_generator,
+                        recombinators, directory, clobber = True,
+                        iterations = 1000):    
+    if not exists(directory):
+        makedirs(directory)
+    elif clobber:
+        rmtree(directory)
+        makedirs(directory)
+    shared_to_directory(population, labeled_nodes, genome_generator,
+                        recombinators, directory, clobber = clobber,
+                        iterations = iterations)
+    return classifier_from_directory(directory, population.id_mapping)
+
+
+def shared_to_directory(population, labeled_nodes, genome_generator,
+                        recombinators, directory, min_segment_length = 0,
+                        clobber = True, iterations = 1000):
+
+    labeled_nodes = set(labeled_nodes)
+    unlabeled_nodes = chain.from_iterable(generation.members
+                                          for generation
+                                          in population.generations[-3:])
+    unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
+    print("Finding related pairs.")
+    pairs = related_pairs(unlabeled_nodes, labeled_nodes, population)
+    print("{} related pairs.".format(len(pairs)))
+    print("Opening file descriptors.")
+    if clobber:
+        mode = "w"
+    else:
+        mode = "a"
+    fds = {node: open(join(directory, str(node._id)), mode)
+           for node in labeled_nodes}
+    print("Calculating shared lengths.")
+    for i in range(iterations):
+        print("iteration {}".format(i))
+        print("Cleaning genomes.")
+        population.clean_genomes()
+        print("Generating genomes")
+        generate_genomes(population, genome_generator, recombinators, 3)
+        print("Calculating shared length")
+        _calculate_shared_to_fds(pairs, fds, min_segment_length)
+    for fd in fds.values():
+        fd.close()
         
-def calculate_shared_to_db(pairs, con, min_segment_length = 0):
+def _calculate_shared_to_fds(pairs, fds, min_segment_length):
     """
-    Calculate the shared segment lengths of each pair in pairs and
-    store it in the given databse.
-    Pairs are (unlabeled node, labeled node) pairs.
+    Calculate the shared length between the pairs, and store the
+    shared length in the given directory. Each labeled node has a file
+    in the given directory. The files contain tab separated entries,
+    where the first entry is the unlabeled node id, and the second
+    entry is the amount of shared material.
     """
-    cur = con.cursor()
-    shared_iter = ((unlabeled._id, labeled._id,
+    shared_iter = ((unlabeled, labeled,
                     shared_segment_length_genomes(unlabeled.genome,
                                                   labeled.genome,
                                                   min_segment_length))
                    for unlabeled, labeled in pairs)
-    cur.executemany("INSERT INTO lengths VALUES (?, ?, ?)", shared_iter)
-    cur.execute("VACUUM")
-    cur.close()
+    for unlabeled, labeled, shared in shared_iter:
+        fd = fds[labeled]
+        fd.write(str(unlabeled._id))
+        fd.write("\t")
+        fd.write(str(shared) + "\n")
 
-def calculate_distributions(pairs, con):
-    cur = con.cursor()
+def classifier_from_directory(directory, id_mapping):
+    distributions = distributions_from_directory(directory, id_mapping)
+    labeled_nodes = set(id_mapping[int(filename)]
+                        for filename in listdir(directory))
+    return LengthClassifier(distributions, labeled_nodes)
+
+def distributions_from_directory(directory, id_mapping):
+    """
+    Calculate distributions from a directory created by
+    calculate_shared_to_directory.
+    """
     distributions = dict()
-    for unlabeled, labeled in pairs:
-            query = cur.execute("""SELECT shared
-                                   FROM lengths
-                                   WHERE unlabeled = ? AND labeled = ?""",
-                                (unlabeled._id, labeled._id))
-            lengths = np.fromiter((value[0] for value in query),
-                                  dtype = np.float64)
-            shape, scale = fit_gamma(lengths)
+    for labeled_filename in listdir(directory):
+        lengths = defaultdict(list)
+        labeled = id_mapping[int(labeled_filename)]
+        with open(join(directory, labeled_filename), "r") as labeled_file:
+            for line in labeled_file:
+                unlabeled_id, shared_str = line.split("\t")
+                lengths[id_mapping[int(unlabeled_id)]].append(int(shared_str))
+        for unlabeled, lengths in lengths.items():
+            shape, scale = fit_gamma(np.array(lengths, dtype = np.float64))
             params = GammaParams(shape, scale)
-            distributions[(unlabeled, labeled)] = params
-    cur.close()
+            distributions[unlabeled, labeled] = params
     return distributions
-
-def _set_up_sqlite(filename):
-    if isfile(filename): # Clear old versions of this file
-        remove(filename)
-    temp_storage = sqlite3.connect(filename)
-    temp_storage.execute("""PRAGMA page_size = 32768""");
-    temp_storage.execute("""CREATE TABLE lengths
-                            (unlabeled integer, labeled integer, shared integer)""")
-    temp_storage.execute("""CREATE INDEX labeled_index
-                            ON lengths (labeled)""")
-    temp_storage.commit()
-    return temp_storage
     
 def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
     lengths = common_segment_lengths(genome_a, genome_b)
