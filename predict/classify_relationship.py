@@ -3,6 +3,7 @@ from itertools import chain, product
 from os import popen, listdir, makedirs
 from os.path import join, exists
 from shutil import rmtree
+from warnings import warn
 
 from scipy.stats import gamma
 import numpy as np
@@ -148,8 +149,20 @@ def distributions_from_directory(directory, id_mapping):
         labeled = id_mapping[int(labeled_filename)]
         with open(join(directory, labeled_filename), "r") as labeled_file:
             for line in labeled_file:
-                unlabeled_id, shared_str = line.split("\t")
-                lengths[id_mapping[int(unlabeled_id)]].append(int(shared_str))
+                # If the program crashed, the output can be left in an
+                # inconsistent state.
+                try:
+                    unlabeled_id, shared_str = line.split("\t")
+                except ValueError:
+                    warn("Malformed line:\n{}".format(line), stacklevel = 0)
+                    continue
+                try:
+                    unlabeled = id_mapping[int(unlabeled_id)]
+                except KeyError:
+                    error_string = "No such unlabeled node with id {}."
+                    warn(error_string.format(unlabeled_id), stacklevel = 0)
+                    continue
+                lengths[unlabeled].append(int(shared_str))
         for unlabeled, lengths in lengths.items():
             shape, scale = fit_gamma(np.array(lengths, dtype = np.float64))
             params = GammaParams(shape, scale)
