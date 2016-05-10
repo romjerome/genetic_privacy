@@ -1,42 +1,31 @@
-import pyximport; pyximport.install()
-
-from classify_relationship import LengthClassifier
-from common_ancestor_vector import common_ancestor_vector
 from functools import reduce
 from operator import mul
 
+import pyximport; pyximport.install()
+
+from classify_relationship import (LengthClassifier,
+                                   shared_segment_length_genomes)
 MINIMUM_LABELED_NODES = 5
 
 class BayesDeanonymize:
-    def __init__(self, population, labeled_nodes):
+    def __init__(self, population, classifier = None):
         self._population = population
-        self._labeled_nodes = list(labeled_nodes)
-        self._length_classifier = LengthClassifier(population, 1000)
-        self._vector_intern = dict() # To intern the vector objects
-        self._vector_cache = dict()
-
-    def _intern_vector(self, ancestor_vector):
-        if ancestor_vector in self._vector_intern:
-            ancestor_vector = self._vector_intern[ancestor_vector]
+        if classifier is None:
+            self._length_classifier = LengthClassifier(population, 1000)
         else:
-            self._vector_intern[ancestor_vector] = ancestor_vector
-        return ancestor_vector
+            self._length_classifier = classifier
 
     def _compare_genome_node(self, node, genome):
         probabilities = []
-        for labeled_node in self._labeled_nodes:
-            pair = (node, labeled_node)
-            if pair in self._vector_cache:
-                ancestor_vector = self._vector_cache[pair]
-            else:
-                ancestor_vector = common_ancestor_vector(self._population,
-                                                         node, labeled_node)
-                ancestor_vector = self._intern_vector(ancestor_vector)
-                self._vector_cache[pair] = ancestor_vector
-                    
-            prob = self._length_classifier.get_probability(ancestor_vector,
-                                                           labeled_node.genome,
-                                                           genome)
+        length_classifier = self._length_classifier
+        for labeled_node in length_classifier._labeled_nodes:
+            if (node, labeled_node) not in length_classifier:
+                continue
+            shared = shared_segment_length_genomes(genome, labeled_node.genome,
+                                                   0)
+            prob = length_classifier.get_probability(shared,
+                                                     node,
+                                                     labeled_node)
             probabilities.append(prob)
         return list(filter(lambda x: x is not None, probabilities))
 
@@ -52,4 +41,13 @@ class BayesDeanonymize:
                 # from too few labeled nodes.
                 continue
             node_probabilities[member] = reduce(mul, probabilities, 1)
-        return max(node_probabilities.items(), key = lambda x: x[1])[0]
+        potential_node = max(node_probabilities.items(),
+                             key = lambda x: x[1])[0]
+        return get_sibling_group(potential_node)
+
+def get_sibling_group(node):
+    """
+    Returns the set containing node and all its full siblings
+    Will need to change when monogamy assumptions change.
+    """
+    return node.mother.children

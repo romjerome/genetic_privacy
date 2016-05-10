@@ -1,30 +1,49 @@
 #!/usr/bin/env python3
 
-from random import sample, choice
+from random import sample
+from pickle import load
+
+import progressbar
 
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
 
 NUM_LABELED = 400
 
-with open("population_40000.pickle", "rb") as pickle_file:
+print("Loading population.")
+with open("population_10000.pickle", "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
+print("Loading classifier")
+with open("classifier.pickle", "rb") as pickle_file:
+    classifier = load(pickle_file)
+
+print("Fixing persistence")
+classifier.fix_persistence(population)
+print("Checking labeled nodes")
+all_nodes = set(population.members)
+for node in classifier._labeled_nodes:
+    assert node in all_nodes
 
 last_generation = population.generations[-1].members
-labeled_nodes = set(sample(last_generation, NUM_LABELED))
 
-bayes = BayesDeanonymize(population, labeled_nodes)
+bayes = BayesDeanonymize(population, classifier)
 
-unlabeled = sample(list(set(last_generation) - labeled_nodes), 1000)
+unlabeled = sample(list(set(last_generation) - set(classifier._labeled_nodes)),
+                   1000)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0
 incorrect = 0
-for node in unlabeled:
-    if bayes.identify(node.genome) == node:
+bar = progressbar.ProgressBar()
+print("Attempting to identify {} random nodes.".format(len(unlabeled)))
+i = 0
+for node in bar(unlabeled):
+    print(i)
+    if node in bayes.identify(node.genome):
         correct += 1
     else:
         incorrect += 1
+    i += 1
 
 
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,

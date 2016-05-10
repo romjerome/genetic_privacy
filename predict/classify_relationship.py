@@ -42,6 +42,19 @@ class LengthClassifier:
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
+    def fix_persistence(self, population):
+        """
+        This is a hack, because pickling causes issues. Long term
+        should probably use something from
+        https://docs.python.org/3/library/pickle.html#pickle-persistent
+        """
+        id_map = population.id_mapping
+        self._distributions = {(id_map[nodes[0]._id],
+                                id_map[nodes[1]._id]): dist
+                               for nodes, dist
+                               in self._distributions.items()}
+        self._labeled_nodes = [id_map[node._id] for node in self._labeled_nodes]
+
     def __contains__(self, item):
         return item in self._distributions
 
