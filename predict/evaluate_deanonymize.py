@@ -3,8 +3,6 @@
 from random import sample
 from pickle import load
 
-import progressbar
-
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
 
@@ -34,10 +32,9 @@ unlabeled = sample(list(set(last_generation) - set(classifier._labeled_nodes)),
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0
 incorrect = 0
-bar = progressbar.ProgressBar()
 print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 i = 0
-for node in bar(unlabeled):
+for node in unlabeled:
     print(i)
     if node in bayes.identify(node.genome):
         correct += 1
