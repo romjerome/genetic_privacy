@@ -2,10 +2,13 @@ from functools import reduce
 from operator import mul
 
 import pyximport; pyximport.install()
+import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
 MINIMUM_LABELED_NODES = 5
+INF = float("inf")
+INF_REPLACE = 1 - 1e-8
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None):
@@ -31,26 +34,33 @@ class BayesDeanonymize:
                 
             prob = length_classifier.get_probability(shared, node,
                                                      labeled_node)
+            if prob == INF: # XXX Should only infinity get replaced?
+                prob = INF_REPLACE
+            if prob == 0:
+                prob = 1e-20
                 
             probabilities.append(prob)
             
-        return list(filter(lambda x: x is not None, probabilities))
+        return np.array(probabilities)
 
         
-    def identify(self, genome):
+    def identify(self, genome, actual_node):
         node_probabilities = dict() # Probability that a node is a match
         shared_genome_cache = dict()
         for member in self._population.members:
             if member.genome is None:
                 continue
+            # if member is actual_node:
+            #     import pdb
+            #     pdb.set_trace()
             probabilities = self._compare_genome_node(member, genome,
                                                       shared_genome_cache)
             if len(probabilities) < MINIMUM_LABELED_NODES:
                 # We don't want to base our estimation on datapoints
                 # from too few labeled nodes.
                 continue
-            node_probabilities[member] = reduce(mul, probabilities, 1)
-        potential_node = max(node_probabilities.items(),
+            node_probabilities[member] = np.sum(np.log(probabilities))
+        potential_node = min(node_probabilities.items(),
                              key = lambda x: x[1])[0]
         return get_sibling_group(potential_node)
 

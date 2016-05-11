@@ -3,6 +3,8 @@
 from random import sample
 from pickle import load
 
+import pdb
+
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
 
@@ -28,7 +30,7 @@ last_generation = population.generations[-1].members
 bayes = BayesDeanonymize(population, classifier)
 
 unlabeled = sample(list(set(last_generation) - set(classifier._labeled_nodes)),
-                   1000)
+                   10)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0
 incorrect = 0
@@ -36,9 +38,13 @@ print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 i = 0
 for node in unlabeled:
     print(i)
-    if node in bayes.identify(node.genome):
+    identified = bayes.identify(node.genome, node)
+    # pdb.set_trace()
+    if node in identified:
         correct += 1
+        print("correct")
     else:
+        print("incorrect")
         incorrect += 1
     i += 1
 
