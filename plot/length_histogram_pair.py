@@ -1,41 +1,48 @@
-import sqlite3
 from random import choice
+from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from scipy.stats import beta, gamma, poisson
+from scipy.stats import beta, gamma, poisson, exponweib
 
-LENGTH_DB = "/media/paul/Storage/scratch/lengths_1000.db"
-conn = sqlite3.connect(LENGTH_DB)
+LENGTHS_FILENAME = "lengths/70004"
 
-c = conn.cursor()
-
-query = c.execute("""SELECT DISTINCT unlabeled, labeled from lengths
-                     WHERE shared > 100""")
-nonzero_pairs = [(unlabeled, labeled) for unlabeled, labeled in query]
-
-def get_lengths(unlabeled, labeled, cur):
-    q = cur.execute("""SELECT shared from lengths
-                       WHERE unlabeled = ? AND labeled = ?""", (unlabeled,
-                                                                labeled))
-    lengths = [length[0] for length in q]
-    return np.array(lengths)
+def get_lengths(lengths_filename):
+    lengths = defaultdict(list)
+    with open(lengths_filename, "r") as lengths_file:
+        for line in lengths_file:
+            try:
+                node_id, length = line.split("\t")
+            except ValueError:
+                continue
+            node_id = int(node_id)
+            length = int(length)
+            if node_id > 100000 or length > 10000000000:
+                continue
+            lengths[node_id].append(length)
+    return lengths
+            
     
 def plot_histogram(lengths):
     lengths.sort()
-    plt.hist(lengths, bins = 30, normed = True)
-    # plt.hist(lengths, bins = 20)
+    weights = np.ones_like(lengths)/float(len(lengths))
+    plt.hist(lengths, weights=weights, bins = 20)
+
     np_lengths = np.array(lengths)
     beta_pdf = beta(*beta.fit(np_lengths)).pdf(np_lengths)
     gamma_pdf = gamma(*gamma.fit(np_lengths)).pdf(np_lengths)
+    exponweib_pdf = exponweib(*exponweib.fit(np_lengths)).pdf(np_lengths)
 
-    
     beta_plot = plt.plot(lengths, beta_pdf, label = "Beta")
     gamma_plot = plt.plot(lengths, gamma_pdf, label = "Gamma")
+    weib_plot = plt.plot(lengths, exponweib_pdf, label = "Exp Weib")
     plt.legend(loc = "upper right")
     plt.show()
 
+lengths_vectors = get_lengths(LENGTHS_FILENAME)
+for node_id, lengths in lengths_vectors.items():
+    plot_histogram(lengths)
 
 for unlabeled, labeled in nonzero_pairs:
     lengths = get_lengths(unlabeled, labeled, c)
