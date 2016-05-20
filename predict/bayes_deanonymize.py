@@ -60,7 +60,7 @@ class BayesDeanonymize:
                 # from too few labeled nodes.
                 continue
             node_probabilities[member] = np.sum(np.log(probabilities))
-        potential_node = min(node_probabilities.items(),
+        potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
         return get_sibling_group(potential_node)
 
