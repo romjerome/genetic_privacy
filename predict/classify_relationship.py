@@ -58,8 +58,7 @@ class LengthClassifier:
     def __contains__(self, item):
         return item in self._distributions
 
-def related_pairs(unlabeled_nodes, labeled_nodes, population,
-                  generations = 7):
+def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
     """
     Given a population and labeled nodes, returns a list of pairs of nodes
     (unlabeled node, labeled node)
@@ -83,7 +82,7 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population,
 
 def generate_classifier(population, labeled_nodes, genome_generator,
                         recombinators, directory, clobber = True,
-                        iterations = 1000):    
+                        iterations = 1000, generations_back_shared = 7):    
     if not exists(directory):
         makedirs(directory)
     elif clobber:
@@ -91,13 +90,15 @@ def generate_classifier(population, labeled_nodes, genome_generator,
         makedirs(directory)
     shared_to_directory(population, labeled_nodes, genome_generator,
                         recombinators, directory, clobber = clobber,
-                        iterations = iterations)
+                        iterations = iterations,
+                        generations_back_shared = generations_back_shared)
     return classifier_from_directory(directory, population.id_mapping)
 
 
 def shared_to_directory(population, labeled_nodes, genome_generator,
                         recombinators, directory, min_segment_length = 0,
-                        clobber = True, iterations = 1000):
+                        clobber = True, iterations = 1000,
+                        generations_back_shared = 7):
 
     labeled_nodes = set(labeled_nodes)
     unlabeled_nodes = chain.from_iterable(generation.members
@@ -105,7 +106,8 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
                                           in population.generations[-3:])
     unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
     print("Finding related pairs.")
-    pairs = related_pairs(unlabeled_nodes, labeled_nodes, population)
+    pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
+                          generations_back_shared)
     print("{} related pairs.".format(len(pairs)))
     print("Opening file descriptors.")
     if clobber:
