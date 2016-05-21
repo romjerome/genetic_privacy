@@ -1,5 +1,6 @@
 from functools import reduce
 from operator import mul
+from math import isnan
 
 import pyximport; pyximport.install()
 import numpy as np
@@ -8,7 +9,8 @@ from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
-INF_REPLACE = 1 - 1e-8
+INF_REPLACE = 1.0
+ZERO_REPLACE = 1e-20
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None):
@@ -22,8 +24,6 @@ class BayesDeanonymize:
         probabilities = []
         length_classifier = self._length_classifier
         for labeled_node in length_classifier._labeled_nodes:
-            if (node, labeled_node) not in length_classifier:
-                continue
             if labeled_node in cache:
                 shared = cache[labeled_node]
             else:
@@ -31,13 +31,18 @@ class BayesDeanonymize:
                                                        labeled_node.genome,
                                                        0)
                 cache[labeled_node] = shared
-                
-            prob = length_classifier.get_probability(shared, node,
-                                                     labeled_node)
-            if prob == INF: # XXX Should only infinity get replaced?
-                prob = INF_REPLACE
-            if prob == 0:
-                prob = 1e-20
+            if (node, labeled_node) not in length_classifier:
+                if shared == 0:
+                    prob = INF_REPLACE
+                else:
+                    prob = ZERO_REPLACE
+            else:
+                prob = length_classifier.get_probability(shared, node,
+                                                         labeled_node)
+                if prob > 1 or isnan(prob):
+                    prob = INF_REPLACE
+                if prob == 0:
+                    prob = ZERO_REPLACE
                 
             probabilities.append(prob)
             
@@ -50,16 +55,21 @@ class BayesDeanonymize:
         for member in self._population.members:
             if member.genome is None:
                 continue
-            # if member is actual_node:
-            #     import pdb
-            #     pdb.set_trace()
             probabilities = self._compare_genome_node(member, genome,
                                                       shared_genome_cache)
-            if len(probabilities) < MINIMUM_LABELED_NODES:
-                # We don't want to base our estimation on datapoints
-                # from too few labeled nodes.
-                continue
             node_probabilities[member] = np.sum(np.log(probabilities))
+        # rank = sorted(list(node_probabilities.items()),
+        #               key = lambda x: x[1])
+        # potential_node = rank[-1][0]
+        # import pdb
+        # pdb.set_trace()
+        # potential_node_probs = self._compare_genome_node(potential_node,
+        #                                                  genome,
+        #                                                  shared_genome_cache)
+        # actual_node_probs = self._compare_genome_node(actual_node,
+        #                                               genome,
+        #                                               shared_genome_cache)
+
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
         return get_sibling_group(potential_node)
